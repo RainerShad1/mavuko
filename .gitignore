@@ -1,0 +1,21 @@
+# Solo se sube lo que la página necesita para publicarse.
+/*
+!/.gitignore
+!/web/
+!/brand/
+
+/brand/*
+!/brand/tokens.css
+!/brand/react/
+!/brand/icono/
+!/brand/logo/
+!/brand/simbolo/
+!/brand/patron/
+!/brand/marca-de-agua/
+!/brand/palabra/
+
+/web/README.md
+/web/src/app/sistema/
+
+.env*
+!.env.example

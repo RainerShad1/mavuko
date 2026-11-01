@@ -1,0 +1,266 @@
+/* Fundamentos del sistema de diseño de Mavuko. Los colores vienen de brand/tokens.css. */
+
+:root {
+  /* Espaciado: serie 3·5·8 */
+  --s-3: 3px;
+  --s-5: 5px;
+  --s-8: 8px;
+  --s-13: 13px;
+  --s-21: 21px;
+  --s-34: 34px;
+  --s-55: 55px;
+  --s-89: 89px;
+  --s-144: 144px;
+  --margen: clamp(21px, 3.8vw, 55px);
+  --seccion: clamp(55px, 8vw, 144px);
+  --nudo: 5px; /* el corte que separa bloques */
+
+  /* Tipografía */
+  --fuente-titulo: var(--font-bricolage, var(--mv-font-display));
+  --fuente-texto: var(--font-instrument, var(--mv-font-body));
+  --t-exhibicion: clamp(2.75rem, 6.6vw, 6rem);
+  --t-titulo: clamp(2.25rem, 5.4vw, 5rem);
+  --t-subtitulo: clamp(1.625rem, 3.2vw, 3rem);
+  --t-menor: clamp(1.3125rem, 2vw, 2.125rem);
+  --t-entrada: clamp(1.0625rem, 1.5vw, 1.3125rem);
+  --t-cuerpo: 1rem;
+  --t-nota: 0.875rem;
+  --t-marca: 0.8125rem;
+
+  /* Corte a machete: pendiente 5:18 del tope de la caña */
+  --corte: 27.78cqw;
+
+  /* Radios: la caña se corta, no se redondea */
+  --radio-0: 0;
+  --radio-telefono: 21px;
+  --radio-icono: 23.33%;
+
+  /* Sombras: solo para lo que flota */
+  --sombra-1: 0 8px 21px color-mix(in srgb, var(--mv-melaza) 18%, transparent);
+  --sombra-2: 0 21px 55px color-mix(in srgb, var(--mv-melaza) 26%, transparent);
+
+  /* Movimiento */
+  --dur-3: 130ms;
+  --dur-5: 210ms;
+  --dur-8: 340ms;
+  --dur-13: 550ms;
+  --dur-21: 880ms;
+  --curva: cubic-bezier(0.16, 1, 0.3, 1);
+  --ciclo-tallos: 6000ms;
+
+  /* Capas */
+  --z-marco: 3;
+  --z-menu: 40;
+  --z-nav: 50;
+  --z-saltar: 60;
+
+  color-scheme: light;
+}
+
+/* Temas: cada campo de la página declara el suyo con data-tema. */
+:root,
+[data-tema="base"] {
+  --fondo: var(--mv-azucar);
+  --fondo-2: var(--mv-bruma);
+  --texto: var(--mv-melaza);
+  --texto-2: color-mix(in srgb, var(--mv-melaza) 84%, var(--mv-azucar));
+  --acento: var(--mv-cana);
+  --enlace: var(--mv-nudo);
+  --foco: var(--mv-nudo);
+  --btn-f: var(--mv-nudo);
+  --btn-t: var(--mv-azucar);
+  --btn-fh: var(--mv-melaza);
+  --btn-th: var(--mv-azucar);
+  --btn-b: var(--mv-melaza);
+  --btn-bh: var(--mv-melaza);
+  --campo-f: var(--mv-azucar);
+  --campo-b: var(--mv-melaza);
+  --logo-color: 1;
+  --logo-oscuro: 0;
+}
+
+[data-tema="suave"] {
+  --fondo: var(--mv-bruma);
+  --fondo-2: var(--mv-azucar);
+  --texto: var(--mv-melaza);
+  --texto-2: color-mix(in srgb, var(--mv-melaza) 84%, var(--mv-bruma));
+  --acento: var(--mv-nudo);
+  --enlace: var(--mv-nudo);
+  --foco: var(--mv-nudo);
+  --btn-f: var(--mv-nudo);
+  --btn-t: var(--mv-azucar);
+  --btn-fh: var(--mv-melaza);
+  --btn-th: var(--mv-azucar);
+  --btn-b: var(--mv-melaza);
+  --btn-bh: var(--mv-melaza);
+  --campo-f: var(--mv-azucar);
+  --campo-b: var(--mv-melaza);
+  --logo-color: 1;
+  --logo-oscuro: 0;
+}
+
+[data-tema="melaza"] {
+  --fondo: var(--mv-melaza);
+  --fondo-2: var(--mv-bagazo);
+  --texto: var(--mv-azucar);
+  --texto-2: color-mix(in srgb, var(--mv-azucar) 84%, var(--mv-melaza));
+  --acento: var(--mv-hoja);
+  --enlace: var(--mv-hoja);
+  --foco: var(--mv-sol);
+  --btn-f: var(--mv-sol);
+  --btn-t: var(--mv-melaza);
+  --btn-fh: var(--mv-azucar);
+  --btn-th: var(--mv-melaza);
+  --btn-b: var(--mv-azucar);
+  --btn-bh: var(--mv-azucar);
+  --campo-f: var(--mv-bagazo);
+  --campo-b: var(--mv-azucar);
+  --logo-color: 0;
+  --logo-oscuro: 1;
+}
+
+/* Sobre Caña el texto blanco solo cuenta como grande: desde 19 px en negrita. */
+[data-tema="cana"] {
+  --fondo: var(--mv-cana);
+  --fondo-2: var(--mv-nudo);
+  --texto: var(--mv-azucar);
+  --texto-2: var(--mv-azucar);
+  --acento: var(--mv-azucar);
+  --enlace: var(--mv-azucar);
+  --foco: var(--mv-melaza);
+  --btn-f: var(--mv-melaza);
+  --btn-t: var(--mv-azucar);
+  --btn-fh: var(--mv-azucar);
+  --btn-th: var(--mv-melaza);
+  --btn-b: var(--mv-azucar);
+  --btn-bh: var(--mv-azucar);
+  --campo-f: var(--mv-azucar);
+  --campo-b: var(--mv-melaza);
+  --logo-color: 0;
+  --logo-oscuro: 1;
+}
+
+/* Marca blanca: las apps de cada restaurante pasan sus colores en --marca-*. */
+[data-tema="marca"] {
+  --fondo: var(--marca-fondo, var(--mv-azucar));
+  --fondo-2: var(--marca-fondo-2, var(--mv-bruma));
+  --texto: var(--marca-texto, var(--mv-melaza));
+  --texto-2: var(--marca-texto, var(--mv-melaza));
+  --acento: var(--marca-principal, var(--mv-cana));
+  --enlace: var(--marca-principal, var(--mv-nudo));
+  --foco: var(--marca-principal, var(--mv-nudo));
+  --btn-f: var(--marca-principal, var(--mv-nudo));
+  --btn-t: var(--marca-sobre-principal, var(--mv-azucar));
+  --btn-fh: var(--marca-texto, var(--mv-melaza));
+  --btn-th: var(--marca-fondo, var(--mv-azucar));
+  --btn-b: var(--marca-texto, var(--mv-melaza));
+  --btn-bh: var(--marca-texto, var(--mv-melaza));
+  --campo-f: var(--marca-fondo, var(--mv-azucar));
+  --campo-b: var(--marca-texto, var(--mv-melaza));
+  --logo-color: 1;
+  --logo-oscuro: 0;
+}
+
+/* Modo oscuro: solo cambian los campos adaptables (base y suave). */
+:root[data-modo="oscuro"] {
+  color-scheme: dark;
+}
+:root[data-modo="oscuro"],
+:root[data-modo="oscuro"] [data-tema="base"] {
+  --fondo: var(--mv-tierra);
+  --fondo-2: var(--mv-melaza);
+  --texto: var(--mv-azucar);
+  --texto-2: color-mix(in srgb, var(--mv-azucar) 84%, var(--mv-tierra));
+  --acento: var(--mv-hoja);
+  --enlace: var(--mv-hoja);
+  --foco: var(--mv-sol);
+  --btn-f: var(--mv-sol);
+  --btn-t: var(--mv-melaza);
+  --btn-fh: var(--mv-azucar);
+  --btn-th: var(--mv-melaza);
+  --btn-b: var(--mv-azucar);
+  --btn-bh: var(--mv-azucar);
+  --campo-f: var(--mv-melaza);
+  --campo-b: var(--mv-azucar);
+  --logo-color: 0;
+  --logo-oscuro: 1;
+}
+:root[data-modo="oscuro"] [data-tema="suave"] {
+  --fondo: var(--mv-bagazo);
+  --fondo-2: var(--mv-melaza);
+  --texto: var(--mv-azucar);
+  --texto-2: var(--mv-azucar);
+  --acento: var(--mv-hoja);
+  --enlace: var(--mv-azucar);
+  --foco: var(--mv-sol);
+  --btn-f: var(--mv-sol);
+  --btn-t: var(--mv-melaza);
+  --btn-fh: var(--mv-azucar);
+  --btn-th: var(--mv-melaza);
+  --btn-b: var(--mv-azucar);
+  --btn-bh: var(--mv-azucar);
+  --campo-f: var(--mv-melaza);
+  --campo-b: var(--mv-azucar);
+  --logo-color: 0;
+  --logo-oscuro: 1;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scrollbar-color: var(--mv-cana) var(--fondo-2);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: var(--fuente-texto);
+    font-size: var(--t-cuerpo);
+    line-height: 1.5;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+  }
+  [data-tema] {
+    color: var(--texto);
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-wrap: balance;
+  }
+  a {
+    text-underline-offset: 5px;
+    text-decoration-thickness: 2px;
+  }
+  :focus-visible {
+    outline: 3px solid var(--foco);
+    outline-offset: 3px;
+  }
+  ::selection {
+    background: var(--mv-sol);
+    color: var(--mv-melaza);
+  }
+  ::placeholder {
+    color: var(--texto-2);
+    opacity: 1;
+  }
+  input,
+  textarea,
+  select {
+    caret-color: var(--acento);
+  }
+  [id] {
+    scroll-margin-top: 89px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}

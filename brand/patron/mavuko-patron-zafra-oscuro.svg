@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+<rect width="120" height="120" fill="#4A2C17"/>
+<g transform="translate(14 14) scale(0.36)"><g id="p1">
+  <g id="p1-tallo-3" fill="#5E3C25">
+    <rect x="21" y="85.6" width="18" height="20.4"/>
+    <polygon points="21,76.5 39,71.5 39,83 21,83"/>
+  </g>
+  <g id="p1-tallo-5" fill="#5E3C25">
+    <rect x="48" y="85.6" width="18" height="20.4"/>
+    <rect x="48" y="62.6" width="18" height="20.4"/>
+    <polygon points="48,53.5 66,48.5 66,60 48,60"/>
+  </g>
+  <g id="p1-tallo-8" fill="#5E3C25">
+    <rect x="75" y="85.6" width="18" height="20.4"/>
+    <rect x="75" y="62.6" width="18" height="20.4"/>
+    <rect x="75" y="39.6" width="18" height="20.4"/>
+    <polygon points="75,19 93,14 93,37 75,37"/>
+  </g>
+</g></g>
+<g transform="translate(74 74) scale(0.36)"><g id="p2">
+  <g id="p2-tallo-3" fill="#5E3C25">
+    <rect x="21" y="85.6" width="18" height="20.4"/>
+    <polygon points="21,76.5 39,71.5 39,83 21,83"/>
+  </g>
+  <g id="p2-tallo-5" fill="#5E3C25">
+    <rect x="48" y="85.6" width="18" height="20.4"/>
+    <rect x="48" y="62.6" width="18" height="20.4"/>
+    <polygon points="48,53.5 66,48.5 66,60 48,60"/>
+  </g>
+  <g id="p2-tallo-8" fill="#5E3C25">
+    <rect x="75" y="85.6" width="18" height="20.4"/>
+    <rect x="75" y="62.6" width="18" height="20.4"/>
+    <rect x="75" y="39.6" width="18" height="20.4"/>
+    <polygon points="75,19 93,14 93,37 75,37"/>
+  </g>
+</g></g>
+</svg>

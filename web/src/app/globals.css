@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "../brand/tokens.css";
+@import "../sistema/fundamentos.css";
+@import "../sistema/componentes.css";
+
+/* Tailwind solo conoce los tokens de la marca: sin paleta ni escalas por defecto. */
+@theme inline {
+  --color-*: initial;
+  --color-cana: var(--mv-cana);
+  --color-nudo: var(--mv-nudo);
+  --color-hoja: var(--mv-hoja);
+  --color-sol: var(--mv-sol);
+  --color-melaza: var(--mv-melaza);
+  --color-azucar: var(--mv-azucar);
+  --color-bruma: var(--mv-bruma);
+  --color-patron: var(--mv-patron);
+  --color-bagazo: var(--mv-bagazo);
+  --color-tierra: var(--mv-tierra);
+  --color-fondo: var(--fondo);
+  --color-fondo-2: var(--fondo-2);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-acento: var(--acento);
+  --color-enlace: var(--enlace);
+
+  --font-*: initial;
+  --font-titulo: var(--fuente-titulo);
+  --font-texto: var(--fuente-texto);
+
+  --spacing-s3: var(--s-3);
+  --spacing-s5: var(--s-5);
+  --spacing-s8: var(--s-8);
+  --spacing-s13: var(--s-13);
+  --spacing-s21: var(--s-21);
+  --spacing-s34: var(--s-34);
+  --spacing-s55: var(--s-55);
+  --spacing-s89: var(--s-89);
+  --spacing-s144: var(--s-144);
+  --spacing-margen: var(--margen);
+  --spacing-seccion: var(--seccion);
+
+  --text-exhibicion: var(--t-exhibicion);
+  --text-titulo: var(--t-titulo);
+  --text-subtitulo: var(--t-subtitulo);
+  --text-menor: var(--t-menor);
+  --text-entrada: var(--t-entrada);
+  --text-nota: var(--t-nota);
+  --text-marca: var(--t-marca);
+
+  --radius-*: initial;
+  --radius-telefono: var(--radio-telefono);
+
+  --shadow-*: initial;
+  --shadow-1: var(--sombra-1);
+  --shadow-2: var(--sombra-2);
+
+  --breakpoint-*: initial;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 900px;
+  --breakpoint-lg: 1200px;
+}

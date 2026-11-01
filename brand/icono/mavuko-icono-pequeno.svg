@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Mavuko">
+<rect id="fondo" width="120" height="120" rx="28" fill="#4A2C17"/>
+<g transform="translate(6 18) scale(0.78)"><g id="simbolo">
+  <g id="simbolo-tallo-3" fill="#8DB255">
+    <polygon points="21,76.5 39,71.5 39,106 21,106"/>
+  </g>
+  <g id="simbolo-tallo-5" fill="#8DB255">
+    <polygon points="48,53.5 66,48.5 66,106 48,106"/>
+  </g>
+  <g id="simbolo-tallo-8" fill="#8DB255">
+    <polygon points="75,19 93,14 93,106 75,106"/>
+  </g>
+</g></g>
+</svg>

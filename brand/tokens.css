@@ -1,0 +1,20 @@
+/* Mavuko — tokens de marca (identidad "Zafra"). Generado por _build/build_brand.py: no editar a mano. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Color */
+  --mv-cana:    #5B8C3A; /* principal: símbolo, campos grandes, títulos. Texto blanco encima solo desde 19 px en negrita */
+  --mv-nudo:    #3D6626; /* texto verde pequeño, botón principal y hover (contraste AA sobre blanco) */
+  --mv-hoja:    #8DB255; /* símbolo sobre fondos oscuros, acentos */
+  --mv-sol:     #F2B134; /* acento escaso: hoja del ícono, botón sobre oscuro. Nunca texto sobre blanco */
+  --mv-melaza:  #4A2C17; /* texto principal, fondos oscuros, ícono de app */
+  --mv-azucar:  #FFFFFF; /* fondo principal */
+  --mv-bruma:   #F1F6EA; /* fondo secundario, paneles */
+  --mv-patron:  #D9E6C8; /* patrón de zafra sobre blanco */
+  --mv-bagazo:  #5E3C25; /* superficie elevada sobre Melaza, patrón oscuro */
+  --mv-tierra:  #281609; /* fondo del modo oscuro, marcos de video */
+
+  /* Tipografía */
+  --mv-font-display: 'Bricolage Grotesque', system-ui, sans-serif; /* logotipo y títulos, Bold */
+  --mv-font-body:    'Instrument Sans', system-ui, sans-serif;     /* textos, interfaces */
+}
