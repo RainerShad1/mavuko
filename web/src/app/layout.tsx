@@ -16,7 +16,7 @@ const instrument = Instrument_Sans({
 
 export const metadata: Metadata = {
   title: "Mavuko, soluciones tecnológicas",
-  description: "Sistemas a la medida para que tu negocio ahorre tiempo y automatice su trabajo, desde La Romana.",
+  description: "Sistemas a la medida para que tu negocio ahorre tiempo y automatice su trabajo.",
   icons: { icon: "/brand/icono/favicon.ico", apple: "/brand/icono/mavuko-icono-180.png" },
 };
 

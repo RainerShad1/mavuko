@@ -10,7 +10,7 @@ export const ENLACES: EnlaceNav[] = [
 ];
 
 export const ENLACES_PIE = [...ENLACES, { texto: "WhatsApp", href: WHATSAPP, externo: true }];
-export const NOTA_PIE = "La Romana, República Dominicana · Mavuko Solutions";
+export const NOTA_PIE = "Mavuko Solutions";
 
 export const ADAPTACION = [
   { titulo: "Tu imagen", texto: "Tu logo y tus colores. Tus clientes ven tu negocio, no el nuestro." },
@@ -29,7 +29,7 @@ export const PASOS = [
 export const PAGINAS = [
   {
     nombre: "Romana CompuService",
-    tipo: "Tienda en línea de computadoras, repuestos y servicio técnico en La Romana, con pedidos y seguimiento en vivo.",
+    tipo: "Tienda en línea de computadoras, repuestos y servicio técnico, con pedidos y seguimiento en vivo.",
     href: "https://romanacompuservice-tienda.vercel.app/",
     captura: "/paginas/romana-compuservice.webp",
     alt: "Portada de la tienda en línea de Romana CompuService",

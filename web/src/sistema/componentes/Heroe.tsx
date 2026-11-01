@@ -260,6 +260,9 @@ export function MarcoVideo({
   const reproducir = () => {
     setReproduciendo(true);
     void video.current?.play();
+    // Si el video apenas asoma, lo trae al centro de la pantalla para verlo completo.
+    const m = marco.current;
+    if (m) scrollTo({ top: m.getBoundingClientRect().top + scrollY - Math.max(0, (innerHeight - m.offsetHeight) / 2) });
   };
 
   return (
@@ -267,7 +270,7 @@ export function MarcoVideo({
       <div ref={marco} className="mv-marco" data-tema="melaza">
         {src ? (
           <video ref={video} src={src} poster={poster} controls={reproduciendo} preload="none" playsInline>
-            {subtitulos && <track kind="captions" src={subtitulos} srcLang="es" label="Español" default />}
+            {subtitulos && <track kind="captions" src={subtitulos} srcLang="es" label="Español" />}
           </video>
         ) : (
           <span className="mv-marco-patron" aria-hidden="true" />

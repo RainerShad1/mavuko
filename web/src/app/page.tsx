@@ -38,7 +38,7 @@ export default function Inicio() {
               <PalabraGiratoria palabras={["negocio", "restaurante", "tienda", "salón"]} />
             </Fragment>,
           ]}
-          bajada="Creamos sistemas a la medida que le ahorran tiempo a tu negocio. Los instalamos, los adaptamos y los mantenemos, desde La Romana."
+          bajada="Creamos sistemas a la medida que le ahorran tiempo a tu negocio. Los instalamos, los adaptamos y los mantenemos."
           acciones={
             <>
               <Boton href="#contacto" flecha>
@@ -50,11 +50,11 @@ export default function Inicio() {
             </>
           }
         />
-        <MarcoVideo asoma titulo="Mira cómo trabajamos" nota="Video en preparación" />
+        <MarcoVideo asoma titulo="Mira cómo trabajamos" src="/video/mavuko-promo.mp4" poster="/video/mavuko-promo-portada.webp" subtitulos="/video/mavuko-promo.vtt" />
 
         <Seccion id="que-hacemos" tema="suave">
           <Cabecera
-            titulo="Una empresa de tecnología de La Romana."
+            titulo="Una empresa de tecnología para negocios."
             entrada="Partimos de una base común y la adaptamos a cada negocio. Así no tienes que cambiar tu forma de trabajar para que el sistema te sirva."
           />
           <ul className="grid gap-[5px] sm:grid-cols-2 lg:grid-cols-4">
