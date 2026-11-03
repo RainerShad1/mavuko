@@ -34,4 +34,11 @@ export const PAGINAS = [
     captura: "/paginas/romana-compuservice.webp",
     alt: "Portada de la tienda en línea de Romana CompuService",
   },
+  {
+    nombre: "Mayelin Empanadas",
+    tipo: "Pedidos a domicilio con mapa, panel del negocio y avisos automáticos por WhatsApp en cada paso del pedido.",
+    href: "https://mayelin-empanadas.vercel.app/",
+    captura: "/paginas/mayelin-empanadas.webp",
+    alt: "Portada de la página de pedidos de Mayelin Empanadas",
+  },
 ];
