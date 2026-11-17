@@ -3,6 +3,7 @@
 !/.gitignore
 !/web/
 !/brand/
+!/colegios/
 
 /brand/*
 !/brand/tokens.css

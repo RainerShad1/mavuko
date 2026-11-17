@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Sistema administrativo · Colegio Paulo Freire</title>
+<link rel="icon" href="/assets/monograma.png">
+<style>
+:root{--navy:#04234d;--navy2:#0b3366;--green:#035036;--gold:#c39a42;--bg:#f5f3ee;--card:#fff;--ink:#1d2b3f;--muted:#6b778a;--line:#e8e3d8;--ok:#0f8a5f;--okbg:#e4f5ed;--warn:#b7791f;--warnbg:#fdf3dc;--bad:#c2410c;--badbg:#fde8dd;--info:#1f5f8b;--infobg:#e3eef7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--navy);color:#c9d5e6;padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow-y:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:0 8px 18px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:14px}
+.brand img{width:34px;background:#fff;border-radius:10px;padding:4px}
+.brand b{color:#fff;display:block;font-size:15px}.brand small{font-size:11px;opacity:.75}
+.navlbl{font-size:10.5px;letter-spacing:1.5px;font-weight:700;opacity:.5;padding:10px 12px 6px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:inherit;padding:10px 12px;border-radius:12px;font-size:13.5px;font-weight:600;text-align:left;margin-bottom:2px;white-space:nowrap}
+.nav button:hover{background:rgba(255,255,255,.06)}
+.nav button.on{background:#fff;color:var(--navy)}
+.nav .ico{width:22px;text-align:center;font-size:16px}
+.nav .badge{margin-left:auto;background:var(--gold);color:#fff;border-radius:999px;font-size:11px;padding:2px 8px}
+.nav .badge:empty{display:none}
+.side-foot{margin-top:auto;font-size:11.5px;opacity:.75;padding:14px 10px 0}
+.side-foot button{margin-top:8px;background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:6px 12px;font-size:11.5px}
+main{padding:26px 30px 60px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.top h1{font-size:24px;color:var(--navy)}
+.top p{color:var(--muted);font-size:13px;max-width:640px}
+.demo{background:var(--warnbg);color:var(--warn);font-weight:700;font-size:11px;letter-spacing:1px;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;font-size:13.5px;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--navy2)}
+.btn-g{background:var(--green);color:#fff}
+.btn-w{background:#25d366;color:#fff}
+.btn-r{background:var(--badbg);color:var(--bad)}
+.btn-o{background:#fff;border:1.5px solid var(--line);color:var(--navy)}
+.btn-sm{padding:7px 11px;font-size:12.5px;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.kpi{background:var(--card);border-radius:18px;padding:18px 20px;border:1px solid var(--line)}
+.kpi small{color:var(--muted);font-weight:600;font-size:12px}
+.kpi b{display:block;font-size:24px;color:var(--navy);margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi.g b{color:var(--ok)}.kpi.r b{color:var(--bad)}
+.bar{height:8px;background:#eef0f3;border-radius:99px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.alerts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.alert{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;cursor:pointer;text-align:left;transition:.15s}
+.alert:hover{border-color:var(--gold)}
+.alert .n{font-size:22px;font-weight:800;color:var(--navy);min-width:28px}
+.alert span{font-size:12.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.alert .e{font-size:20px}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.card{background:var(--card);border-radius:18px;border:1px solid var(--line);padding:20px;min-width:0}
+.card h2{font-size:15.5px;color:var(--navy);margin-bottom:4px}
+.card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+.chart{display:flex;align-items:flex-end;gap:14px;height:200px;padding-top:10px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.stack{width:100%;max-width:56px;position:relative;flex:1;display:flex;align-items:flex-end}
+.stack .exp{position:absolute;bottom:0;left:0;right:0;background:#eef0f3;border-radius:8px}
+.stack .got{position:relative;width:100%;background:var(--navy);border-radius:8px}
+.col .v{font-size:11px;font-weight:700;color:var(--navy)}.col .m{font-size:11.5px;color:var(--muted);font-weight:600}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:10px}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.list .row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.list .row:first-child{border-top:0}
+.av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12.5px;color:#fff;background:var(--navy2)}
+.who{flex:1;min-width:0}.who b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.who span{font-size:12px;color:var(--muted)}
+.amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--okbg);color:var(--ok)}.p-warn{background:var(--warnbg);color:var(--warn)}.p-bad{background:var(--badbg);color:var(--bad)}.p-mute{background:#eef0f3;color:var(--muted)}.p-info{background:var(--infobg);color:var(--info)}
+.tools{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.tools input,.tools select{padding:10px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 13.5px Montserrat,system-ui,sans-serif;background:#fff;min-width:0}
+.tools input{flex:1;min-width:200px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer}tr.click:hover td{background:#faf8f3}
+.tbl{overflow-x:auto}
+.kids{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;color:var(--navy)}
+.tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tab .c{margin-left:6px;background:var(--gold);color:#fff;border-radius:99px;padding:1px 7px;font-size:11px}
+.ov{position:fixed;inset:0;background:rgba(4,20,45,.45);display:none;z-index:40}
+.ov.show{display:block}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:#fff;z-index:50;transform:translateX(105%);transition:.3s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.drawer.show{transform:none}
+.dh{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center}
+.dh h2{font-size:18px;color:var(--navy)}.dh p{font-size:12.5px;color:var(--muted)}
+.x{margin-left:auto;background:#f1efe9;border:0;width:36px;height:36px;border-radius:50%;font-size:18px;color:var(--navy);flex:none}
+.db{padding:18px 22px;overflow:auto;flex:1}
+.stu{border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.stu h3{font-size:15px;color:var(--navy)}.stu .g{font-size:12px;color:var(--muted);margin-bottom:10px}
+.months{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.mo{border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;font-weight:700}
+.mo small{display:block;font-weight:600;font-size:10px;opacity:.8}
+.mo.ok{background:var(--okbg);color:var(--ok)}.mo.due{background:var(--warnbg);color:var(--warn)}.mo.late{background:var(--badbg);color:var(--bad)}.mo.fut{background:#f3f4f6;color:#9aa3b0}
+.df{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap}
+.df .btn{flex:1}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.97);opacity:0;pointer-events:none;width:min(480px,94vw);max-height:92vh;overflow:auto;background:#fff;border-radius:22px;z-index:60;transition:.2s;padding:24px}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.modal h2{color:var(--navy);font-size:19px;margin-bottom:4px}
+.modal .sub{color:var(--muted);font-size:12.5px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin:12px 0 6px}
+.modal input,.modal select,.modal textarea,.field{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:12px;font:500 14px Montserrat,system-ui,sans-serif;background:#fcfbf8;color:var(--ink)}
+textarea.field{resize:vertical;min-height:110px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chk{border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;font-size:12.5px;font-weight:600;background:#fff;color:var(--ink)}
+.chk.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.chk:disabled{opacity:.4;cursor:not-allowed}
+.total{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:14px;font-weight:700}
+.total b{font-size:19px;color:var(--navy)}
+.mfoot{display:flex;gap:10px;margin-top:18px}.mfoot .btn{flex:1}
+.rec{border:1.5px dashed var(--line);border-radius:16px;padding:18px;font-size:13px}
+.rec .rh{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px}
+.rec .rh img{width:30px}.rec .rh b{display:block;color:var(--navy)}
+.rec .li{display:flex;justify-content:space-between;gap:10px;padding:4px 0}
+.rec .li span:first-child{color:var(--muted)}
+.wa{background:#efe7dd;border-radius:16px;padding:14px;margin-top:6px}
+.bub{background:#fff;border-radius:10px;border-top-left-radius:2px;padding:9px 11px 18px;font-size:13px;line-height:1.5;position:relative;max-width:92%;white-space:pre-line;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.bub i{position:absolute;right:8px;bottom:3px;font-size:10px;color:#667781;font-style:normal}
+/* recordatorios */
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.rule{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start}
+.rule b{display:block;font-size:13.5px;color:var(--navy)}.rule span{font-size:12px;color:var(--muted)}
+.sw{margin-left:auto;flex:none;width:40px;height:24px;border-radius:99px;background:#d6d9df;position:relative;border:0;transition:.2s}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--ok)}.sw.on:after{left:19px}
+.locked{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#dbe4f1;border-radius:22px;padding:30px;display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:center;margin-bottom:16px}
+.locked h2{color:#fff;font-size:22px;margin:8px 0}
+.locked ul{list-style:none;font-size:13.5px}.locked li{padding:5px 0}.locked li:before{content:"✓  ";color:var(--gold);font-weight:800}
+.tagm{display:inline-block;background:var(--gold);color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;padding:5px 10px;border-radius:999px}
+.qitem{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.qitem:first-child{border-top:0}
+.cost{background:var(--navy);color:#dbe4f1;border-radius:18px;padding:18px 20px}
+.cost b{color:#fff;font-size:22px;display:block;margin:4px 0}
+.cost small{font-size:11.5px;opacity:.85;display:block;line-height:1.5}
+.cost .alt b{font-size:inherit;display:inline;margin:0}
+.cost .alt{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15)}
+.ticks{font-size:12px;font-weight:700}
+.t-sent{color:#8696a0}.t-read{color:#34b7f1}
+/* comprobantes */
+.comp{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:16px;border:1px solid var(--line);border-radius:16px;margin-bottom:12px;background:#fff}
+.voucher{background:linear-gradient(180deg,#f7f9fc,#eaf0f7);border-radius:12px;padding:12px;font-size:10.5px;color:#334;border:1px solid #dde5ef;align-self:start}
+.voucher b{display:block;color:#0b3366;font-size:11px;margin-bottom:6px}
+.voucher .vm{font-size:15px;font-weight:800;color:var(--ok);margin:6px 0}
+.voucher div{display:flex;justify-content:space-between;gap:6px;padding:1px 0}
+.vent{border-radius:12px;padding:10px 12px;margin-top:12px;font-size:12px}
+.vent .vt{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.vent .vt b{font-size:13.5px}.vent .vt span{color:var(--muted)}
+.vent small{display:block;color:var(--muted);margin-top:6px;line-height:1.4}
+.vbar{height:6px;border-radius:99px;background:rgba(0,0,0,.08);margin-top:8px;overflow:hidden}.vbar i{display:block;height:100%;border-radius:99px}
+.v-ok{background:var(--okbg)}.v-ok b{color:var(--ok)}.v-ok .vbar i{background:var(--ok)}
+.v-warn{background:var(--warnbg)}.v-warn b{color:var(--warn)}.v-warn .vbar i{background:var(--warn)}
+.v-bad{background:var(--badbg)}.v-bad b{color:var(--bad)}.v-bad .vbar i{background:var(--bad)}
+.v-off{background:#eef0f3}.v-off b{color:var(--muted)}
+.comp .act{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+/* circulares */
+.circ{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.estim{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.estim div{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px}
+.estim b{font-size:18px}
+.warnbox{background:var(--warnbg);color:#7a5210;border-radius:12px;padding:10px 12px;font-size:12.5px;margin-top:12px;line-height:1.45}
+/* simulador */
+.simwrap{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+.phone{border-radius:36px;background:#0b141a;padding:10px;box-shadow:0 40px 80px -30px rgba(4,35,77,.55)}
+.ptop{display:flex;align-items:center;gap:10px;background:#075e54;color:#fff;padding:13px 14px;border-radius:28px 28px 0 0}
+.ptop img{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;padding:3px}
+.ptop b{display:block;font-size:14px}.ptop small{font-size:11px;opacity:.85}
+.chat{background:#efe7dd;height:520px;overflow-y:auto;padding:14px 10px;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth}
+.m{max-width:85%;padding:7px 10px 17px;border-radius:10px;position:relative;font-size:13px;line-height:1.45;color:#111b21;white-space:pre-line;box-shadow:0 1px 1px rgba(0,0,0,.08);animation:pin .2s ease-out}
+.m i{position:absolute;right:8px;bottom:2px;font-size:10px;color:#667781;font-style:normal}
+.m.bot{background:#fff;align-self:flex-start;border-top-left-radius:2px}
+.m.me{background:#d9fdd3;align-self:flex-end;border-top-right-radius:2px}
+.m.img{padding:5px 5px 17px}
+.m .vch{width:170px}
+.qr{display:flex;flex-wrap:wrap;gap:5px;align-self:flex-start;max-width:92%}
+.qr button{background:#fff;border:0;color:#027eb5;font-weight:600;font-size:12.5px;padding:8px 11px;border-radius:10px;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.qr button:hover{background:#f5fbff}
+.typing{align-self:flex-start;background:#fff;border-radius:10px;padding:10px 14px;font-size:18px;letter-spacing:2px;color:#999}
+.pin{display:flex;gap:6px;background:#f0f2f5;padding:8px;border-radius:0 0 28px 28px}
+.pin input{flex:1;border:0;border-radius:20px;padding:10px 14px;font:500 13.5px Montserrat,system-ui,sans-serif;outline:none}
+.pin button{width:40px;height:40px;border-radius:50%;border:0;background:#00a884;color:#fff;font-size:16px;flex:none}
+@keyframes pin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.who-sel{display:flex;flex-direction:column;gap:8px}
+.persona{display:flex;gap:12px;align-items:center;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px;text-align:left}
+.persona.on{border-color:var(--navy);box-shadow:0 0 0 3px rgba(4,35,77,.08)}
+.persona b{display:block;font-size:13.5px;color:var(--navy)}.persona span{font-size:12px;color:var(--muted)}
+.feed .row{animation:pin .3s ease-out}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;background:var(--navy);color:#fff;padding:12px 18px;border-radius:14px;font-weight:600;z-index:80;transition:.25s;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);max-width:92vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{text-align:center;color:var(--muted);padding:26px 0}
+.hide{display:none!important}
+.mcards{display:none}
+.selst{padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;font:600 12.5px Montserrat,system-ui,sans-serif;background:#fff}
+@media(max-width:1100px){.simwrap{grid-template-columns:1fr}.phone{max-width:380px;margin:auto;width:100%}}
+@media(max-width:980px){.kpis,.alerts{grid-template-columns:1fr 1fr}.grid2,.rules,.circ,.locked{grid-template-columns:1fr}}
+@media(max-width:760px){
+ .app{grid-template-columns:1fr}
+ aside{position:fixed;bottom:0;top:auto;left:0;right:0;height:auto;flex-direction:row;padding:6px;z-index:30;border-radius:18px 18px 0 0;overflow-x:auto;overflow-y:hidden}
+ .brand,.side-foot,.navlbl{display:none}
+ .nav{display:flex;width:max-content;gap:2px}
+ .nav button{flex-direction:column;gap:2px;font-size:10px;padding:7px 8px;margin:0;align-items:center;text-align:center;position:relative;width:auto;min-width:64px}
+ .nav .badge{position:absolute;top:1px;right:6px;margin:0;padding:1px 6px;font-size:10px}
+ main{padding:18px 14px 100px}
+ .top h1{font-size:20px}
+ .kpi b{font-size:19px}.kpi{padding:14px}
+ .desk{display:none}.mcards{display:block}
+ .months{grid-template-columns:repeat(4,1fr)}
+ .comp{grid-template-columns:1fr}.voucher{max-width:220px}
+ .chat{height:460px}
+}
+.lbl{display:block;font-size:12px;font-weight:700;color:var(--navy);margin:12px 0 6px}
+#chatList .row{cursor:pointer;border-radius:12px;padding-left:8px;padding-right:8px}
+#chatList .row.on{background:#eef3ea}
+#chatList .who{min-width:0}
+#chatList .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.m .st{font-style:normal;margin-left:4px}
+.m .st.leido{color:#53bdeb}
+.vimg{width:100%;max-width:240px;border-radius:12px;border:1px solid var(--line);display:block;cursor:zoom-in}
+.login{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#04234d,#035036);display:grid;place-items:center;padding:20px}
+.login form{background:#fff;border-radius:22px;padding:30px;width:min(380px,100%);box-shadow:0 30px 60px -30px rgba(0,0,0,.5)}
+.login img{width:54px;display:block;margin:0 auto 10px}
+.login h2{text-align:center;color:var(--navy);margin:0 0 4px}
+.login p{text-align:center;color:var(--muted);font-size:13px;margin:0 0 14px}
+.login input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 14.5px Montserrat,system-ui,sans-serif;margin-top:8px;box-sizing:border-box}
+.login .btn{width:100%;justify-content:center;margin-top:16px}
+.login .er{color:var(--bad);font-size:13px;text-align:center;min-height:18px;margin-top:10px}
+.side-foot b{display:block;color:#fff}
+.busy{opacity:.6;pointer-events:none}
+</style></head><body>
+<div class="login hide" id="login"><form id="loginForm"><img src="/assets/monograma.png" alt=""><h2>Colegio Paulo Freire</h2><p>Sistema administrativo</p><input id="lUser" placeholder="Usuario" autocomplete="username" required><input id="lPass" type="password" placeholder="Contraseña" autocomplete="current-password" required><button class="btn btn-p" type="submit">Entrar</button><div class="er" id="lErr"></div></form></div>
+
+<div class="app">
+ <aside>
+  <div class="brand"><img src="/assets/monograma.png" alt=""><span><b>Paulo Freire</b><small>Sistema administrativo</small></span></div>
+  <nav class="nav" id="nav">
+   <div class="navlbl">GENERAL</div>
+   <button data-v="panel" class="on"><span class="ico">📊</span>Panel</button>
+   <button data-v="asistente"><span class="ico">💬</span>WhatsApp<span class="badge" id="bChat"></span></button>
+   <div class="navlbl">COBROS</div>
+   <button data-v="familias"><span class="ico">👨‍👩‍👧</span>Familias</button>
+   <button data-v="pagos"><span class="ico">💳</span>Pagos</button>
+   <button data-v="comprobantes"><span class="ico">🧾</span>Comprobantes<span class="badge" id="bComp"></span></button>
+   <div class="navlbl">ATENCIÓN</div>
+   <button data-v="solicitudes"><span class="ico">📥</span>Solicitudes<span class="badge" id="bSol"></span></button>
+   <button data-v="interesados"><span class="ico">🌱</span>Interesados<span class="badge" id="bInt"></span></button>
+   <button data-v="circulares"><span class="ico">📢</span>Circulares</button>
+   <button data-v="avisos"><span class="ico">🔔</span>Recordatorios<span class="badge" id="qBadge"></span></button>
+  </nav>
+  <div class="side-foot"><b id="uNombre"></b><span id="demoNote"></span><br><button id="reset" class="hide">↺ Reiniciar datos de prueba</button><br><button id="logout">Cerrar sesión</button></div>
+ </aside>
+ <main>
+  <!-- PANEL -->
+  <section id="v-panel">
+   <div class="top"><div><h1 id="saludo">Hola 👋</h1><p>Resumen del colegio · Año escolar 2026–2027</p></div><span class="demo" id="demoTag">MODO DEMO · DATOS DE PRUEBA</span></div>
+   <div class="kpis">
+    <div class="kpi"><small>Estudiantes</small><b id="kEst">0</b><span id="kFam">0 familias</span></div>
+    <div class="kpi g"><small id="kCobLbl">Cobrado este mes</small><b id="kCob">RD$0</b><span id="kCobSub"></span><div class="bar"><i id="kBar"></i></div></div>
+    <div class="kpi"><small id="kPendLbl">Por cobrar</small><b id="kPend">RD$0</b><span id="kPendSub"></span></div>
+    <div class="kpi r"><small>En mora (meses vencidos)</small><b id="kMora">RD$0</b><span id="kMoraSub"></span></div>
+   </div>
+   <div class="alerts">
+    <button class="alert" data-go="comprobantes"><span class="e">🧾</span><span class="n" id="aComp">0</span><span id="aCompSub">Comprobantes por revisar</span></button>
+    <button class="alert" data-go="solicitudes"><span class="e">🤒</span><span class="n" id="aAus">0</span><span>Ausencias reportadas hoy</span></button>
+    <button class="alert" data-go="solicitudes" data-tab="citas"><span class="e">📅</span><span class="n" id="aCit">0</span><span>Citas por confirmar</span></button>
+    <button class="alert" data-go="interesados"><span class="e">🌱</span><span class="n" id="aInt">0</span><span>Nuevos interesados</span></button>
+   </div>
+   <div class="grid2">
+    <div class="card"><h2>Cobrado vs. esperado por mes</h2><p class="sub">Mensualidades del año escolar</p><div class="chart" id="chart"></div>
+     <div class="legend"><span><i style="background:var(--navy)"></i>Cobrado</span><span><i style="background:#eef0f3"></i>Esperado</span></div></div>
+    <div class="card"><h2>Familias en mora</h2><p class="sub">Con meses vencidos sin pagar</p><div class="list" id="moraList"></div></div>
+   </div>
+   <div class="card" style="margin-top:16px"><h2>Últimos pagos registrados</h2><p class="sub">Incluye los aprobados desde comprobantes de WhatsApp</p><div class="list" id="lastPays"></div></div>
+  </section>
+
+  <!-- WHATSAPP -->
+  <section id="v-asistente" class="hide">
+   <div class="top"><div><h1>WhatsApp del colegio</h1><p>Conversaciones reales con el asistente. Si un padre pide hablar con una persona, la secretaría le responde desde aquí.</p></div><span class="demo" id="waTag"></span></div>
+   <div class="simwrap">
+    <div class="phone">
+     <div class="ptop"><img src="/assets/monograma.png" alt=""><span><b id="chName">Elige una conversación</b><small id="chSub">—</small></span></div>
+     <div class="chat" id="chat"><p class="empty" style="color:#667781">Aquí aparecen los mensajes</p></div>
+     <form class="pin" id="pinForm"><input id="pinTxt" placeholder="Responder como secretaría" autocomplete="off" disabled><button type="submit" aria-label="Enviar" id="pinBtn" disabled>➤</button></form>
+    </div>
+    <div>
+     <div class="card"><h2>Conversaciones</h2><p class="sub">Se actualiza sola cada pocos segundos</p><div class="list" id="chatList"><p class="empty">Aún no hay mensajes</p></div></div>
+     <div class="card" style="margin-top:16px"><h2>Probar con tu teléfono</h2><p class="sub">Vincula tu número a una familia de prueba. Luego escribe <b>Hola</b> al <b id="waNum"></b> y el asistente te reconocerá como ese padre.</p>
+      <label class="lbl">Familia de prueba</label><select class="field" id="vFam"></select>
+      <label class="lbl">Tu número de WhatsApp</label><input class="field" id="vTel" placeholder="809-000-0000" inputmode="tel">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-p btn-sm" id="vBtn">Vincular número</button><a class="btn btn-w btn-sm" id="vWa" target="_blank" rel="noopener">Abrir WhatsApp →</a></div>
+      <p class="sub" style="margin-top:10px">Si escribes desde un número que no está vinculado, el asistente te tratará como una familia interesada en inscribir.</p>
+     </div>
+    </div>
+   </div>
+  </section>
+  
+<!-- FAMILIAS -->
+  <section id="v-familias" class="hide">
+   <div class="top"><div><h1>Familias</h1><p>Toca una familia para ver su estado de cuenta</p></div><button class="btn btn-p" data-pay>＋ Registrar pago</button></div>
+   <div class="tools"><input id="q" placeholder="Buscar tutor, estudiante o teléfono…"><select id="fEst"><option value="">Todos los estados</option><option value="ok">Al día</option><option value="warn">Por vencer</option><option value="bad">En mora</option></select><select id="fNiv"><option value="">Todos los niveles</option><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div>
+   <div class="card" style="padding:6px 8px">
+    <div class="tbl desk"><table><thead><tr><th>Tutor</th><th>Estudiantes</th><th>Teléfono</th><th>Estado</th><th style="text-align:right">Debe</th></tr></thead><tbody id="famBody"></tbody></table></div>
+    <div class="list mcards" id="famCards" style="padding:4px 8px"></div>
+   </div>
+  </section>
+
+  <!-- PAGOS -->
+  <section id="v-pagos" class="hide">
+   <div class="top"><div><h1>Pagos</h1><p>Historial de pagos registrados</p></div><button class="btn btn-p" data-pay>＋ Registrar pago</button></div>
+   <div class="tools"><input id="qp" placeholder="Buscar por tutor, estudiante o recibo…"><select id="fMet"><option value="">Todos los métodos</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select></div>
+   <div class="card" style="padding:6px 8px">
+    <div class="tbl desk"><table><thead><tr><th>Recibo</th><th>Fecha</th><th>Estudiante</th><th>Concepto</th><th>Método</th><th style="text-align:right">Monto</th></tr></thead><tbody id="payBody"></tbody></table></div>
+    <div class="list mcards" id="payCards" style="padding:4px 8px"></div>
+   </div>
+  </section>
+
+  <!-- COMPROBANTES -->
+  <section id="v-comprobantes" class="hide">
+   <div class="top"><div><h1>Comprobantes de transferencia</h1><p>Los padres envían la foto por WhatsApp. Al aprobarla, el pago queda registrado y el padre recibe su recibo. Meta da <b>24 horas</b> desde el mensaje del padre para responder como mensaje de servicio; después, el recibo sale como plantilla con costo.</p></div></div>
+   <div class="tabs"><button class="tab on" data-ctab="pend">Por revisar<span class="c" id="cPend"></span></button><button class="tab" data-ctab="hist">Revisados</button></div>
+   <div id="compList"></div>
+  </section>
+
+  <!-- SOLICITUDES -->
+  <section id="v-solicitudes" class="hide">
+   <div class="top"><div><h1>Solicitudes por WhatsApp</h1><p>Ausencias, citas y conversaciones que el bot pasó a la secretaría</p></div></div>
+   <div class="tabs"><button class="tab on" data-stab="ausencias">🤒 Ausencias<span class="c" id="sAus"></span></button><button class="tab" data-stab="citas">📅 Citas<span class="c" id="sCit"></span></button><button class="tab" data-stab="humano">👩‍💼 Atención humana<span class="c" id="sHum"></span></button></div>
+   <div class="card" style="padding:8px 18px"><div class="list" id="solList"></div></div>
+  </section>
+
+  <!-- INTERESADOS -->
+  <section id="v-interesados" class="hide">
+   <div class="top"><div><h1>Nuevos interesados</h1><p>Números no registrados que escribieron al WhatsApp. El bot les dio la información de admisiones y guardó el contacto.</p></div></div>
+   <div class="card" style="padding:6px 8px">
+    <div class="tbl desk"><table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Interés</th><th>Fecha</th><th>Estado</th><th></th></tr></thead><tbody id="intBody"></tbody></table></div>
+    <div class="list mcards" id="intCards" style="padding:4px 8px"></div>
+   </div>
+  </section>
+
+  <!-- CIRCULARES -->
+  <section id="v-circulares" class="hide">
+   <div class="top"><div><h1>Circulares por WhatsApp</h1><p>Envía avisos a los padres de los cursos que elijas. El costo se calcula antes de enviar.</p></div><span class="demo" id="cState">MÓDULO DESACTIVADO</span></div>
+   <div class="locked" id="cLocked">
+    <div><span class="tagm">MÓDULO ADICIONAL</span><h2>Circulares por WhatsApp</h2><p>Funciona solo si el colegio lo solicita. Cada circular cuesta aprox. US$0.0113 por padre (tarifa de Meta), que se paga aparte. El costo se muestra antes de cada envío.</p>
+     <button class="btn btn-w" id="cActivate" style="margin-top:16px">Activar módulo</button></div>
+    <ul><li>Envío a todo el colegio, por nivel o por grado</li><li>Plantillas listas (reuniones, suspensiones, actividades)</li><li>Envío inmediato o programado</li><li>Costo calculado antes de enviar</li></ul>
+   </div>
+   <div class="circ" id="cOn">
+    <div class="card">
+     <h2>Nueva circular</h2>
+     <label>Plantilla</label>
+     <select class="field" id="cTpl"><option value="">— Escribir desde cero —</option><option value="reunion">Reunión de padres</option><option value="suspension">Suspensión de docencia</option><option value="actividad">Actividad escolar</option><option value="notas">Entrega de calificaciones</option></select>
+     <label>Título</label><input class="field" id="cTit" placeholder="Ej.: Reunión de padres">
+     <label>Mensaje</label><textarea class="field" id="cMsg" placeholder="Escribe el aviso…"></textarea>
+     <label>Enviar a</label>
+     <div class="chips" id="cDest"></div>
+     <label>Cuándo</label>
+     <div class="chips"><button class="chk on" data-when="now">Ahora</button><button class="chk" data-when="prog">Programar: mañana 7:00 a. m.</button></div>
+     <label>Vista previa</label>
+     <div class="wa"><div class="bub" id="cPrev"></div></div>
+    </div>
+    <div>
+     <div class="cost">
+      <small>Costo estimado de esta circular</small>
+      <b id="cCost">US$0.00</b>
+      <small id="cCostSub"></small>
+      <div class="estim"><div><small>Padres</small><b id="cN">0</b></div><div><small>Estudiantes</small><b id="cE">0</b></div></div>
+      <div class="alt"><small id="cAlt"></small></div>
+      <button class="btn btn-w" id="cSend" style="width:100%;margin-top:14px">Enviar circular</button>
+     </div>
+     <div class="card" style="margin-top:16px"><h2>Enviadas</h2><p class="sub" id="cTot"></p><div class="list" id="cHist"></div></div>
+     <button class="btn btn-o" id="cDeactivate" style="margin-top:12px;width:100%">Desactivar módulo</button>
+    </div>
+   </div>
+  </section>
+
+  <!-- RECORDATORIOS -->
+  <section id="v-avisos" class="hide">
+   <div class="top"><div><h1>Recordatorios de pago</h1><p>Avisos automáticos por WhatsApp cuando una mensualidad está por vencer o está vencida.</p></div><span class="demo" id="modState">MÓDULO DESACTIVADO</span></div>
+   <div class="locked" id="locked">
+    <div><span class="tagm">MÓDULO ADICIONAL</span><h2>Recordatorios automáticos</h2><p>Funciona solo si el colegio lo activa. Cada mensaje tiene un costo de Meta de aprox. US$0.0113, que se paga aparte.</p>
+     <button class="btn btn-w" id="activate" style="margin-top:16px">Activar módulo</button></div>
+    <ul><li>Aviso 3 días antes del vencimiento</li><li>Aviso el día de pago</li><li>Aviso de mora a los 3 y 10 días del vencimiento</li><li>Confirmación de entrega y lectura</li></ul>
+   </div>
+   <div id="modOn" class="hide">
+    <div class="rules">
+     <div class="rule"><span style="font-size:22px">⏰</span><div><b>Aviso previo</b><span>3 días antes del vencimiento (día 12)</span></div><button class="sw" data-rule="previo"></button></div>
+     <div class="rule"><span style="font-size:22px">📅</span><div><b>Día de pago</b><span>El mismo día 15 a las 8:00 a. m.</span></div><button class="sw" data-rule="dia"></button></div>
+     <div class="rule"><span style="font-size:22px">⚠️</span><div><b>Mora</b><span>A los 3 y a los 10 días del vencimiento</span></div><button class="sw" data-rule="mora"></button></div>
+    </div>
+    <div class="grid2">
+     <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2>Cola de hoy</h2><p class="sub" style="margin:0" id="qSub"></p></div><button class="btn btn-w" id="sendAll">Enviar ahora</button></div><div class="list" id="queue" style="margin-top:10px"></div></div>
+     <div>
+      <div class="cost"><small>Costo estimado de recordatorios este mes</small><b id="costV">US$0.00</b><small id="costSub"></small></div>
+      <div class="card" style="margin-top:16px"><h2>Enviados</h2><p class="sub">Estado de entrega en WhatsApp</p><div class="list" id="sentLog"></div></div>
+      <button class="btn btn-o" id="deactivate" style="margin-top:12px;width:100%">Desactivar módulo</button>
+     </div>
+    </div>
+   </div>
+  </section>
+ </main>
+</div>
+
+<div class="ov" id="ov"></div>
+<div class="drawer" id="drawer"><div class="dh"><div class="av" id="dAv"></div><div><h2 id="dName"></h2><p id="dSub"></p></div><button class="x" data-close>×</button></div><div class="db" id="dBody"></div>
+ <div class="df"><button class="btn btn-w" id="dWa">Enviar estado de cuenta</button><button class="btn btn-p" id="dPay">＋ Registrar pago</button></div></div>
+
+<div class="modal" id="mPay">
+ <h2>Registrar pago</h2><p class="sub">Selecciona el estudiante y los meses que paga</p>
+ <label>Estudiante</label><select id="pStu"></select>
+ <label>Meses</label><div class="chips" id="pMonths"></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+  <div><label>Método</label><select id="pMet"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select></div>
+  <div><label>Referencia</label><input id="pRef" placeholder="Opcional"></div>
+ </div>
+ <div class="total"><span>Total</span><b id="pTot">RD$0</b></div>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" id="pSave">Guardar pago</button></div>
+</div>
+
+<div class="modal" id="mRec">
+ <h2>Pago registrado ✅</h2><p class="sub">Recibo generado automáticamente</p>
+ <div class="rec" id="recBody"></div>
+ <label>Mensaje que recibe el tutor</label><div class="wa"><div class="bub" id="recWa"></div></div>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-w" id="recSend">Enviar recibo por WhatsApp</button></div>
+</div>
+
+<div class="modal" id="mWa">
+ <h2 id="waTitle">Vista previa</h2><p class="sub" id="waSub"></p>
+ <div class="wa"><div class="bub" id="waText"></div></div>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-w" id="waSend">Enviar ahora</button></div>
+</div>
+
+<div class="modal" id="mRej">
+ <h2>Rechazar comprobante</h2><p class="sub">El padre recibirá el motivo por WhatsApp</p>
+ <div class="chips" id="rejOpts"><button class="chk on">El monto no coincide</button><button class="chk">No se ve claro</button><button class="chk">No aparece en el banco</button><button class="chk">Comprobante duplicado</button></div>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-r" id="rejOk">Rechazar y avisar</button></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/panel/app.js"></script>
+</body></html>

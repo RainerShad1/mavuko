@@ -1,0 +1,4 @@
+DATABASE_URL=postgresql://usuario:clave@host/neondb?sslmode=require
+WA_TOKEN=
+WA_VERIFY_TOKEN=
+WA_APP_SECRET=
