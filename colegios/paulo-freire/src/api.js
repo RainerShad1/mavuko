@@ -14,7 +14,7 @@ const iso = (d) => (d ? new Date(d).toISOString() : null);
 const horaDe = (d) => new Date(new Date(d).getTime() + COLEGIO.zonaHoraria * 3600e3).toISOString().slice(11, 16);
 
 export async function estado(env, db, user) {
-  const [cfg, fams, ests, pays, comps, aus, citas, hum, ints, circs, sent, lastIn] = await Promise.all([
+  const [cfg, fams, ests, pays, comps, aus, citas, hum, ints, circs, sent, lastIn, esperando] = await Promise.all([
     leerConfig(db),
     db.q('select * from familias order by id'),
     db.q('select * from estudiantes order by id'),
@@ -27,6 +27,9 @@ export async function estado(env, db, user) {
     db.q('select * from circulares order by fecha'),
     db.q("select e.*, f.tutor from enviados e join familias f on f.id = e.familia_id where e.fecha > now() - interval '7 days' order by e.fecha"),
     db.q("select f.id, max(m.fecha) as f from familias f join mensajes m on m.tel = f.tel_wa and m.dir = 'in' group by f.id"),
+    // Conversaciones que pidieron una persona y aún no se marcan como atendidas
+    db.q(`select h.tel, min(h.nombre) as nombre, max(m.fecha) as ult from humano h
+          left join mensajes m on m.tel = h.tel and m.dir = 'in' where not h.ok group by h.tel`),
   ]);
   const hoyIni = Date.parse(hoyRD() + 'T00:00:00Z') - COLEGIO.zonaHoraria * 3600e3;
   return {
@@ -48,6 +51,7 @@ export async function estado(env, db, user) {
     circs: circs.map((c) => ({ id: c.id, tit: c.tit, msg: c.msg, dest: c.dest, n: c.n, costo: Number(c.costo), fecha: iso(c.fecha), prog: c.prog })),
     sent: sent.map((s) => ({ fam: s.familia_id, tutor: s.tutor, tipo: s.tipo, hora: horaDe(s.fecha), est: s.estado, rec: s.rec, hoy: s.rec && new Date(s.fecha).getTime() >= hoyIni })),
     lastIn: Object.fromEntries(lastIn.map((r) => [r.id, iso(r.f)])),
+    esperando: esperando.map((e) => ({ tel: e.tel, nombre: e.nombre, ult: iso(e.ult) })),
   };
 }
 

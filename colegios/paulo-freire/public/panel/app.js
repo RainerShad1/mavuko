@@ -302,15 +302,19 @@ function preview(id) {
 }
 
 // ================= WhatsApp (conversaciones reales) =================
-let CHATS = [], curChat = null, MSGS = [];
+let CHATS = [], curChat = null, MSGS = [], cfil = 'atencion';
 async function loadChats() {
   CHATS = await api('/chats');
-  const pend = CHATS.filter((c) => c.humano).length; $('#bChat').textContent = pend || '';
   renderChatList();
   if (curChat) await openChat(curChat, true);
 }
 function renderChatList() {
-  $('#chatList').innerHTML = CHATS.length ? CHATS.map((c) => `<div class="row ${c.tel === curChat ? 'on' : ''}" data-chat="${c.tel}"><div class="av" style="background:${c.fam ? colorAv(c.fam) : '#7a5a1e'}">${esc(ini(c.nombre)) || '?'}</div><div class="who"><b>${esc(c.nombre)}</b><span>${c.dir === 'out' ? '↪ ' : ''}${esc(c.texto.split('\n')[0])}</span></div><div style="text-align:right;flex:none"><small style="color:var(--muted)">${horaDe(c.fecha)}</small>${c.humano ? '<div><span class="pill p-warn">Secretaría</span></div>' : c.fam ? '' : '<div><span class="pill p-info">Nuevo</span></div>'}</div></div>`).join('') : '<p class="empty">Aún no hay mensajes. Escribe al número del colegio para probar.</p>';
+  const aten = CHATS.filter((c) => c.humano);
+  $('#cAten').textContent = aten.length || '';
+  document.querySelectorAll('[data-cfil]').forEach((b) => b.classList.toggle('on', b.dataset.cfil === cfil));
+  const lista = cfil === 'atencion' ? aten : CHATS;
+  if (cfil === 'atencion' && !lista.length) { $('#chatList').innerHTML = `<p class="empty">Nadie está esperando a una persona ✅<br><small>El asistente está atendiendo ${CHATS.length ? CHATS.length + ' conversaci' + (CHATS.length === 1 ? 'ón' : 'ones') : 'las conversaciones'}. Puedes verlas en "Todas".</small></p>`; return; }
+  $('#chatList').innerHTML = lista.length ? lista.map((c) => `<div class="row ${c.tel === curChat ? 'on' : ''}" data-chat="${c.tel}" data-chatid="${c.tel}"><div class="av" style="background:${c.fam ? colorAv(c.fam) : '#7a5a1e'}">${esc(ini(c.nombre)) || '?'}</div><div class="who"><b>${esc(c.nombre)}</b><span>${c.dir === 'out' ? '↪ ' : ''}${esc(c.texto.split('\n')[0])}</span></div><div style="text-align:right;flex:none"><small style="color:var(--muted)">${horaDe(c.fecha)}</small>${c.humano ? '<div><span class="pill p-warn">Secretaría</span></div>' : c.fam ? '' : '<div><span class="pill p-info">Nuevo</span></div>'}</div></div>`).join('') : '<p class="empty">Aún no hay mensajes. Escribe al número del colegio para probar.</p>';
 }
 async function openChat(tel, silencioso) {
   curChat = tel;
@@ -492,6 +496,7 @@ $('#bFile').onchange = (e) => {
 document.addEventListener('click', (e) => {
   const t = e.target;
   const wt = t.closest('[data-wtab]'); if (wt) { wtab = wt.dataset.wtab; renderWeb(); return; }
+  const cf = t.closest('[data-cfil]'); if (cf) { cfil = cf.dataset.cfil; renderChatList(); return; }
   const tp = t.closest('[data-tipo]'); if (tp) { tipoPub = tp.dataset.tipo; document.querySelectorAll('[data-tipo]').forEach((b) => b.classList.toggle('on', b === tp)); return; }
   const qf = t.closest('[data-qfoto]'); if (qf) { NUEVAS.splice(+qf.dataset.qfoto, 1); previewPub(); return; }
   const pw = t.closest('[data-pweb]'); if (pw) { act(pw, async () => { await api('/publicaciones/' + pw.dataset.pweb, { web: pw.dataset.v2 === '1' }); await cargarWeb(); }); return; }
@@ -503,6 +508,16 @@ document.addEventListener('change', (e) => {
   const gv = e.target.closest('[data-gvis]'); if (gv) act(null, async () => { await api('/galeria/' + gv.dataset.gvis, { visible: gv.checked }); await cargarWeb(); });
   const gt = e.target.closest('[data-gtxt]'); if (gt) act(null, async () => { await api('/galeria/' + gt.dataset.gtxt, { texto: gt.value }); toast('Descripción guardada'); });
 });
+
+// Avisos del sistema operativo (aparecen aunque el panel esté en otra pestaña)
+function estadoAvisos() {
+  const b = $('#avisosBtn'); if (!b) return;
+  if (!('Notification' in window)) { b.classList.add('hide'); return; }
+  b.textContent = Notification.permission === 'granted' ? '🔔 Avisos activados' : Notification.permission === 'denied' ? '🔕 Avisos bloqueados' : '🔔 Activar avisos';
+  b.disabled = Notification.permission !== 'default';
+}
+$('#avisosBtn').onclick = async () => { try { await Notification.requestPermission(); } catch {} estadoAvisos(); if (Notification.permission === 'granted') { sonar(); toast('Listo: te avisaremos cuando alguien pida hablar con una persona'); } };
+estadoAvisos();
 
 // ================= Login =================
 function quitarCarga() { const c = $('#cargando'); if (c && !c.classList.contains('fuera')) { c.classList.add('fuera'); setTimeout(() => c.remove(), 600); } }
@@ -518,8 +533,43 @@ $('#loginForm').onsubmit = async (e) => {
 
 // ================= Arranque y actualización automática =================
 // Avisa cuando llega algo nuevo por WhatsApp (comprobantes, ausencias, citas, etc.)
-let vistos = null;
+let vistos = null, ultEsperando = null;
+// Sonido corto generado en el navegador (sin archivos)
+function sonar() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    [[880, 0], [1320, 0.16]].forEach(([f, t]) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = f; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.35);
+      o.connect(g).connect(ac.destination); o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.4);
+    });
+  } catch { /* sin audio */ }
+}
+function notificar(titulo, cuerpo, tel) {
+  sonar();
+  try {
+    if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+      const n = new Notification(titulo, { body: cuerpo, icon: '/assets/monograma.png', tag: 'pf-' + tel });
+      n.onclick = () => { window.focus(); go('asistente'); act(null, () => openChat(tel)); n.close(); };
+    }
+  } catch { /* sin notificaciones */ }
+}
+// Solo suena cuando alguien pide una persona o escribe de nuevo mientras espera
+function avisarAtencion() {
+  const ahora = Object.fromEntries((DB.esperando || []).map((e) => [e.tel, e.ult || '']));
+  if (ultEsperando) {
+    for (const e of DB.esperando || []) {
+      const antes = ultEsperando[e.tel];
+      if (antes === undefined) { notificar(`${e.nombre} quiere hablar con la secretaría`, 'Toca para abrir la conversación', e.tel); toast(`👩‍💼 ${e.nombre} quiere hablar con la secretaría`); }
+      else if (e.ult && e.ult > antes) notificar(`Nuevo mensaje de ${e.nombre}`, 'Está esperando respuesta de una persona', e.tel);
+    }
+  }
+  ultEsperando = ahora;
+  $('#bChat').textContent = (DB.esperando || []).length || '';
+}
 function avisarNuevos() {
+  avisarAtencion();
   const ids = {
     comp: DB.comps.filter((c) => c.estado === 'pend').map((c) => c.id),
     aus: DB.aus.map((a) => a.id), cit: DB.citas.map((c) => c.id),
@@ -531,7 +581,6 @@ function avisarNuevos() {
     nuevos('comp').forEach((id) => { const c = DB.comps.find((x) => x.id === id); msgs.push(`🧾 Nuevo comprobante de ${fam(c.fam)?.tutor || ''}`); });
     nuevos('aus').forEach((id) => { const a = DB.aus.find((x) => x.id === id); msgs.push(`🤒 Ausencia: ${stu(a.est)?.nombre || ''}`); });
     nuevos('cit').forEach(() => msgs.push('📅 Nueva cita por confirmar'));
-    nuevos('hum').forEach((id) => { const h = DB.humano.find((x) => x.id === id); msgs.push(`👩‍💼 ${h.nombre} quiere hablar con la secretaría`); });
     nuevos('int').forEach((id) => { const i = DB.ints.find((x) => x.id === id); msgs.push(`🌱 Nuevo interesado: ${i.nombre}`); });
     if (msgs.length) toast(msgs.join(' · '));
   }

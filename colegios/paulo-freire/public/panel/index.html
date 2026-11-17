@@ -212,7 +212,9 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.5}
 .lbl{display:block;font-size:12px;font-weight:700;color:var(--navy);margin:12px 0 6px}
 #chatList .row{cursor:pointer;border-radius:12px;padding-left:8px;padding-right:8px}
 #chatList .row.on{background:#eef3ea}
-#chatList .who{min-width:0}
+#chatList .who{min-width:0;flex:1}
+.simwrap>div{min-width:0}
+#chatList .row{min-width:0}
 #chatList .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .m .st{font-style:normal;margin-left:4px}
 .m .st.leido{color:#53bdeb}
@@ -371,7 +373,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
      <form class="pin" id="pinForm"><input id="pinTxt" placeholder="Responder como secretaría" autocomplete="off" disabled><button type="submit" aria-label="Enviar" id="pinBtn" disabled>➤</button></form>
     </div>
     <div>
-     <div class="card"><h2>Conversaciones</h2><p class="sub">Se actualiza sola cada pocos segundos</p><div class="list" id="chatList"><p class="empty">Aún no hay mensajes</p></div></div>
+     <div class="card"><div class="row-head" style="margin-bottom:10px"><div><h2>Conversaciones</h2><p class="sub" style="margin:0">El asistente atiende solo. Aquí te avisamos cuando alguien pide hablar con una persona.</p></div><button class="btn btn-o btn-sm" id="avisosBtn" type="button">🔔 Activar avisos</button></div><div class="tabs" style="margin-bottom:8px"><button class="tab on" data-cfil="atencion" type="button">Necesitan atención<span class="c" id="cAten"></span></button><button class="tab" data-cfil="todas" type="button">Todas</button></div><div class="list" id="chatList"><p class="empty">Aún no hay mensajes</p></div></div>
      <div class="card" style="margin-top:16px"><h2>Probar con tu teléfono</h2><p class="sub">Vincula tu número a una familia de prueba. Luego escribe <b>Hola</b> al <b id="waNum"></b> y el asistente te reconocerá como ese padre.</p>
       <label class="lbl">Familia de prueba</label><select class="field" id="vFam"></select>
       <label class="lbl">Tu número de WhatsApp</label><input class="field" id="vTel" placeholder="809-000-0000" inputmode="tel">
