@@ -6,6 +6,8 @@ export const COLEGIO = {
   nombreLargo: 'Instituto Dominicano Paulo Freire',
   whatsapp: '18298531204',
   telefono: '829-853-1204',
+  telefonoOficina: '809-813-1059',
+  direccion: 'Dr. Teófilo Ferry #35, Ens. María Rubio, La Romana',
   ubicacion: 'https://www.google.com/maps/place/Colegio+Instituto+Dominicano+Paulo+Freire/@18.4322493,-68.9674235,19z',
   zonaHoraria: -4, // República Dominicana (UTC-4, sin horario de verano)
   diaVence: 15,
@@ -27,8 +29,8 @@ export const COLEGIO = {
 export const FAQR = {
   horario: '🕗 *Horario*\nInicial: 7:30 a. m. – 12:00 m.\nPrimaria y Secundaria: 7:30 a. m. – 1:30 p. m.\nSecretaría: lunes a viernes, 7:30 a. m. – 3:00 p. m.',
   utiles: '📚 La lista de útiles de cada grado está disponible en la secretaría y en nuestra página web.',
-  uniforme: '👕 *Uniforme*\nPolo blanco con el logo, pantalón o falda azul marino y zapatos negros. Los viernes: uniforme deportivo.',
-  ubicacion: `📍 *Ubicación*\n${COLEGIO.ubicacion}\n\nHorario de oficina: 7:30 a. m. – 3:00 p. m.`,
+  uniforme: '👕 *Uniforme*\nPolo rojo con el logo del colegio y pantalón o falda azul marino. Para más detalles, consulte en la secretaría.',
+  ubicacion: `📍 *Ubicación*\n${COLEGIO.direccion}\n${COLEGIO.ubicacion}\n\nTeléfono: ${COLEGIO.telefonoOficina}\nHorario de oficina: 7:30 a. m. – 3:00 p. m.`,
   calendario: '📅 *Próximas fechas*\n• 2/12 Reunión de padres y entrega de calificaciones\n• 12/12 Acto navideño\n• 18/12 Inicio de vacaciones de Navidad\n• 8/1 Regreso a clases',
   pagar: `💳 *Formas de pago*\n• En efectivo o tarjeta en la secretaría\n• Por transferencia:\n${COLEGIO.cuentas}\n\nSi transfiere, envíenos la foto del comprobante por aquí y le llega su recibo.`,
   inscripcion: '📝 *Inscripciones abiertas*\nOfrecemos Nivel Inicial, Primario y Secundario.\nRequisitos: acta de nacimiento, récord de notas, 2 fotos 2x2 y certificado médico.',

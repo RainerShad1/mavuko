@@ -5,6 +5,7 @@ import { leerConfig, guardarConfig, nuevoId, nuevoRecibo, telWA, telBonito } fro
 import { enviar, ventanaAbierta, VENTANA } from './wa.js';
 import { enviarAFamilia, enviarRecordatorios, colaRecordatorios, textoRecibo, primerNombre } from './avisos.js';
 import { sembrar } from './seed.js';
+import { apiContenido } from './contenido.js';
 
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers } });
@@ -79,6 +80,10 @@ export async function api(req, env, db, user, ctx) {
     if (cfg.modoDemo && !(await db.one('select 1 as x from familias limit 1'))) await sembrar(db, hoyRD());
     return json(await estado(env, db, user));
   }
+
+  // ---- Página web y redes ----
+  const c = await apiContenido(req, env, db, p, m, body, json, err);
+  if (c) return c;
 
   // ---- Pagos ----
   if (p === '/pagos' && m === 'POST') {

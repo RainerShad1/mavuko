@@ -9,7 +9,7 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*", "/webhook", "/panel"]
+    "run_worker_first": ["/api/*", "/webhook", "/panel", "/media/*"]
   },
   // 12:00 UTC = 8:00 a. m. en República Dominicana
   "triggers": { "crons": ["0 12 * * *"] },
@@ -21,4 +21,5 @@
   // Secretos (se configuran en Cloudflare, nunca en este archivo):
   //   DATABASE_URL, WA_TOKEN, WA_VERIFY_TOKEN, WA_APP_SECRET
   // Opcionales: WA_PLANTILLA_AVISO, WA_PLANTILLA_IDIOMA
+  // Redes sociales: FB_PAGE_ID, FB_PAGE_TOKEN (secreto), IG_USER_ID
 }

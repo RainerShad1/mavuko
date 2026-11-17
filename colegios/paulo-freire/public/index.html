@@ -1,333 +1,352 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<title>Instituto Dominicano Paulo Freire</title>
+<title>Colegio Paulo Freire · Inicial, Primaria y Secundaria en La Romana</title>
+<meta name="description" content="Instituto Dominicano Paulo Freire: Nivel Inicial, Primario y Secundario en el ensanche María Rubio, La Romana. Admisiones abiertas.">
+<link rel="icon" href="/assets/monograma.png">
+<meta property="og:title" content="Colegio Paulo Freire · La Romana">
+<meta property="og:description" content="Inicial, Primaria y Secundaria. Admisiones abiertas para el año escolar 2026–2027.">
+<meta property="og:image" content="/assets/fotos/admisiones.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#04234d;--navy2:#0b3366;--green:#035036;--gold:#c39a42;--cream:#faf7f0;--ink:#1d2b3f;--muted:#5d6b7e;--line:#e7e1d3;--r:18px}
+:root{
+  --tinta:#0B2B5B;      /* azul del logo */
+  --hoja:#12603F;       /* verde del logo */
+  --oro:#C99A3E;        /* dorado del logo */
+  --polo:#C8202F;       /* rojo del polo del uniforme */
+  --cielo:#EDF2F8;      /* fondo claro, frío */
+  --texto:#1B2433;
+  --suave:#56637A;
+  --linea:#D6DEEA;
+  --disp:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:Figtree,system-ui,sans-serif;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:Montserrat,system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
-a{color:inherit;text-decoration:none}
-.wrap{width:min(1160px,92vw);margin:auto}
-h1,h2,h3{font-family:"Playfair Display",Georgia,serif;color:var(--navy);line-height:1.15}
-h2{font-size:clamp(30px,4vw,44px);margin-bottom:14px}
-.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-.eyebrow:before{content:"";width:28px;height:2px;background:var(--gold)}
-.lead{color:var(--muted);font-size:17px;max-width:620px}
-section{padding:96px 0}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:999px;font-weight:700;font-size:15px;transition:.2s;border:2px solid transparent;cursor:pointer;font-family:inherit}
-.btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--green)}
-.btn-o{border-color:var(--navy);color:var(--navy);background:transparent}.btn-o:hover{background:var(--navy);color:#fff}
-.btn-g{background:var(--gold);color:#fff}.btn-g:hover{filter:brightness(.92)}
-/* header */
-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.nav{display:flex;align-items:center;justify-content:space-between;height:74px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand img{width:38px;height:auto}
-.brand b{display:block;font-family:"Playfair Display",serif;color:var(--navy);font-size:19px;line-height:1}
-.brand small{font-size:10px;letter-spacing:2.5px;color:var(--muted);font-weight:600}
-.links{display:flex;gap:28px;font-weight:600;font-size:14px;color:var(--navy)}
-.links a:hover{color:var(--gold)}
-.nav .btn{padding:10px 18px;font-size:13px}
-.burger{display:none;background:none;border:0;font-size:26px;color:var(--navy);cursor:pointer}
-/* hero */
-.hero{background:radial-gradient(1200px 500px at 85% 10%,#eef3ea 0,transparent 60%),var(--cream);padding:70px 0 90px;overflow:hidden}
-.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
-.hero h1{font-size:clamp(38px,5.4vw,64px);margin-bottom:20px}
-.hero h1 em{font-style:normal;color:var(--green)}
-.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
-.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:34px}
-.chip{background:#fff;border:1px solid var(--line);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--navy)}
-.logo-stage{position:relative;aspect-ratio:1;max-width:460px;margin:auto;width:100%}
-.logo-stage:before{content:"";position:absolute;inset:6%;border-radius:50%;background:#fff;box-shadow:0 30px 80px -30px rgba(4,35,77,.35)}
-.logo-stage img{position:absolute;left:19%;top:16%;width:62%;height:auto;animation:pop 1s cubic-bezier(.2,.8,.2,1) both}
-@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
-.ln{fill:none;stroke:var(--gold);stroke-width:3;stroke-dasharray:1;stroke-dashoffset:1}
-.f{opacity:0}
-.tagl{font:800 64px Montserrat,sans-serif;fill:var(--gold);opacity:0}
-.run .lnI{animation:draw .9s .2s forwards,fade .5s 4.4s forwards} .run .fI{animation:on .5s .8s forwards,dim .4s 1.5s forwards,on .4s 2.7s forwards}
-.run .lnD{animation:draw .9s 1.4s forwards,fade .5s 4.4s forwards} .run .fD{animation:on .5s 2s forwards}
-.run .lnP{animation:draw .9s 2.5s forwards,fade .5s 4.4s forwards} .run .fP{animation:on .5s 3.1s forwards}
-.run .lnF{animation:draw .9s 3.5s forwards,fade .5s 4.4s forwards} .run .fF{animation:on .5s 4.1s forwards}
-.run .t1{animation:tag 1s .4s forwards} .run .t2{animation:tag 1s 1.5s forwards} .run .t3{animation:tag 1s 2.6s forwards} .run .t4{animation:tag 1s 3.6s forwards}
-.run .gl{animation:globe 1s 4.6s cubic-bezier(.2,.9,.3,1.2) both} .run .lv{animation:grow .9s 5s cubic-bezier(.2,.9,.3,1.1) both}
-.gl{transform-box:fill-box;transform-origin:center} .lv{transform-origin:745px 430px}
-@keyframes draw{to{stroke-dashoffset:0}}@keyframes fade{to{opacity:0}}@keyframes on{to{opacity:1}}@keyframes dim{to{opacity:.18}}
-@keyframes tag{0%{opacity:0;transform:translateY(10px)}30%,70%{opacity:1;transform:none}100%{opacity:0}}
-@keyframes globe{from{opacity:0;transform:scale(.4) rotate(-90deg)}to{opacity:1;transform:none}}
-@keyframes grow{from{opacity:0;transform:scale(0)}to{opacity:1;transform:none}}
-.replay{position:absolute;bottom:2%;right:4%;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:600 12px Montserrat;color:var(--navy);cursor:pointer}
-/* identidad */
-.ident{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:44px}
-.letter{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;position:relative;overflow:hidden;transition:.25s}
-.letter:hover{transform:translateY(-4px);box-shadow:0 18px 40px -22px rgba(4,35,77,.35)}
-.letter .big{font-family:"Playfair Display",serif;font-size:72px;line-height:1;color:var(--navy)}
-.letter:nth-child(4) .big{color:var(--green)}
-.letter h3{font-family:Montserrat;font-size:17px;margin:10px 0 6px}
-.letter p{font-size:14px;color:var(--muted)}
-.letter:after{content:"";position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:.35s}
-.letter:hover:after{transform:none}
-.mvv{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px}
-.mvv div{background:var(--cream);border-radius:var(--r);padding:26px}
-.mvv h3{font-size:21px;margin-bottom:8px} .mvv p{font-size:14.5px;color:var(--muted)}
-/* niveles */
-.alt{background:var(--cream)}
-.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px}
-.lvl{background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
-.lvl .top{height:120px;display:flex;align-items:flex-end;padding:20px 24px;color:#fff;font:700 13px Montserrat;letter-spacing:2px}
-.lvl:nth-child(1) .top{background:linear-gradient(135deg,var(--gold),#e0bd6d)}
-.lvl:nth-child(2) .top{background:linear-gradient(135deg,var(--green),#0a7a55)}
-.lvl:nth-child(3) .top{background:linear-gradient(135deg,var(--navy),var(--navy2))}
-.lvl .body{padding:24px} .lvl h3{font-size:24px;margin-bottom:8px} .lvl p{color:var(--muted);font-size:14.5px}
-.lvl ul{margin-top:14px;list-style:none;font-size:14px} .lvl li{padding:6px 0;border-top:1px dashed var(--line)} .lvl li:before{content:"✓ ";color:var(--green);font-weight:800}
-/* why */
-.why{display:grid;grid-template-columns:repeat(3,1fr);gap:26px 34px;margin-top:44px}
-.why div{display:flex;gap:16px} .ic{flex:none;width:48px;height:48px;border-radius:14px;background:#eef3ea;color:var(--green);display:grid;place-items:center;font-size:22px}
-.why h3{font-family:Montserrat;font-size:16px;margin-bottom:4px} .why p{font-size:14px;color:var(--muted)}
-/* admisiones */
-.adm{background:var(--navy);color:#dbe4f1}
-.adm h2,.adm h3{color:#fff}
-.adm .wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
-.steps{list-style:none;margin-top:30px;counter-reset:s}
-.steps li{counter-increment:s;display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.12)}
-.steps li:before{content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font-weight:800}
-.steps b{color:#fff;display:block}
-form{background:#fff;color:var(--ink);border-radius:22px;padding:30px;box-shadow:0 30px 60px -30px rgba(0,0,0,.5)}
-#f h3,form h3{color:var(--navy);font-size:24px;margin-bottom:4px} form .sub{font-size:13.5px;color:var(--muted);margin-bottom:18px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-label{display:block;font-size:12.5px;font-weight:700;color:var(--navy);margin:12px 0 6px}
-input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 14.5px Montserrat;background:#fcfbf8;color:var(--ink)}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);background:#fff}
-form .btn{width:100%;justify-content:center;margin-top:18px}
-.ok{display:none;text-align:center;padding:16px 0} .ok.show{display:block} .ok .btn{margin-top:14px}
-/* noticias */
-.news{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:40px}
-.card{border:1px solid var(--line);border-radius:var(--r);padding:24px;background:#fff;display:flex;gap:18px}
-.date{flex:none;width:64px;text-align:center;background:var(--cream);border-radius:12px;padding:10px 0;color:var(--navy)}
-.date b{display:block;font:700 26px "Playfair Display",serif;line-height:1} .date span{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--gold)}
-.card h3{font-family:Montserrat;font-size:16px;margin-bottom:6px} .card p{font-size:14px;color:var(--muted)}
-/* galeria */
-.gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-auto-rows:190px;gap:14px;margin-top:40px}
-.gal div{border-radius:var(--r);position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:18px;color:#fff;font-weight:700;background-size:22px 22px}
-.gal div:nth-child(1){grid-row:span 2;background-color:var(--navy);background-image:radial-gradient(rgba(255,255,255,.08) 1.5px,transparent 1.5px)}
-.gal div:nth-child(2){background-color:var(--green);background-image:radial-gradient(rgba(255,255,255,.1) 1.5px,transparent 1.5px)}
-.gal div:nth-child(3){background-color:var(--gold);background-image:radial-gradient(rgba(255,255,255,.15) 1.5px,transparent 1.5px)}
-.gal div:nth-child(4){background-color:#2c4d78;background-image:radial-gradient(rgba(255,255,255,.08) 1.5px,transparent 1.5px)}
-.gal div:nth-child(5){background-color:#0a6b4a;background-image:radial-gradient(rgba(255,255,255,.1) 1.5px,transparent 1.5px)}
-.gal span{font-size:11px;opacity:.75;display:block;font-weight:600;letter-spacing:1px}
-/* portal */
-.portal{background:linear-gradient(120deg,var(--green),#06694a);border-radius:28px;padding:48px;color:#e3f1ea;display:grid;grid-template-columns:1.2fr 1fr;gap:30px;align-items:center}
-.portal h2{color:#fff}
-.feat{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.feat div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 16px;font-weight:600;font-size:14px;color:#fff}
-.soon{display:inline-block;background:var(--gold);color:#fff;font-size:11px;font-weight:800;letter-spacing:2px;padding:5px 10px;border-radius:999px;margin-bottom:14px}
-.bot{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
-.bfeat{display:grid;grid-template-columns:1fr 1fr;gap:22px 26px;margin-top:30px}
-.bfeat div{display:flex;gap:14px} .bfeat h3{font-family:Montserrat;font-size:15.5px;margin-bottom:3px} .bfeat p{font-size:13.5px;color:var(--muted)}
-.phone{max-width:340px;width:100%;margin:auto;border-radius:36px;background:#0b141a;padding:10px;box-shadow:0 40px 80px -30px rgba(4,35,77,.55)}
-.ph-top{display:flex;align-items:center;gap:10px;background:#075e54;color:#fff;padding:14px 14px;border-radius:28px 28px 0 0}
-.ph-top img{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;padding:3px}
-.ph-top b{display:block;font-size:14px} .ph-top small{font-size:11px;opacity:.8}
-.chat{background:#efe7dd;padding:14px 12px 18px;border-radius:0 0 28px 28px;display:flex;flex-direction:column;gap:8px;font-size:13px;min-height:440px}
-.day{align-self:center;background:#e1f2fb;color:#54656f;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:8px}
-.msg{max-width:86%;padding:8px 10px 16px;border-radius:10px;position:relative;line-height:1.45;color:#111b21;box-shadow:0 1px 1px rgba(0,0,0,.08)}
-.msg span{position:absolute;right:8px;bottom:3px;font-size:10px;color:#667781}
-.msg.in{background:#fff;align-self:flex-start;border-top-left-radius:2px}
-.msg.out{background:#d9fdd3;align-self:flex-end;border-top-right-radius:2px;padding-right:44px}
-.opts{display:grid;gap:6px;max-width:86%} .opts div{background:#fff;color:#027eb5;text-align:center;font-weight:600;padding:8px;border-radius:10px;font-size:12.5px}
-/* contacto */
-.contact{display:grid;grid-template-columns:1fr 1.2fr;gap:30px;margin-top:40px}
-.info div{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
-.info b{display:block;color:var(--navy);font-size:14px} .info span{color:var(--muted);font-size:14.5px}
-.map{border-radius:var(--r);min-height:320px;background:#eef3ea;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:36px 36px;display:grid;place-items:center;color:var(--green);font-weight:700;text-align:center}
-.ph{background:#fff4dc;border-bottom:1px dashed var(--gold);padding:0 3px}
-footer{background:#031a3a;color:#9fb0c8;padding:56px 0 30px;font-size:14px}
-footer .wrap{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:30px}
-footer b{color:#fff;display:block;margin-bottom:10px} footer a{display:block;padding:3px 0} footer a:hover{color:var(--gold)}
-.copy{border-top:1px solid rgba(255,255,255,.1);margin-top:36px;padding-top:20px;text-align:center;font-size:12.5px}
-.wa{position:fixed;right:20px;bottom:20px;width:58px;height:58px;border-radius:50%;background:#25d366;display:grid;place-items:center;box-shadow:0 10px 30px -8px rgba(0,0,0,.4);z-index:60}
-.reveal{opacity:0;transform:translateY(24px);transition:.7s cubic-bezier(.2,.7,.2,1)} .reveal.in{opacity:1;transform:none}
-@media(max-width:900px){
- .links{display:none;position:absolute;top:74px;left:0;right:0;background:#fff;flex-direction:column;padding:20px 6vw;gap:16px;border-bottom:1px solid var(--line)}
- .links.open{display:flex} .burger{display:block} .nav .btn{display:none}
- .hero .wrap,.adm .wrap,.bot,.contact{grid-template-columns:1fr} .bfeat{grid-template-columns:1fr}
- .hero{padding-top:40px} .logo-stage{max-width:340px;order:-1}
- .ident{grid-template-columns:1fr 1fr} .mvv,.levels,.why,.news{grid-template-columns:1fr}
- .gal{grid-template-columns:1fr 1fr;grid-auto-rows:150px} .gal div:nth-child(1){grid-column:span 2;grid-row:span 1}
- section{padding:70px 0} .portal{padding:32px 24px} .row{grid-template-columns:1fr}
- footer .wrap{grid-template-columns:1fr}
+body{font-family:var(--body);font-size:17px;line-height:1.6;color:var(--texto);background:#fff;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--oro);outline-offset:3px;border-radius:4px}
+.w{width:min(1180px,92vw);margin-inline:auto}
+h1,h2,h3{font-family:var(--disp);color:var(--tinta);line-height:1.05;letter-spacing:-.02em}
+h2{font-size:clamp(34px,4.6vw,56px);font-weight:800;max-width:16ch}
+p{max-width:62ch}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 16px var(--body);padding:15px 24px;border-radius:14px;text-decoration:none;border:2px solid transparent;cursor:pointer;transition:transform .15s,background .15s}
+.btn:active{transform:translateY(1px)}
+.btn-polo{background:var(--polo);color:#fff}.btn-polo:hover{background:#a91a27}
+.btn-linea{border-color:var(--tinta);color:var(--tinta);background:#fff}.btn-linea:hover{background:var(--cielo)}
+.btn-wa{background:#1fa855;color:#fff}.btn-wa:hover{background:#178a45}
+.btn svg{width:20px;height:20px;flex:none}
+
+/* ---------- Encabezado ---------- */
+.top{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--linea)}
+.top .w{display:flex;align-items:center;gap:28px;height:72px}
+.marca{display:flex;align-items:center;gap:12px;text-decoration:none;margin-right:auto}
+.marca img{width:34px}
+.marca b{font:800 20px/1 var(--disp);color:var(--tinta);display:block;letter-spacing:-.01em}
+.marca small{font-size:12.5px;color:var(--suave)}
+.top nav{display:flex;gap:24px;font-weight:600;font-size:15px}
+.top nav a{text-decoration:none;color:var(--tinta)}
+.top nav a:hover{color:var(--polo)}
+.top .btn{padding:10px 18px;font-size:14.5px}
+.menu{display:none;background:none;border:0;font:700 15px var(--body);color:var(--tinta);cursor:pointer;padding:8px}
+
+/* ---------- Portada: la palabra generadora ---------- */
+.hero{background:var(--cielo);overflow:hidden;padding:64px 0 88px}
+.hero .w{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+.palabra{display:flex;gap:.12em;font-size:clamp(46px,7vw,100px);margin-bottom:22px;flex-wrap:nowrap}
+.silaba{font:800 1em/1 var(--disp);color:#fff;padding:.1em .22em .16em;border-radius:.16em;letter-spacing:-.03em;box-shadow:0 .08em 0 rgba(11,43,91,.18)}
+.silaba:nth-child(1){background:var(--tinta)}
+.silaba:nth-child(2){background:var(--hoja)}
+.silaba:nth-child(3){background:var(--oro)}
+.hero h1{font-size:clamp(30px,3.6vw,46px);font-weight:700;max-width:18ch;margin-bottom:18px}
+.hero .lead{font-size:19px;color:var(--suave);margin-bottom:30px}
+.acciones{display:flex;gap:12px;flex-wrap:wrap}
+.cartel{position:relative;justify-self:center;width:min(430px,100%);transform:rotate(2deg)}
+.cartel img{border-radius:6px;box-shadow:0 30px 60px -28px rgba(11,43,91,.55),0 2px 0 rgba(11,43,91,.08);background:#fff;width:100%;height:auto;max-height:640px;object-fit:contain}
+.cinta{position:absolute;width:118px;height:30px;background:rgba(201,154,62,.78);top:-12px;left:50%;transform:translateX(-50%) rotate(-4deg);border-radius:2px}
+.hero-nota{margin-top:34px;display:flex;gap:28px;flex-wrap:wrap;font-size:15px;color:var(--suave)}
+.hero-nota b{display:block;color:var(--tinta);font-size:15.5px}
+@media (prefers-reduced-motion:no-preference){
+  .silaba{animation:entra .6s cubic-bezier(.2,.9,.25,1.25) both}
+  .silaba:nth-child(2){animation-delay:.18s}.silaba:nth-child(3){animation-delay:.36s}
+  @keyframes entra{from{opacity:0;transform:translateY(.35em) rotate(-4deg)}to{opacity:1;transform:none}}
 }
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}}
+
+section{padding:96px 0}
+.intro{display:grid;grid-template-columns:1fr 1fr;gap:20px 56px;align-items:end;margin-bottom:48px}
+.intro p{color:var(--suave);font-size:18px}
+
+/* ---------- Niveles: una ruta de 2 a 17 años ---------- */
+.ruta{display:grid;grid-template-columns:4fr 6fr 6fr;gap:0;border-top:4px solid var(--tinta)}
+.tramo{padding:26px 26px 6px 0;position:relative}
+.tramo + .tramo{padding-left:26px;border-left:1px dashed var(--linea)}
+.tramo:before{content:"";position:absolute;top:-12px;left:0;width:20px;height:20px;border-radius:50%;background:var(--c);border:4px solid #fff;box-shadow:0 0 0 2px var(--c)}
+.tramo + .tramo:before{left:26px}
+.tramo .edad{font:700 15px var(--body);color:var(--c)}
+.tramo h3{font-size:30px;font-weight:800;margin:4px 0 10px}
+.tramo p{color:var(--suave);font-size:16px}
+.tramo ul{list-style:none;margin-top:14px;font-size:15.5px}
+.tramo li{padding:7px 0;border-top:1px solid var(--linea)}
+
+/* ---------- Actividades ---------- */
+.actividades{background:var(--cielo)}
+.destacada{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;background:#fff;border-radius:24px;overflow:hidden;margin-bottom:28px}
+.destacada .foto{height:100%;min-height:380px;max-height:560px;background:var(--linea)}
+.destacada .foto img{width:100%;height:100%;max-height:560px;object-fit:cover;object-position:50% 25%}
+.destacada .txt{padding:36px 40px 36px 0}
+.fecha{font-weight:700;color:var(--polo);font-size:15px}
+.destacada h3{font-size:clamp(28px,3vw,38px);font-weight:800;margin:8px 0 14px}
+.destacada p{color:var(--suave)}
+.lista{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.item{background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.item img{aspect-ratio:4/3;object-fit:contain;width:100%;background:var(--cielo)}
+.item .txt{padding:18px 20px 22px}
+.item h3{font-size:21px;font-weight:700;margin:4px 0 6px}
+.item p{font-size:15px;color:var(--suave);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mas-fotos{font-size:13.5px;color:var(--hoja);font-weight:600;margin-top:8px}
+
+/* ---------- Galería ---------- */
+.galeria{columns:3 280px;column-gap:16px}
+.galeria figure{break-inside:avoid;margin:0 0 16px;position:relative;border-radius:14px;overflow:hidden;cursor:zoom-in;background:var(--linea)}
+.galeria img{width:100%}
+.galeria figcaption{position:absolute;left:0;right:0;bottom:0;padding:28px 14px 12px;color:#fff;font-size:14.5px;font-weight:600;background:linear-gradient(transparent,rgba(11,43,91,.82))}
+.vacio{color:var(--suave);padding:20px 0}
+.visor{position:fixed;inset:0;z-index:80;background:rgba(6,22,48,.92);display:none;place-items:center;padding:24px}
+.visor.on{display:grid}
+.visor img{max-height:84vh;width:auto;border-radius:8px}
+.visor p{color:#fff;text-align:center;margin:12px auto 0}
+.visor button{position:absolute;top:16px;right:20px;background:none;border:0;color:#fff;font-size:40px;cursor:pointer;line-height:1}
+
+/* ---------- Admisiones ---------- */
+.adm{background:var(--tinta);color:#dfe7f3}
+.adm h2{color:#fff}
+.adm .w{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+.pasos{list-style:none;margin-top:34px;counter-reset:p}
+.pasos li{counter-increment:p;display:grid;grid-template-columns:52px 1fr;gap:14px;padding:18px 0;border-top:1px solid rgba(255,255,255,.14)}
+.pasos li:before{content:counter(p);font:800 34px/1 var(--disp);color:var(--oro)}
+.pasos b{color:#fff;display:block;font-size:18px}
+.form{background:#fff;color:var(--texto);border-radius:24px;padding:32px}
+.form h3{font-size:28px;font-weight:800;margin-bottom:6px}
+.form .sub{color:var(--suave);font-size:15px;margin-bottom:10px}
+.form label{display:block;font-weight:600;font-size:14.5px;color:var(--tinta);margin:14px 0 6px}
+.form input,.form select,.form textarea{width:100%;font:500 16px var(--body);padding:13px 14px;border:2px solid var(--linea);border-radius:12px;background:#fff;color:var(--texto)}
+.form input:focus,.form select:focus,.form textarea:focus{border-color:var(--tinta);outline:none}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .btn{width:100%;justify-content:center;margin-top:20px}
+.trampa{position:absolute;left:-9999px}
+.msg{margin-top:14px;font-weight:600;font-size:15px}
+.msg.ok{color:var(--hoja)}.msg.er{color:var(--polo)}
+
+/* ---------- Asistente ---------- */
+.asis .w{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.asis ul{list-style:none;margin:24px 0 30px;display:grid;gap:12px}
+.asis li{padding-left:34px;position:relative}
+.asis li:before{content:"✓";position:absolute;left:0;top:0;width:24px;height:24px;border-radius:7px;background:var(--hoja);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center}
+.chat{background:#e9e2d8;border-radius:28px;padding:22px 18px;display:flex;flex-direction:column;gap:10px;max-width:420px;justify-self:center;width:100%;box-shadow:0 30px 60px -30px rgba(11,43,91,.45)}
+.chat .quien{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--tinta);font-size:15px;margin-bottom:6px}
+.chat .quien img{width:30px;height:30px;border-radius:50%;background:#fff;object-fit:contain;padding:3px}
+.b{max-width:85%;padding:9px 12px;border-radius:12px;font-size:14.5px;line-height:1.45;white-space:pre-line}
+.b.in{background:#fff;align-self:flex-start;border-top-left-radius:3px}
+.b.out{background:#d7fbd0;align-self:flex-end;border-top-right-radius:3px}
+.op{align-self:flex-start;display:flex;gap:6px;flex-wrap:wrap}
+.op span{background:#fff;color:#0b7bb5;font-weight:600;font-size:13.5px;padding:7px 11px;border-radius:10px}
+
+/* ---------- Contacto ---------- */
+.contacto{background:var(--cielo)}
+.contacto .w{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px}
+.datos{display:grid;gap:22px;margin-top:30px}
+.datos div{border-left:4px solid var(--oro);padding-left:16px}
+.datos b{display:block;font-family:var(--disp);font-size:20px;color:var(--tinta)}
+.datos span,.datos a{color:var(--suave)}
+.mapa{border-radius:24px;overflow:hidden;min-height:420px;background:var(--linea)}
+.mapa iframe{border:0;width:100%;height:100%;min-height:420px}
+
+footer{background:#071c3d;color:#a9b8cf;padding:56px 0 28px;font-size:15px}
+footer .w{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px}
+footer b{display:block;color:#fff;margin-bottom:10px;font-family:var(--disp);font-size:18px}
+footer a{display:block;text-decoration:none;padding:3px 0}
+footer a:hover{color:#fff}
+.pie{border-top:1px solid rgba(255,255,255,.12);margin-top:36px;padding-top:20px;font-size:13.5px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.flota{position:fixed;right:18px;bottom:18px;z-index:50;width:58px;height:58px;border-radius:50%;background:#1fa855;display:grid;place-items:center;box-shadow:0 12px 28px -10px rgba(0,0,0,.5)}
+.flota svg{width:30px;height:30px}
+
+@media(max-width:960px){
+  .top nav{display:none;position:absolute;top:72px;left:0;right:0;background:#fff;flex-direction:column;padding:18px 4vw;gap:14px;border-bottom:1px solid var(--linea)}
+  .top nav.on{display:flex}.menu{display:block}.top .btn{display:none}
+  .hero{padding:40px 0 64px}.hero .w,.intro,.adm .w,.asis .w,.contacto .w,.destacada{grid-template-columns:1fr}
+  .cartel{width:min(340px,86%);order:-1}
+  .ruta{grid-template-columns:1fr;border-top:0;border-left:4px solid var(--tinta)}
+  .tramo,.tramo + .tramo{padding:6px 0 24px 28px;border-left:0}
+  .tramo:before,.tramo + .tramo:before{left:-12px;top:10px}
+  .lista{grid-template-columns:1fr}
+  .destacada .txt{padding:0 24px 28px}.destacada .foto{min-height:260px}
+  section{padding:68px 0}.dos{grid-template-columns:1fr}
+  footer .w{grid-template-columns:1fr}
+}
 </style></head><body>
 
-<header><div class="wrap nav">
- <a href="#inicio" class="brand"><img src="assets/monograma.png" alt="" width="38" height="53"><span><b>Paulo Freire</b><small>INSTITUTO DOMINICANO</small></span></a>
- <nav class="links" id="links"><a href="#identidad">Nosotros</a><a href="#niveles">Niveles</a><a href="#admisiones">Admisiones</a><a href="#noticias">Noticias</a><a href="#contacto">Contacto</a></nav>
- <a href="#asistente" class="btn btn-o">Asistente WhatsApp</a>
- <button class="burger" id="burger" aria-label="Menú">☰</button>
+<header class="top"><div class="w">
+  <a class="marca" href="#inicio"><img src="/assets/monograma.png" alt="" width="34" height="47"><span><b>Paulo Freire</b><small>Instituto Dominicano · La Romana</small></span></a>
+  <nav id="nav"><a href="#niveles">Niveles</a><a href="#actividades">Actividades</a><a href="#galeria">Vida escolar</a><a href="#admisiones">Admisiones</a><a href="#contacto">Contacto</a></nav>
+  <a class="btn btn-polo" href="#admisiones">Reservar un cupo</a>
+  <button class="menu" id="menu" aria-expanded="false" aria-controls="nav">Menú</button>
 </div></header>
 
-<section class="hero" id="inicio"><div class="wrap">
- <div>
-  <div class="eyebrow">Instituto Dominicano Paulo Freire</div>
-  <h1>Educamos para <em>transformar</em> el mundo.</h1>
-  <p class="lead">Formamos estudiantes críticos, solidarios y preparados, inspirados en el pensamiento de Paulo Freire: aprender dialogando, pensando y actuando sobre la realidad.</p>
-  <div class="cta"><a href="#admisiones" class="btn btn-p">Solicitar inscripción →</a><a href="#contacto" class="btn btn-o">Agendar una visita</a></div>
-  <div class="chips"><span class="chip">Nivel Inicial</span><span class="chip">Nivel Primario</span><span class="chip">Nivel Secundario</span></div>
- </div>
- <div class="logo-stage"><img src="assets/logo.png" alt="Logo del Colegio Paulo Freire"></div>
-</div></section>
-
-<section id="identidad"><div class="wrap">
- <div class="eyebrow reveal">Nuestra identidad</div>
- <h2 class="reveal">Un nombre, cuatro letras.</h2>
- <p class="lead reveal">Nuestro logo guarda las iniciales del instituto entrelazadas en un solo símbolo: cada letra representa una parte de lo que somos.</p>
- <div class="ident">
-  <div class="letter reveal"><div class="big">I</div><h3>Instituto</h3><p>Una comunidad educativa organizada, con rigor académico y metas claras.</p></div>
-  <div class="letter reveal"><div class="big">D</div><h3>Dominicano</h3><p>Orgullosos de nuestra identidad, historia y cultura.</p></div>
-  <div class="letter reveal"><div class="big">P</div><h3>Paulo</h3><p>El maestro que nos inspira a educar desde el diálogo y el respeto.</p></div>
-  <div class="letter reveal"><div class="big">F</div><h3>Freire</h3><p>Una pedagogía para la libertad: pensar, cuestionar y transformar.</p></div>
- </div>
- <div class="mvv">
-  <div class="reveal"><h3>Misión</h3><p>Brindar una educación integral y de calidad que forme personas críticas, con valores y capaces de transformar su entorno.</p></div>
-  <div class="reveal"><h3>Visión</h3><p>Ser un referente educativo en la región por la excelencia académica y la formación humana de nuestros estudiantes.</p></div>
-  <div class="reveal"><h3>Valores</h3><p>Respeto · Diálogo · Responsabilidad · Solidaridad · Amor por el aprendizaje.</p></div>
- </div>
-</div></section>
-
-<section class="alt" id="niveles"><div class="wrap">
- <div class="eyebrow reveal">Oferta académica</div>
- <h2 class="reveal">Acompañamos cada etapa.</h2>
- <div class="levels">
-  <div class="lvl reveal"><div class="top">NIVEL INICIAL</div><div class="body"><h3>Primeros pasos</h3><p>Aprendizaje a través del juego, la exploración y el afecto.</p><ul><li>Desarrollo de la lectoescritura</li><li>Motricidad y creatividad</li><li>Ambiente seguro y cercano</li></ul></div></div>
-  <div class="lvl reveal"><div class="top">NIVEL PRIMARIO</div><div class="body"><h3>Bases sólidas</h3><p>Lectura, matemática y ciencias con un enfoque práctico y participativo.</p><ul><li>Hábitos de estudio</li><li>Formación en valores</li><li>Proyectos y ferias escolares</li></ul></div></div>
-  <div class="lvl reveal"><div class="top">NIVEL SECUNDARIO</div><div class="body"><h3>Rumbo al futuro</h3><p>Pensamiento crítico y preparación para la universidad y la vida.</p><ul><li>Orientación vocacional</li><li>Tecnología e investigación</li><li>Liderazgo y servicio</li></ul></div></div>
- </div>
-</div></section>
-
-<section><div class="wrap">
- <div class="eyebrow reveal">¿Por qué elegirnos?</div>
- <h2 class="reveal">Más que un colegio, una comunidad.</h2>
- <div class="why">
-  <div class="reveal"><span class="ic">👩‍🏫</span><span><h3>Docentes comprometidos</h3><p>Maestros que conocen a cada estudiante por su nombre.</p></span></div>
-  <div class="reveal"><span class="ic">💬</span><span><h3>Comunicación con familias</h3><p>Padres informados de notas, actividades y avisos.</p></span></div>
-  <div class="reveal"><span class="ic">🌱</span><span><h3>Formación en valores</h3><p>Educamos la mente y también el corazón.</p></span></div>
-  <div class="reveal"><span class="ic">🔬</span><span><h3>Aprender haciendo</h3><p>Proyectos, ferias científicas y actividades prácticas.</p></span></div>
-  <div class="reveal"><span class="ic">🛡️</span><span><h3>Ambiente seguro</h3><p>Control de entrada y salida y supervisión constante.</p></span></div>
-  <div class="reveal"><span class="ic">🌎</span><span><h3>Visión global</h3><p>Ciudadanos dominicanos preparados para el mundo.</p></span></div>
- </div>
-</div></section>
-
-<section class="adm" id="admisiones"><div class="wrap">
- <div>
-  <div class="eyebrow reveal">Admisiones</div>
-  <h2 class="reveal">Inscripciones abiertas.</h2>
-  <p class="reveal" style="max-width:480px">Completa la solicitud y nuestro equipo te contactará para coordinar la visita y la entrevista.</p>
-  <ol class="steps">
-   <li class="reveal"><span><b>Envía la solicitud</b>Llena el formulario en menos de 2 minutos.</span></li>
-   <li class="reveal"><span><b>Visita el colegio</b>Conoce las instalaciones y al equipo docente.</span></li>
-   <li class="reveal"><span><b>Entrega de documentos</b>Acta de nacimiento, récord de notas, fotos y certificado médico.</span></li>
-   <li class="reveal"><span><b>¡Bienvenido!</b>Formaliza la inscripción y recibe tu kit de inicio.</span></li>
-  </ol>
- </div>
- <form id="f" class="reveal">
-  <div id="fields">
-   <h3>Solicitud de inscripción</h3><p class="sub">La solicitud se envía directamente por WhatsApp a la secretaría.</p>
-   <div class="row"><div><label>Nombre del padre/tutor</label><input name="tutor" required></div><div><label>Teléfono</label><input name="tel" type="tel" required placeholder="809-000-0000"></div></div>
-   <div class="row"><div><label>Nombre del estudiante</label><input name="est" required></div><div><label>Grado solicitado</label><select name="grado" required><option value="">Selecciona…</option><option>Inicial – Pre-primario</option><option>1.º Primaria</option><option>2.º Primaria</option><option>3.º Primaria</option><option>4.º Primaria</option><option>5.º Primaria</option><option>6.º Primaria</option><option>1.º Secundaria</option><option>2.º Secundaria</option><option>3.º Secundaria</option><option>4.º Secundaria</option><option>5.º Secundaria</option><option>6.º Secundaria</option></select></div></div>
-   <label>Comentario (opcional)</label><textarea name="msg" rows="3"></textarea>
-   <button class="btn btn-g" type="submit">Enviar solicitud</button>
+<main>
+<section class="hero" id="inicio"><div class="w">
+  <div>
+    <div class="palabra" aria-hidden="true"><span class="silaba">a</span><span class="silaba">pren</span><span class="silaba">der</span></div>
+    <h1>es leer el mundo y transformarlo.</h1>
+    <p class="lead">Nivel Inicial, Primario y Secundario en el ensanche María Rubio. Clases donde se aprende dialogando, con maestros que conocen a cada estudiante por su nombre.</p>
+    <div class="acciones">
+      <a class="btn btn-polo" href="#admisiones">Reservar un cupo</a>
+      <a class="btn btn-linea" href="https://wa.me/18298531204?text=Hola" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+    </div>
+    <div class="hero-nota">
+      <span><b>Admisiones abiertas</b>Año escolar 2026–2027</span>
+      <span><b>809-813-1059</b>Secretaría</span>
+    </div>
   </div>
-  <div class="ok" id="ok"><h3>¡Solicitud lista! ✅</h3><p class="sub">Toca el botón para enviarla por WhatsApp a la secretaría.</p><a class="btn btn-p" id="walink" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a></div>
- </form>
+  <figure class="cartel"><span class="cinta" aria-hidden="true"></span><img id="banner" src="/assets/fotos/admisiones.jpg" alt="Estudiantes del Colegio Paulo Freire con uniforme. Admisiones abiertas." width="1536" height="1920" fetchpriority="high"></figure>
 </div></section>
 
-<section id="noticias"><div class="wrap">
- <div class="eyebrow reveal">Noticias y calendario</div>
- <h2 class="reveal">Lo que pasa en el colegio.</h2>
- <div class="news">
-  <div class="card reveal"><div class="date"><b>02</b><span>DIC</span></div><div><h3>Reunión de padres</h3><p>Entrega de calificaciones del primer período. 4:00 p. m.</p></div></div>
-  <div class="card reveal"><div class="date"><b>12</b><span>DIC</span></div><div><h3>Acto navideño</h3><p>Presentaciones artísticas de todos los niveles.</p></div></div>
-  <div class="card reveal"><div class="date"><b>08</b><span>ENE</span></div><div><h3>Regreso a clases</h3><p>Inicio del segundo período escolar.</p></div></div>
- </div>
-</div></section>
-
-<section class="alt"><div class="wrap">
- <div class="eyebrow reveal">Vida escolar</div>
- <h2 class="reveal">Momentos que forman.</h2>
- <div class="gal">
-  <div class="reveal"><p><span>FOTO</span>Actos cívicos</p></div>
-  <div class="reveal"><p><span>FOTO</span>Feria científica</p></div>
-  <div class="reveal"><p><span>FOTO</span>Deportes</p></div>
-  <div class="reveal"><p><span>FOTO</span>Arte y cultura</p></div>
-  <div class="reveal"><p><span>FOTO</span>Graduaciones</p></div>
- </div>
-</div></section>
-
-<section id="asistente"><div class="wrap bot">
- <div>
-  <div class="eyebrow reveal">Asistente para padres</div>
-  <h2 class="reveal">Todo lo del colegio, en tu WhatsApp.</h2>
-  <p class="lead reveal">Sin apps ni contraseñas. Los padres y tutores registrados consultan la información de sus hijos escribiéndole al número oficial del colegio, a cualquier hora.</p>
-  <div class="bfeat">
-   <div class="reveal"><span class="ic">💳</span><span><h3>Estado de cuenta</h3><p>Mensualidades pagadas, pendientes y fecha del próximo pago.</p></span></div>
-   <div class="reveal"><span class="ic">🔔</span><span><h3>Recordatorios automáticos</h3><p>Aviso antes de que venza el pago y si quedó pendiente.</p></span></div>
-   <div class="reveal"><span class="ic">📢</span><span><h3>Circulares y avisos</h3><p>Reuniones, actividades y suspensiones, directo al celular.</p></span></div>
-   <div class="reveal"><span class="ic">📅</span><span><h3>Calendario e información</h3><p>Horarios, fechas importantes, lista de útiles y requisitos.</p></span></div>
+<section id="niveles"><div class="w">
+  <div class="intro">
+    <h2>Una sola ruta, de los 2 a los 17 años.</h2>
+    <p>Acompañamos a cada estudiante desde sus primeros juegos hasta la puerta de la universidad. Un mismo equipo, los mismos valores y una forma de enseñar que pone a los estudiantes a pensar, preguntar y crear.</p>
   </div>
-  <div class="cta reveal"><a class="btn btn-p" href="https://wa.me/18298531204" target="_blank" rel="noopener">Escribir al asistente →</a></div>
- </div>
- <div class="phone reveal" aria-label="Ejemplo de conversación con el asistente">
-  <div class="ph-top"><img src="assets/monograma.png" alt=""><span><b>Colegio Paulo Freire</b><small>Cuenta de empresa</small></span></div>
-  <div class="chat">
-   <div class="day">HOY</div>
-   <div class="msg in">🔔 Hola, Sra. María. Le recordamos que la mensualidad de <b>noviembre</b> de <b>Luis Pérez</b> (3.º Primaria) vence el <b>15/11</b>.<br>Monto: <b>RD$ 0,000</b><span>8:00</span></div>
-   <div class="msg out">Estado de cuenta<span>8:12</span></div>
-   <div class="msg in">📄 <b>Luis Pérez · 3.º Primaria</b><br>✅ Agosto — Pagado<br>✅ Septiembre — Pagado<br>✅ Octubre — Pagado<br>⏳ Noviembre — Vence 15/11<br><br>¿Qué desea hacer?<span>8:12</span></div>
-   <div class="opts"><div>💳 Cómo pagar</div><div>📢 Circulares</div><div>👩‍💼 Hablar con secretaría</div></div>
+  <div class="ruta">
+    <div class="tramo" style="--c:var(--oro)"><span class="edad">2 a 5 años</span><h3>Inicial</h3><p>Aprender jugando, en un ambiente seguro y cariñoso.</p><ul><li>Lectoescritura inicial</li><li>Motricidad, arte y música</li></ul></div>
+    <div class="tramo" style="--c:var(--hoja)"><span class="edad">1.º a 6.º grado</span><h3>Primaria</h3><p>Bases sólidas en lectura, matemática y ciencias, con proyectos y ferias escolares.</p><ul><li>Hábitos de estudio</li><li>Formación en valores</li></ul></div>
+    <div class="tramo" style="--c:var(--tinta)"><span class="edad">1.º a 6.º de secundaria</span><h3>Secundaria</h3><p>Pensamiento crítico, tecnología y preparación para la universidad y la vida.</p><ul><li>Orientación vocacional</li><li>Liderazgo y servicio</li></ul></div>
   </div>
- </div>
 </div></section>
 
-<section class="alt" id="contacto"><div class="wrap">
- <div class="eyebrow reveal">Contacto</div>
- <h2 class="reveal">Visítanos.</h2>
- <div class="contact">
-  <div class="info reveal">
-   <div><span class="ic">📍</span><span><b>Dirección</b><a href="https://www.google.com/maps/place/Colegio+Instituto+Dominicano+Paulo+Freire/@18.4322493,-68.9674235,19z" target="_blank" rel="noopener">La Romana · Ver en Google Maps →</a></span></div>
-   <div><span class="ic">📞</span><span><b>Teléfono / WhatsApp</b><a href="https://wa.me/18298531204">829-853-1204</a></span></div>
-   <div><span class="ic">✉️</span><span><b>Correo</b><span class="ph">info@paulofreire.edu.do</span></span></div>
-   <div><span class="ic">🕗</span><span><b>Horario de oficina</b>Lunes a viernes · <span class="ph">7:30 a. m. – 3:00 p. m.</span></span></div>
-  </div>
-  <div class="map reveal" style="padding:0;overflow:hidden"><iframe title="Ubicación del Colegio Paulo Freire" src="https://www.google.com/maps?q=18.4322493,-68.9674235&z=17&output=embed" style="border:0;width:100%;height:100%;min-height:320px" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
- </div>
+<section class="actividades" id="actividades"><div class="w">
+  <div class="intro"><h2>Lo que pasa en el colegio.</h2><p>Actividades, actos y noticias de nuestra comunidad. También las publicamos en nuestro Instagram y Facebook.</p></div>
+  <div id="pubs"><p class="vacio">Cargando actividades…</p></div>
 </div></section>
 
-<footer><div class="wrap">
- <div><b style="font-family:'Playfair Display',serif;font-size:22px">Instituto Dominicano Paulo Freire</b><p>Educamos para transformar el mundo.</p></div>
- <div><b>Enlaces</b><a href="#identidad">Nosotros</a><a href="#niveles">Niveles</a><a href="#admisiones">Admisiones</a><a href="#contacto">Contacto</a><a href="/panel/">Acceso del personal</a><a href="/privacidad">Política de privacidad</a><a href="/terminos">Condiciones de servicio</a></div>
- <div><b>Síguenos</b><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">WhatsApp</a></div>
-</div><div class="wrap copy" style="display:block">© 2026 Instituto Dominicano Paulo Freire · Todos los derechos reservados · Sitio y sistema por Mavuko</div></footer>
+<section id="galeria"><div class="w">
+  <div class="intro"><h2>Vida escolar.</h2><p>Momentos de clases, actos y celebraciones. Toca una foto para verla completa.</p></div>
+  <div class="galeria" id="gal"></div>
+</div></section>
 
-<a class="wa" href="https://wa.me/18298531204" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg></a>
+<section class="adm" id="admisiones"><div class="w">
+  <div>
+    <h2>Reserva el cupo de tu hijo.</h2>
+    <p style="margin-top:14px">Admisiones abiertas para el año escolar 2026–2027 en todos los niveles.</p>
+    <ol class="pasos">
+      <li><span><b>Envía la solicitud</b>Toma menos de dos minutos. La secretaría te llama para coordinar.</span></li>
+      <li><span><b>Visita el colegio</b>Conoce las aulas y al equipo docente.</span></li>
+      <li><span><b>Entrega los documentos</b>Acta de nacimiento, récord de notas, dos fotos 2x2 y certificado médico.</span></li>
+      <li><span><b>Formaliza la inscripción</b>Y recibe la lista de útiles y el horario.</span></li>
+    </ol>
+  </div>
+  <form class="form" id="f" novalidate>
+    <h3>Solicitud de cupo</h3>
+    <p class="sub">La recibe la secretaría al instante.</p>
+    <div class="dos"><div><label for="tutor">Tu nombre</label><input id="tutor" name="tutor" autocomplete="name" required></div><div><label for="tel">Teléfono</label><input id="tel" name="tel" type="tel" autocomplete="tel" placeholder="809-000-0000" required></div></div>
+    <div class="dos"><div><label for="est">Nombre del estudiante</label><input id="est" name="est"></div><div><label for="grado">Grado</label><select id="grado" name="grado" required><option value="">Elige uno</option><option>Inicial (2 a 5 años)</option><option>1.º Primaria</option><option>2.º Primaria</option><option>3.º Primaria</option><option>4.º Primaria</option><option>5.º Primaria</option><option>6.º Primaria</option><option>1.º Secundaria</option><option>2.º Secundaria</option><option>3.º Secundaria</option><option>4.º Secundaria</option><option>5.º Secundaria</option><option>6.º Secundaria</option></select></div></div>
+    <input class="trampa" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn btn-polo" type="submit">Enviar solicitud</button>
+    <p class="msg" id="fmsg" role="status"></p>
+  </form>
+</div></section>
+
+<section class="asis" id="asistente"><div class="w">
+  <div>
+    <h2>El colegio, en tu WhatsApp.</h2>
+    <p style="margin-top:14px;color:var(--suave)">Las familias escriben al número del colegio y resuelven al momento, a cualquier hora:</p>
+    <ul><li>Estado de cuenta y mensualidades</li><li>Enviar la foto del comprobante de pago</li><li>Avisar una ausencia o pedir una cita</li><li>Horarios, calendario e inscripciones</li></ul>
+    <a class="btn btn-wa" href="https://wa.me/18298531204?text=Hola" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>Escribir al 829-853-1204</a>
+  </div>
+  <div class="chat" aria-label="Ejemplo de conversación con el asistente">
+    <div class="quien"><img src="/assets/monograma.png" alt="">Colegio Paulo Freire</div>
+    <div class="b out">Hola</div>
+    <div class="b in">¡Hola, Carmen! 👋 Soy el asistente virtual del Colegio Paulo Freire. ¿En qué le puedo ayudar?</div>
+    <div class="b out">💳 Estado de cuenta</div>
+    <div class="b in"><b>Luis · 3.º Primaria</b>
+✅ Octubre — Pagado
+✅ Noviembre — Pagado
+⏳ Diciembre — Vence 15/12</div>
+    <div class="op"><span>🧾 Comprobante</span><span>💳 Cómo pagar</span><span>↩️ Menú</span></div>
+  </div>
+</div></section>
+
+<section class="contacto" id="contacto"><div class="w">
+  <div>
+    <h2>Visítanos.</h2>
+    <div class="datos">
+      <div><b>Dirección</b><span>Dr. Teófilo Ferry #35, Ens. María Rubio, La Romana</span></div>
+      <div><b>Teléfono</b><a href="tel:+18098131059">809-813-1059</a></div>
+      <div><b>WhatsApp</b><a href="https://wa.me/18298531204" target="_blank" rel="noopener">829-853-1204</a></div>
+      <div><b>Horario de oficina</b><span>Lunes a viernes, 7:30 a. m. a 3:00 p. m.</span></div>
+    </div>
+  </div>
+  <div class="mapa"><iframe title="Mapa del Colegio Paulo Freire" src="https://www.google.com/maps?q=18.4322493,-68.9674235&z=17&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
+</div></section>
+</main>
+
+<footer><div class="w">
+  <div><b>Instituto Dominicano Paulo Freire</b><p>Educamos para transformar el mundo. Inicial, Primaria y Secundaria en La Romana, República Dominicana.</p></div>
+  <div><b>El colegio</b><a href="#niveles">Niveles</a><a href="#actividades">Actividades</a><a href="#galeria">Vida escolar</a><a href="#admisiones">Admisiones</a></div>
+  <div><b>Más</b><a href="/panel/">Acceso del personal</a><a href="/privacidad">Política de privacidad</a><a href="/terminos">Condiciones de servicio</a></div>
+</div><div class="w pie" style="display:flex"><span>© 2026 Instituto Dominicano Paulo Freire</span><span>Sitio y sistema por Mavuko</span></div></footer>
+
+<a class="flota" href="https://wa.me/18298531204?text=Hola" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg></a>
+
+<div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Foto ampliada"><button type="button" id="cerrar" aria-label="Cerrar">×</button><div><img id="vimg" alt=""><p id="vtxt"></p></div></div>
 
 <script>
-const WA="18298531204";
-document.getElementById('burger').onclick=()=>document.getElementById('links').classList.toggle('open');
-document.querySelectorAll('#links a').forEach(l=>l.onclick=()=>document.getElementById('links').classList.remove('open'));
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
-document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4)*70+'ms';io.observe(el)});
-document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.target);
- const t=`Hola, quiero solicitar inscripción en el Instituto Dominicano Paulo Freire.
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fecha = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'long' });
 
-*Tutor:* ${d.get('tutor')}
-*Teléfono:* ${d.get('tel')}
-*Estudiante:* ${d.get('est')}
-*Grado:* ${d.get('grado')}`+(d.get('msg')?`
-*Comentario:* ${d.get('msg')}`:'');
- document.getElementById('walink').href=`https://wa.me/${WA}?text=`+encodeURIComponent(t);
- document.getElementById('fields').style.display='none';document.getElementById('ok').classList.add('show');});
+$('#menu').onclick = () => { const n = $('#nav'); n.classList.toggle('on'); $('#menu').setAttribute('aria-expanded', n.classList.contains('on')); };
+document.querySelectorAll('#nav a').forEach((a) => a.addEventListener('click', () => $('#nav').classList.remove('on')));
+
+// Contenido que el colegio edita desde el panel
+function pintar(c) {
+  if (c.portada?.banner) { $('#banner').src = c.portada.banner; $('#banner').alt = c.portada.alt || ''; }
+  const ps = c.publicaciones || [];
+  if (!ps.length) $('#pubs').innerHTML = '<p class="vacio">Pronto publicaremos las próximas actividades.</p>';
+  else {
+    const [d, ...r] = ps;
+    const foto = (p, cls) => p.fotos[0] ? `<img src="${esc(p.fotos[0])}" alt="${esc(p.titulo)}" loading="lazy">` : '';
+    $('#pubs').innerHTML =
+      `<article class="destacada"><div class="foto">${foto(d)}</div><div class="txt"><span class="fecha">${fecha(d.fecha)}</span><h3>${esc(d.titulo)}</h3><p>${esc(d.texto)}</p>${d.fotos.length > 1 ? `<p class="mas-fotos">${d.fotos.length} fotos</p>` : ''}</div></article>` +
+      (r.length ? `<div class="lista">${r.slice(0, 6).map((p) => `<article class="item">${foto(p)}<div class="txt"><span class="fecha">${fecha(p.fecha)}</span><h3>${esc(p.titulo)}</h3><p>${esc(p.texto)}</p></div></article>`).join('')}</div>` : '');
+  }
+  const g = c.galeria || [];
+  $('#gal').innerHTML = g.length ? g.map((x) => `<figure data-src="${esc(x.foto)}" data-txt="${esc(x.texto)}" tabindex="0"><img src="${esc(x.foto)}" alt="${esc(x.texto || 'Foto del colegio')}" loading="lazy">${x.texto ? `<figcaption>${esc(x.texto)}</figcaption>` : ''}</figure>`).join('') : '<p class="vacio">Pronto subiremos fotos.</p>';
+}
+fetch('/api/publico/contenido').then((r) => r.ok ? r.json() : Promise.reject()).then(pintar).catch(() => pintar({
+  publicaciones: [{ titulo: 'Desfile de moda reciclada', texto: 'Los estudiantes de sexto diseñaron sus trajes con materiales reciclados.', fecha: new Date().toISOString().slice(0, 10), fotos: ['/assets/fotos/desfile-reciclaje.jpg'] }],
+  galeria: [{ foto: '/assets/fotos/desfile-reciclaje.jpg', texto: 'Desfile de moda reciclada' }],
+}));
+
+// Visor de fotos
+const abrir = (f) => { $('#vimg').src = f.dataset.src; $('#vimg').alt = f.dataset.txt || ''; $('#vtxt').textContent = f.dataset.txt || ''; $('#visor').classList.add('on'); $('#cerrar').focus(); };
+$('#gal').addEventListener('click', (e) => { const f = e.target.closest('figure'); if (f) abrir(f); });
+$('#gal').addEventListener('keydown', (e) => { const f = e.target.closest('figure'); if (f && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrir(f); } });
+const cerrar = () => $('#visor').classList.remove('on');
+$('#cerrar').onclick = cerrar; $('#visor').onclick = (e) => { if (e.target.id === 'visor') cerrar(); };
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+
+// Solicitud de cupo: llega a "Interesados" en el panel
+$('#f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  const m = $('#fmsg'); m.className = 'msg'; m.textContent = 'Enviando…';
+  try {
+    const r = await fetch('/api/publico/inscripcion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error);
+    e.target.reset(); m.className = 'msg ok'; m.textContent = '¡Listo! La secretaría te llamará para coordinar la visita.';
+  } catch (x) { m.className = 'msg er'; m.textContent = x.message || 'No se pudo enviar. Escríbenos por WhatsApp.'; }
+});
 </script>
 </body></html>

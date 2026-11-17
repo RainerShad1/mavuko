@@ -11,6 +11,7 @@ import { procesarMensaje } from './bot.js';
 import { firmaValida } from './wa.js';
 import { enviarRecordatorios } from './avisos.js';
 import { leerConfig } from './db.js';
+import { contenidoPublico, servirMedio } from './contenido.js';
 
 const json = (d, s = 200, h = {}) => new Response(JSON.stringify(d), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...h } });
 
@@ -60,6 +61,26 @@ export default {
     const url = new URL(req.url);
     const p = url.pathname;
     if (p === '/webhook') return webhook(req, env, ctx);
+    // Fotos públicas (página web, Facebook e Instagram las descargan desde aquí)
+    const md = p.match(/^\/media\/([\w-]+)$/);
+    if (md && req.method === 'GET') return servirMedio(crearDB(env), md[1], url.searchParams.has('ig'));
+    if (p === '/api/publico/inscripcion' && req.method === 'POST') {
+      const b = await req.json().catch(() => ({}));
+      if (b.web) return json({ ok: true }); // campo trampa para robots
+      const tutor = String(b.tutor || '').trim().slice(0, 80), tel = String(b.tel || '').replace(/[^\d+ -]/g, '').slice(0, 20);
+      const est = String(b.est || '').trim().slice(0, 80), grado = String(b.grado || '').trim().slice(0, 40);
+      if (!tutor || tel.replace(/\D/g, '').length < 10 || !grado) return json({ error: 'Completa tu nombre, un teléfono de 10 dígitos y el grado' }, 400);
+      try {
+        const db = crearDB(env);
+        const id = 'I' + (await db.one("select nextval('sec_id') as n")).n;
+        await db.q('insert into interesados(id, nombre, tel, grado) values($1,$2,$3,$4)', [id, tutor, tel, est ? `${grado} · ${est}` : grado]);
+        return json({ ok: true });
+      } catch (e) { console.error(e); return json({ error: 'No se pudo enviar. Escríbenos por WhatsApp.' }, 503); }
+    }
+    if (p === '/api/publico/contenido' && req.method === 'GET') {
+      try { return json(await contenidoPublico(crearDB(env)), 200, { 'Cache-Control': 'public, max-age=60' }); }
+      catch (e) { console.error(e); return json({ error: 'Contenido no disponible' }, 503); }
+    }
     if (p.startsWith('/api/')) {
       if (!env.DATABASE_URL && !env.__db) return json({ error: 'Falta configurar DATABASE_URL en Cloudflare (Settings → Variables and Secrets)' }, 503);
       const db = crearDB(env);

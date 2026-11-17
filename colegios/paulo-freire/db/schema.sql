@@ -155,3 +155,40 @@ create table if not exists wa_sesiones (
   ctx jsonb not null default '{}',
   actualizado timestamptz not null default now()
 );
+
+-- ===== Página web y redes =====
+-- Fotos subidas desde el panel (JPEG en base64). ig = versión ajustada al formato de Instagram si hace falta.
+create table if not exists medios (
+  id text primary key,
+  mime text not null default 'image/jpeg',
+  ancho int,
+  alto int,
+  datos text not null,
+  ig text,
+  creado timestamptz not null default now()
+);
+
+-- Actividades y noticias (se muestran en la web y se pueden publicar en Facebook e Instagram)
+create table if not exists publicaciones (
+  id text primary key,
+  tipo text not null default 'actividad',    -- actividad | noticia
+  titulo text not null,
+  texto text not null default '',
+  fecha date not null default current_date,
+  fotos text[] not null default '{}',        -- rutas: /media/ID o /assets/fotos/x.jpg
+  fotos_ig text[] not null default '{}',     -- misma foto ajustada para Instagram
+  web boolean not null default true,
+  fb_estado text, fb_link text,
+  ig_estado text, ig_link text,
+  error text,
+  creado timestamptz not null default now()
+);
+
+create table if not exists galeria (
+  id text primary key,
+  foto text not null,
+  texto text not null default '',
+  orden int not null default 0,
+  visible boolean not null default true,
+  creado timestamptz not null default now()
+);

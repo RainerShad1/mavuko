@@ -2,13 +2,13 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>Sistema administrativo · Colegio Paulo Freire</title>
 <link rel="icon" href="/assets/monograma.png">
 <style>
 :root{--navy:#04234d;--navy2:#0b3366;--green:#035036;--gold:#c39a42;--bg:#f5f3ee;--card:#fff;--ink:#1d2b3f;--muted:#6b778a;--line:#e8e3d8;--ok:#0f8a5f;--okbg:#e4f5ed;--warn:#b7791f;--warnbg:#fdf3dc;--bad:#c2410c;--badbg:#fde8dd;--info:#1f5f8b;--infobg:#e3eef7}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;cursor:pointer}
 .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
 aside{background:var(--navy);color:#c9d5e6;padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow-y:auto}
@@ -69,7 +69,7 @@ main{padding:26px 30px 60px;min-width:0}
 .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
 .p-ok{background:var(--okbg);color:var(--ok)}.p-warn{background:var(--warnbg);color:var(--warn)}.p-bad{background:var(--badbg);color:var(--bad)}.p-mute{background:#eef0f3;color:var(--muted)}.p-info{background:var(--infobg);color:var(--info)}
 .tools{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.tools input,.tools select{padding:10px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 13.5px Montserrat,system-ui,sans-serif;background:#fff;min-width:0}
+.tools input,.tools select{padding:10px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 13.5px Figtree,system-ui,sans-serif;background:#fff;min-width:0}
 .tools input{flex:1;min-width:200px}
 table{width:100%;border-collapse:collapse}
 th{text-align:left;font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line)}
@@ -102,7 +102,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:#faf8f3}
 .modal h2{color:var(--navy);font-size:19px;margin-bottom:4px}
 .modal .sub{color:var(--muted);font-size:12.5px;margin-bottom:12px}
 label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin:12px 0 6px}
-.modal input,.modal select,.modal textarea,.field{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:12px;font:500 14px Montserrat,system-ui,sans-serif;background:#fcfbf8;color:var(--ink)}
+.modal input,.modal select,.modal textarea,.field{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:12px;font:500 14px Figtree,system-ui,sans-serif;background:#fcfbf8;color:var(--ink)}
 textarea.field{resize:vertical;min-height:110px;line-height:1.5}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chk{border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;font-size:12.5px;font-weight:600;background:#fff;color:var(--ink)}
@@ -178,7 +178,7 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.5}
 .qr button:hover{background:#f5fbff}
 .typing{align-self:flex-start;background:#fff;border-radius:10px;padding:10px 14px;font-size:18px;letter-spacing:2px;color:#999}
 .pin{display:flex;gap:6px;background:#f0f2f5;padding:8px;border-radius:0 0 28px 28px}
-.pin input{flex:1;border:0;border-radius:20px;padding:10px 14px;font:500 13.5px Montserrat,system-ui,sans-serif;outline:none}
+.pin input{flex:1;border:0;border-radius:20px;padding:10px 14px;font:500 13.5px Figtree,system-ui,sans-serif;outline:none}
 .pin button{width:40px;height:40px;border-radius:50%;border:0;background:#00a884;color:#fff;font-size:16px;flex:none}
 @keyframes pin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .who-sel{display:flex;flex-direction:column;gap:8px}
@@ -191,7 +191,7 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.5}
 .empty{text-align:center;color:var(--muted);padding:26px 0}
 .hide{display:none!important}
 .mcards{display:none}
-.selst{padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;font:600 12.5px Montserrat,system-ui,sans-serif;background:#fff}
+.selst{padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;font:600 12.5px Figtree,system-ui,sans-serif;background:#fff}
 @media(max-width:1100px){.simwrap{grid-template-columns:1fr}.phone{max-width:380px;margin:auto;width:100%}}
 @media(max-width:980px){.kpis,.alerts{grid-template-columns:1fr 1fr}.grid2,.rules,.circ,.locked{grid-template-columns:1fr}}
 @media(max-width:760px){
@@ -222,11 +222,76 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.5}
 .login img{width:54px;display:block;margin:0 auto 10px}
 .login h2{text-align:center;color:var(--navy);margin:0 0 4px}
 .login p{text-align:center;color:var(--muted);font-size:13px;margin:0 0 14px}
-.login input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 14.5px Montserrat,system-ui,sans-serif;margin-top:8px;box-sizing:border-box}
+.login input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 14.5px Figtree,system-ui,sans-serif;margin-top:8px;box-sizing:border-box}
 .login .btn{width:100%;justify-content:center;margin-top:16px}
 .login .er{color:var(--bad);font-size:13px;text-align:center;min-height:18px;margin-top:10px}
 .side-foot b{display:block;color:#fff}
 .busy{opacity:.6;pointer-events:none}
+/* ===== Rediseño: más claro y cómodo ===== */
+:root{--navy:#0B2B5B;--navy2:#123a73;--green:#12603F;--gold:#C99A3E;--bg:#EEF2F7;--line:#DCE3ED;--ink:#1B2433;--muted:#56637A}
+body{font-family:Figtree,system-ui,sans-serif;font-size:15px}
+h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.01em}
+.top h1{font-size:30px;line-height:1.1}
+.top p{font-size:15px;max-width:70ch;margin-top:4px}
+.card h2{font-size:19px}
+.sub{font-size:14px}
+.navlbl{text-transform:none;letter-spacing:0;font-size:12.5px;opacity:.6;margin-top:14px}
+.nav button{font-size:14.5px;padding:11px 12px;font-family:inherit}
+.btn{min-height:42px;font-family:inherit;font-size:14.5px;cursor:pointer}
+.btn-sm{min-height:34px}
+.tab{font-family:inherit;font-size:14px;padding:9px 16px;cursor:pointer}
+.demo{text-transform:none;letter-spacing:0;font-size:13px}
+.field,select,input,textarea{font-family:inherit}
+.muted{color:var(--muted);font-weight:500}
+.field,.modal input,.modal select,.modal textarea{background:#fff}
+.lbl{margin:14px 0 6px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.subir{width:100%}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:10px}
+.thumbs div{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bg)}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.thumbs button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(11,43,91,.85);color:#fff;cursor:pointer;line-height:1}
+.dest{display:grid;gap:8px}
+.dest label{margin:0;display:flex;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.dest input{width:18px;height:18px;accent-color:var(--navy)}
+.dest b{display:block;font-size:14.5px;color:var(--navy)}
+.dest small{color:var(--muted);font-size:12.5px}
+.aviso{font-size:13.5px;color:var(--warn);margin-top:10px}
+.post{border:1px solid var(--line);border-radius:14px;overflow:hidden;max-width:420px}
+.post .ph{display:flex;align-items:center;gap:10px;padding:12px}
+.post .ph img{width:36px;height:36px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--line);padding:3px}
+.post .ph b{display:block;font-size:14px}.post .ph small{color:var(--muted);font-size:12px}
+.post .pt{padding:0 12px 12px;white-space:pre-line;font-size:14px}
+.post .pi{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:2px;background:var(--bg)}
+.post .pi img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.post .vac{padding:40px 12px;text-align:center;color:var(--muted);font-size:13.5px}
+.pubrow{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.pubrow:first-child{border-top:0}
+.pubrow img,.pubrow .noimg{width:72px;height:72px;border-radius:12px;object-fit:cover;background:var(--bg)}
+.pubrow b{display:block;font-size:15px;color:var(--navy)}
+.pubrow .meta{font-size:13px;color:var(--muted)}
+.estados{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.acc{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.row-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.galgrid .gi{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.galgrid .gi.off img{opacity:.35}
+.galgrid img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.galgrid .gb{padding:10px;display:grid;gap:8px}
+.galgrid input[type=text]{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.galgrid .gl{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.portada{display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start}
+.portada img{width:100%;border-radius:12px;border:1px solid var(--line)}
+.web2{align-items:start}
+.mtop{display:none}
+.alert{min-width:0}
+@media(max-width:760px){
+ .dos,.portada{grid-template-columns:1fr}
+ .pubrow{grid-template-columns:56px 1fr}.pubrow img,.pubrow .noimg{width:56px;height:56px}.acc{grid-column:1/-1;justify-content:flex-start}
+ .mtop{display:flex;justify-content:space-between;align-items:center;margin:-4px 0 14px;font-size:13.5px;color:var(--muted)}
+ .mtop button{background:none;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;font:600 13px Figtree,sans-serif;color:var(--navy)}
+ .top h1{font-size:24px}
+}
 </style></head><body>
 <div class="login hide" id="login"><form id="loginForm"><img src="/assets/monograma.png" alt=""><h2>Colegio Paulo Freire</h2><p>Sistema administrativo</p><input id="lUser" placeholder="Usuario" autocomplete="username" required><input id="lPass" type="password" placeholder="Contraseña" autocomplete="current-password" required><button class="btn btn-p" type="submit">Entrar</button><div class="er" id="lErr"></div></form></div>
 
@@ -234,25 +299,28 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.5}
  <aside>
   <div class="brand"><img src="/assets/monograma.png" alt=""><span><b>Paulo Freire</b><small>Sistema administrativo</small></span></div>
   <nav class="nav" id="nav">
-   <div class="navlbl">GENERAL</div>
+   <div class="navlbl">General</div>
    <button data-v="panel" class="on"><span class="ico">📊</span>Panel</button>
    <button data-v="asistente"><span class="ico">💬</span>WhatsApp<span class="badge" id="bChat"></span></button>
-   <div class="navlbl">COBROS</div>
+   <div class="navlbl">Cobros</div>
    <button data-v="familias"><span class="ico">👨‍👩‍👧</span>Familias</button>
    <button data-v="pagos"><span class="ico">💳</span>Pagos</button>
    <button data-v="comprobantes"><span class="ico">🧾</span>Comprobantes<span class="badge" id="bComp"></span></button>
-   <div class="navlbl">ATENCIÓN</div>
+   <div class="navlbl">Atención</div>
    <button data-v="solicitudes"><span class="ico">📥</span>Solicitudes<span class="badge" id="bSol"></span></button>
    <button data-v="interesados"><span class="ico">🌱</span>Interesados<span class="badge" id="bInt"></span></button>
    <button data-v="circulares"><span class="ico">📢</span>Circulares</button>
    <button data-v="avisos"><span class="ico">🔔</span>Recordatorios<span class="badge" id="qBadge"></span></button>
+   <div class="navlbl">Página web</div>
+   <button data-v="web"><span class="ico">🌐</span>Web y redes</button>
   </nav>
   <div class="side-foot"><b id="uNombre"></b><span id="demoNote"></span><br><button id="reset" class="hide">↺ Reiniciar datos de prueba</button><br><button id="logout">Cerrar sesión</button></div>
  </aside>
  <main>
+  <div class="mtop"><span id="mUser"></span><button id="mLogout">Cerrar sesión</button></div>
   <!-- PANEL -->
   <section id="v-panel">
-   <div class="top"><div><h1 id="saludo">Hola 👋</h1><p>Resumen del colegio · Año escolar 2026–2027</p></div><span class="demo" id="demoTag">MODO DEMO · DATOS DE PRUEBA</span></div>
+   <div class="top"><div><h1 id="saludo">Hola 👋</h1><p>Resumen del colegio · Año escolar 2026–2027</p></div><span class="demo" id="demoTag">Modo demo · datos de prueba</span></div>
    <div class="kpis">
     <div class="kpi"><small>Estudiantes</small><b id="kEst">0</b><span id="kFam">0 familias</span></div>
     <div class="kpi g"><small id="kCobLbl">Cobrado este mes</small><b id="kCob">RD$0</b><span id="kCobSub"></span><div class="bar"><i id="kBar"></i></div></div>
@@ -294,6 +362,43 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.5}
    </div>
   </section>
   
+<!-- PÁGINA WEB Y REDES -->
+  <section id="v-web" class="hide">
+   <div class="top"><div><h1>Página web y redes</h1><p>Lo que publiques aquí aparece en la página del colegio y, si lo marcas, en Facebook e Instagram.</p></div><a class="btn btn-o" href="/" target="_blank" rel="noopener">Ver la página</a></div>
+   <div class="tabs"><button class="tab on" data-wtab="pubs">Actividades y noticias</button><button class="tab" data-wtab="gal">Galería</button><button class="tab" data-wtab="portada">Portada</button></div>
+   <div id="wPubs">
+    <div class="grid2 web2">
+     <form class="card" id="pubForm">
+      <h2>Nueva publicación</h2><p class="sub">Escribe como se lo contarías a los padres.</p>
+      <div class="chips" id="pTipo"><button type="button" class="chk on" data-tipo="actividad">Actividad</button><button type="button" class="chk" data-tipo="noticia">Noticia o aviso</button></div>
+      <label class="lbl" for="pTit">Título</label><input class="field" id="pTit" maxlength="140" placeholder="Ej.: Feria científica de primaria" required>
+      <div class="dos"><div><label class="lbl" for="pFecha">Fecha</label><input class="field" id="pFecha" type="date"></div><div><label class="lbl">Fotos <span class="muted" id="pFotosN">(hasta 10)</span></label><label class="btn btn-o subir" for="pFile">＋ Agregar fotos</label><input id="pFile" type="file" accept="image/*" multiple hidden></div></div>
+      <div class="thumbs" id="pThumbs"></div>
+      <label class="lbl" for="pTxt">Texto</label><textarea class="field" id="pTxt" maxlength="2000" placeholder="Qué pasó, quiénes participaron y cualquier dato útil para las familias."></textarea>
+      <label class="lbl">Publicar en</label>
+      <div class="dest" id="pDest">
+       <label><input type="checkbox" id="dWeb" checked><span><b>Página web</b><small>Sección de actividades</small></span></label>
+       <label><input type="checkbox" id="dFb"><span><b>Facebook</b><small id="dFbEst"></small></span></label>
+       <label><input type="checkbox" id="dIg"><span><b>Instagram</b><small id="dIgEst"></small></span></label>
+      </div>
+      <p class="aviso" id="pAviso"></p>
+      <button class="btn btn-p" id="pPub" type="submit" style="width:100%;margin-top:14px">Publicar</button>
+     </form>
+     <div class="card"><h2>Así se verá</h2><p class="sub">Vista previa en redes</p>
+      <div class="post" id="pPrev"></div>
+     </div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Publicaciones</h2><p class="sub">Las más recientes primero</p><div class="list" id="pubList"></div></div>
+   </div>
+   <div id="wGal" class="hide">
+    <div class="card"><div class="row-head"><div><h2>Galería de la página</h2><p class="sub" style="margin:0">Fotos de la sección "Vida escolar". Desmarca una foto para ocultarla sin borrarla.</p></div><label class="btn btn-p" for="gFile">＋ Subir fotos</label><input id="gFile" type="file" accept="image/*" multiple hidden></div>
+     <div class="galgrid" id="galGrid"></div></div>
+   </div>
+   <div id="wPortada" class="hide">
+    <div class="card portada"><div><h2>Imagen de portada</h2><p class="sub">Es lo primero que ven las familias al entrar a la página. Funciona mejor un afiche o una foto vertical.</p><label class="btn btn-p" for="bFile" style="margin-top:12px">Cambiar imagen</label><input id="bFile" type="file" accept="image/*" hidden></div><img id="bPrev" alt="Portada actual"></div>
+   </div>
+  </section>
+
 <!-- FAMILIAS -->
   <section id="v-familias" class="hide">
    <div class="top"><div><h1>Familias</h1><p>Toca una familia para ver su estado de cuenta</p></div><button class="btn btn-p" data-pay>＋ Registrar pago</button></div>

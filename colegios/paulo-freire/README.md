@@ -29,7 +29,7 @@ Para otro colegio: copiar esta carpeta, cambiar `src/colegio.js`, el logo en `pu
 
 ```
 npm install
-npm test                      # 34 pruebas del bot y la API
+npm test                      # 49 pruebas del bot y la API
 node test/servidor-local.mjs  # abre http://localhost:8787/panel/ (usuario: director, clave: prueba)
 ```
 
@@ -46,6 +46,17 @@ node test/servidor-local.mjs  # abre http://localhost:8787/panel/ (usuario: dire
    - `WA_TOKEN` → token permanente de usuario del sistema de Meta
    - `WA_APP_SECRET` → App Dashboard de Meta → Configuración → Básica → Clave secreta
 4. Webhook en Meta: URL `https://paulo-freire.<tu-subdominio>.workers.dev/webhook`, token de verificación = `WA_VERIFY_TOKEN`, campo `messages`.
+
+## Página web y redes sociales
+
+Desde el panel → **Web y redes** se publican actividades y noticias (con fotos), se maneja la galería y la imagen de portada. Lo publicado aparece en la página y, si se marca, en Facebook e Instagram.
+
+Para publicar de verdad en redes, agrega en Cloudflare:
+- `FB_PAGE_ID` → ID de la página de Facebook
+- `FB_PAGE_TOKEN` (Secret) → token de la página con permisos `pages_manage_posts`, `pages_read_engagement`, `instagram_basic`, `instagram_content_publish`
+- `IG_USER_ID` → ID de la cuenta de Instagram profesional vinculada a esa página
+
+Sin esas variables, la publicación en redes queda como "Simulado".
 
 ## Modo demo
 

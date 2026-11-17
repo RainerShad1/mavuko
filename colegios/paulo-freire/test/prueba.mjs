@@ -12,9 +12,16 @@ const env = { __db: db, ASSETS: { fetch: () => new Response('asset') }, WA_VERIF
 // Simula la API de Meta
 const llamadas = [];
 globalThis.fetch = async (url, init = {}) => {
-  llamadas.push({ url: String(url), body: init.body ? JSON.parse(init.body) : null });
+  llamadas.push({ url: String(url), body: typeof init.body === 'string' ? JSON.parse(init.body) : init.body ? Object.fromEntries(init.body) : null });
   if (String(url).endsWith('/MEDIA1')) return new Response(JSON.stringify({ url: 'https://lookaside.test/m', mime_type: 'image/jpeg' }));
   if (String(url).startsWith('https://lookaside')) return new Response(new Uint8Array([255, 216, 255, 0, 1, 2]));
+  const u = String(url);
+  if (u.includes('/PAGINA/photos')) return new Response(JSON.stringify({ id: 'foto' + llamadas.length, post_id: 'PAGINA_post' + llamadas.length }));
+  if (u.includes('/PAGINA/feed')) return new Response(JSON.stringify({ id: 'PAGINA_feed' + llamadas.length }));
+  if (u.includes('/IGUSER/media_publish')) return new Response(JSON.stringify({ id: 'igmedia1' }));
+  if (u.includes('/IGUSER/media')) return new Response(JSON.stringify({ id: 'cont' + llamadas.length }));
+  if (u.includes('fields=status_code')) return new Response(JSON.stringify({ status_code: 'FINISHED' }));
+  if (u.includes('fields=permalink')) return new Response(JSON.stringify({ permalink: 'https://instagram.com/p/abc' }));
   return new Response(JSON.stringify({ messages: [{ id: 'wamid.out' + llamadas.length }] }));
 };
 const ctx = { waitUntil: (p) => p };
@@ -124,6 +131,33 @@ check(st.sent.some((s) => s.fam === 'F4' && s.est !== 'Simulado'), 'F4 real reci
 // webhook GET verificación y estados
 const v = await worker.fetch(new Request('https://x.test/webhook?hub.mode=subscribe&hub.verify_token=v&hub.challenge=123'), env, ctx);
 check((await v.text()) === '123', 'verificación webhook');
+// ---- Página web y redes ----
+let pub = (await call('/api/publico/contenido')).data;
+check(pub.publicaciones.length === 2 && pub.galeria.length === 2 && pub.portada.banner, 'contenido público inicial');
+const md = await call('/api/medios', 'POST', { datos: btoa('jpegfalso'), ancho: 10, alto: 10 }, cookie);
+check(md.status === 200 && md.data.url.startsWith('/media/'), 'subir foto');
+const img = await worker.fetch(new Request('https://x.test' + md.data.url), env, ctx);
+check(img.status === 200 && (await img.text()) === 'jpegfalso', 'servir foto pública');
+let np = await call('/api/publicaciones', 'POST', { titulo: 'Feria científica', texto: 'Proyectos', fotos: [md.data.url, '/assets/fotos/admisiones.jpg'], fotosIg: [md.data.ig, '/assets/fotos/admisiones.jpg'], fb: true, ig: true }, cookie);
+check(np.status === 200 && np.data.redes.fb.estado === 'simulado' && np.data.redes.ig.estado === 'simulado', 'publicar sin redes conectadas = simulado ' + JSON.stringify(np.data));
+env.FB_PAGE_ID = 'PAGINA'; env.FB_PAGE_TOKEN = 'tok'; env.IG_USER_ID = 'IGUSER';
+np = await call('/api/publicaciones', 'POST', { titulo: 'Acto cívico', texto: 'Izamos la bandera', fotos: [md.data.url], fotosIg: [md.data.ig], fb: true, ig: true }, cookie);
+check(np.data.redes.fb.estado === 'publicado' && np.data.redes.fb.link.includes('facebook.com') && np.data.redes.ig.link === 'https://instagram.com/p/abc', 'publicar en FB e IG ' + JSON.stringify(np.data));
+const fbCall = llamadas.find((l) => l.url.includes('/PAGINA/photos'));
+check(fbCall && fbCall.body.url === 'https://x.test' + md.data.url && fbCall.body.caption.includes('Acto cívico'), 'Facebook recibe la URL pública de la foto');
+check(llamadas.some((l) => l.url.includes('/IGUSER/media') && l.body?.image_url === 'https://x.test' + md.data.ig), 'Instagram recibe la versión ajustada');
+np = await call('/api/publicaciones', 'POST', { titulo: 'Varias fotos', fotos: [md.data.url, md.data.url], fb: true }, cookie);
+check(np.data.redes.fb.estado === 'publicado', 'facebook con varias fotos');
+check((await call('/api/publicaciones', 'POST', { titulo: 'Sin foto', ig: true }, cookie)).status === 400, 'instagram exige foto');
+const ct = (await call('/api/contenido', 'GET', null, cookie)).data;
+check(ct.publicaciones.length === 5 && ct.redes.fb && ct.redes.ig, 'contenido del panel');
+check((await call('/api/publicaciones/' + ct.publicaciones[0].id, 'POST', { web: false }, cookie)).status === 200, 'ocultar de la web');
+check((await call('/api/galeria', 'POST', { foto: md.data.url, texto: 'Recreo' }, cookie)).status === 200, 'agregar a galería');
+check((await call('/api/galeria', 'POST', { foto: 'https://malicioso.com/x.jpg' }, cookie)).status === 400, 'rechaza fotos externas');
+check((await call('/api/portada', 'POST', { banner: md.data.url }, cookie)).status === 200, 'cambiar portada');
+pub = (await call('/api/publico/contenido')).data;
+check(pub.portada.banner === md.data.url && pub.galeria.length === 3, 'web refleja cambios');
+
 const reset = await call('/api/demo/reiniciar', 'POST', {}, cookie);
 check(reset.status === 200, 'reiniciar');
 const tipos = llamadas.filter((l) => l.body?.type).map((l) => l.body.type + (l.body.interactive ? ':' + l.body.interactive.type : ''));

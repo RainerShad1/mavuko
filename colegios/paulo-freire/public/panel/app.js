@@ -235,9 +235,9 @@ const TPL = {
 let cDest = new Set(['Todo']), cWhen = 'now';
 function cGrupos() { const g = ['Todo', 'Inicial', 'Primaria', 'Secundaria']; const gr = [...new Set(DB.stus.map((s) => s.grado))].sort((a, b) => GRADOS.findIndex((x) => x[0] === a) - GRADOS.findIndex((x) => x[0] === b)); return g.concat(gr); }
 function destinatarios() { const st = DB.stus.filter((s) => cDest.has('Todo') || cDest.has(s.nivel) || cDest.has(s.grado)); return { est: st.length, fams: [...new Set(st.map((s) => s.fam))] }; }
-const etiquetaEnvio = () => DB.modoDemo ? ' · MODO DEMO' : '';
+const etiquetaEnvio = () => DB.modoDemo ? ' · modo demo' : '';
 function renderCirc() {
-  $('#cLocked').classList.toggle('hide', DB.modCirc); $('#cOn').classList.toggle('hide', !DB.modCirc); $('#cState').textContent = DB.modCirc ? 'MÓDULO ACTIVO' + etiquetaEnvio() : 'MÓDULO DESACTIVADO';
+  $('#cLocked').classList.toggle('hide', DB.modCirc); $('#cOn').classList.toggle('hide', !DB.modCirc); $('#cState').textContent = DB.modCirc ? 'Módulo activo' + etiquetaEnvio() : 'Módulo desactivado';
   $('#cDest').innerHTML = cGrupos().map((g) => `<button class="chk ${cDest.has(g) ? 'on' : ''}" data-dest="${esc(g)}">${g === 'Todo' ? 'Todo el colegio' : esc(g)}</button>`).join('');
   const d = destinatarios(); const n = d.fams.length;
   $('#cN').textContent = n; $('#cE').textContent = d.est;
@@ -282,7 +282,7 @@ function cola() {
 const TICK = { Enviado: ['t-sent', '✓'], Entregado: ['t-sent', '✓✓'], 'Leído': ['t-read', '✓✓'], Simulado: ['t-sent', '◌'], 'Falló': ['t-sent', '⚠️'] };
 function renderAvisos() {
   $('#locked').classList.toggle('hide', DB.modRec); $('#modOn').classList.toggle('hide', !DB.modRec);
-  $('#modState').textContent = DB.modRec ? 'MÓDULO ACTIVO' + etiquetaEnvio() : 'MÓDULO DESACTIVADO';
+  $('#modState').textContent = DB.modRec ? 'Módulo activo' + etiquetaEnvio() : 'Módulo desactivado';
   document.querySelectorAll('.sw').forEach((b) => b.classList.toggle('on', !!DB.rules[b.dataset.rule]));
   const q = cola(); $('#qBadge').textContent = q.length || '';
   $('#qSub').textContent = q.length ? `${q.length} familias con pagos pendientes o vencidos` : 'Todo enviado por hoy';
@@ -335,7 +335,7 @@ function renderDemoForm() {
   const v = $('#vFam').value;
   $('#vFam').innerHTML = DB.fams.map((f) => { const s = estadoFam(f); return `<option value="${f.id}">${esc(f.tutor)} — ${PILL[s.st][1]}${f.real ? ' · 📱 ' + esc(f.tel) : ''}</option>`; }).join('');
   if (v) $('#vFam').value = v; else { const m = DB.fams.find((f) => estadoFam(f).st === 'bad' && hijosDe(f.id).length > 1) || DB.fams.find((f) => estadoFam(f).st === 'bad'); if (m) $('#vFam').value = m.id; }
-  $('#waTag').textContent = !META.waConectado ? 'WHATSAPP SIN CONECTAR' : DB.modoDemo ? 'MODO DEMO' : 'EN VIVO';
+  $('#waTag').textContent = !META.waConectado ? 'WhatsApp sin conectar' : DB.modoDemo ? 'Modo demo' : 'En vivo';
 }
 
 // ================= UI general =================
@@ -344,7 +344,7 @@ function closeAll() { document.querySelectorAll('.modal.show,.drawer.show').forE
 let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 3500); }
 function renderAll() {
   PAGADOS = new Set(DB.pays.map((p) => p.est + '|' + p.mes));
-  $('#uNombre').textContent = DB.user.nombre;
+  $('#uNombre').textContent = DB.user.nombre; $('#mUser').textContent = DB.user.nombre;
   $('#demoNote').textContent = DB.modoDemo ? 'Modo demo: solo se envían mensajes a los números vinculados.' : '';
   $('#demoTag').classList.toggle('hide', !DB.modoDemo);
   $('#reset').classList.toggle('hide', DB.user.rol !== 'director' || !DB.modoDemo);
@@ -358,6 +358,7 @@ function go(v) {
   document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
   window.scrollTo(0, 0);
   if (v === 'asistente') loadChats().catch(() => {});
+  if (v === 'web') cargarWeb().catch(() => {});
 }
 document.querySelectorAll('#nav button').forEach((b) => (b.onclick = () => go(b.dataset.v)));
 document.addEventListener('click', (e) => {
@@ -406,10 +407,102 @@ $('#cSend').onclick = sendCirc;
 ['#q', '#fEst', '#fNiv'].forEach((s) => $(s).addEventListener('input', renderFamilias));
 ['#qp', '#fMet'].forEach((s) => $(s).addEventListener('input', renderPagos));
 $('#reset').onclick = (ev) => { if (!confirm('¿Borrar todos los datos y cargar de nuevo los datos de prueba? Las familias vinculadas a números reales se desvinculan.')) return; act(ev.currentTarget, async () => { await api('/demo/reiniciar', {}); curChat = null; MSGS = []; await load(); toast('Datos de prueba cargados de nuevo'); }); };
-$('#logout').onclick = async () => { await fetch('/api/logout', { method: 'POST' }); location.reload(); };
+$('#logout').onclick = $('#mLogout').onclick = async () => { await fetch('/api/logout', { method: 'POST' }); location.reload(); };
 $('#pinForm').onsubmit = (e) => { e.preventDefault(); const v = $('#pinTxt').value.trim(); if (!v || !curChat) return; act($('#pinBtn'), async () => { await api('/chats/' + curChat, { texto: v }); $('#pinTxt').value = ''; await loadChats(); await openChat(curChat); }); };
 $('#vBtn').onclick = (ev) => act(ev.currentTarget, async () => { await api('/demo/vincular', { fam: $('#vFam').value, tel: $('#vTel').value }); await load(); toast('Número vinculado ✅ Escribe "Hola" al WhatsApp del colegio'); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+
+
+// ================= Página web y redes =================
+let CONT = null, NUEVAS = [], wtab = 'pubs', tipoPub = 'actividad';
+async function cargarWeb() { CONT = await api('/contenido'); renderWeb(); }
+// Reduce la foto a JPEG (máx. 1600 px) y, si no cabe en el formato de Instagram (4:5 a 1.91:1), prepara una versión con márgenes
+async function procesarFoto(file) {
+  const img = await createImageBitmap(file);
+  const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+  const w = Math.round(img.width * k), h = Math.round(img.height * k);
+  const cv = (W, H, x, y) => { const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.fillStyle = '#EEF2F7'; g.fillRect(0, 0, W, H); g.drawImage(img, x, y, w, h); return c.toDataURL('image/jpeg', 0.82).split(',')[1]; };
+  const datos = cv(w, h, 0, 0);
+  const r = w / h; let ig = null;
+  if (r < 0.8) { const W = Math.ceil(h * 0.8); ig = cv(W, h, Math.round((W - w) / 2), 0); }
+  else if (r > 1.91) { const H = Math.ceil(w / 1.91); ig = cv(w, H, 0, Math.round((H - h) / 2)); }
+  return { datos, ig, ancho: w, alto: h, vista: 'data:image/jpeg;base64,' + datos };
+}
+const subir = (f) => api('/medios', { datos: f.datos, ig: f.ig, ancho: f.ancho, alto: f.alto });
+const ESTADO = { publicado: ['p-ok', 'Publicado'], simulado: ['p-info', 'Simulado'], 'falló': ['p-bad', 'Falló'] };
+const chip = (red, e, link) => e ? `<span class="pill ${ESTADO[e]?.[0] || 'p-mute'}">${red}: ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${ESTADO[e]?.[1] || e}</a>` : ESTADO[e]?.[1] || e}</span>` : '';
+function renderWeb() {
+  if (!CONT) return;
+  document.querySelectorAll('[data-wtab]').forEach((b) => b.classList.toggle('on', b.dataset.wtab === wtab));
+  $('#wPubs').classList.toggle('hide', wtab !== 'pubs'); $('#wGal').classList.toggle('hide', wtab !== 'gal'); $('#wPortada').classList.toggle('hide', wtab !== 'portada');
+  const rd_ = CONT.redes;
+  $('#dFbEst').textContent = rd_.fb ? 'Página conectada' : 'Sin conectar: se simula'; $('#dIgEst').textContent = rd_.ig ? 'Cuenta conectada' : 'Sin conectar: se simula';
+  $('#pubList').innerHTML = CONT.publicaciones.length ? CONT.publicaciones.map((p) => `<div class="pubrow">${p.fotos[0] ? `<img src="${esc(p.fotos[0])}" alt="">` : '<div class="noimg"></div>'}<div><b>${esc(p.titulo)}</b><span class="meta">${p.tipo === 'noticia' ? 'Noticia' : 'Actividad'} del ${fmtF(p.fecha + 'T12:00:00')} · ${p.fotos.length} foto${p.fotos.length === 1 ? '' : 's'}</span>
+    <div class="estados"><span class="pill ${p.web ? 'p-ok' : 'p-mute'}">Web: ${p.web ? 'visible' : 'oculta'}</span>${chip('Facebook', p.fb, p.fbLink)}${chip('Instagram', p.ig, p.igLink)}</div>${p.error ? `<div class="meta" style="color:var(--bad);margin-top:4px">${esc(p.error)}</div>` : ''}</div>
+    <div class="acc"><button class="btn btn-o btn-sm" data-pweb="${p.id}" data-v2="${p.web ? 0 : 1}">${p.web ? 'Ocultar de la web' : 'Mostrar en la web'}</button>${p.fb !== 'publicado' ? `<button class="btn btn-o btn-sm" data-pred="${p.id}" data-red="fb">Publicar en Facebook</button>` : ''}${p.ig !== 'publicado' && p.fotos.length ? `<button class="btn btn-o btn-sm" data-pred="${p.id}" data-red="ig">Publicar en Instagram</button>` : ''}<button class="btn btn-r btn-sm" data-pdel="${p.id}">Borrar</button></div></div>`).join('') : '<p class="empty">Aún no hay publicaciones. Crea la primera arriba.</p>';
+  $('#galGrid').innerHTML = CONT.galeria.length ? CONT.galeria.map((g) => `<div class="gi ${g.visible ? '' : 'off'}"><img src="${esc(g.foto)}" alt="${esc(g.texto)}" loading="lazy"><div class="gb"><input type="text" value="${esc(g.texto)}" placeholder="Descripción corta" data-gtxt="${g.id}" maxlength="120"><div class="gl"><label><input type="checkbox" data-gvis="${g.id}" ${g.visible ? 'checked' : ''}> Visible en la web</label><button class="btn btn-r btn-sm" data-gdel="${g.id}">Borrar</button></div></div></div>`).join('') : '<p class="empty">La galería está vacía. Sube fotos de clases, actos y celebraciones.</p>';
+  $('#bPrev').src = CONT.portada.banner;
+  previewPub();
+}
+function previewPub() {
+  const t = $('#pTit').value.trim(), x = $('#pTxt').value.trim();
+  $('#pThumbs').innerHTML = NUEVAS.map((f, i) => `<div><img src="${f.vista}" alt=""><button type="button" data-qfoto="${i}" aria-label="Quitar foto">×</button></div>`).join('');
+  $('#pFotosN').textContent = NUEVAS.length ? `(${NUEVAS.length} de 10)` : '(hasta 10)';
+  const avisos = [];
+  if ($('#dIg').checked && !NUEVAS.length) avisos.push('Instagram necesita al menos una foto.');
+  if (($('#dFb').checked && !CONT?.redes.fb) || ($('#dIg').checked && !CONT?.redes.ig)) avisos.push('Las redes sin conectar se simulan: no se publica de verdad.');
+  $('#pAviso').textContent = avisos.join(' ');
+  $('#pPrev').innerHTML = `<div class="ph"><img src="/assets/monograma.png" alt=""><span><b>${esc(META?.colegio || 'Colegio')}</b><small>Ahora</small></span></div><div class="pt">${esc(t || 'Título de la publicación')}${x ? '\n\n' + esc(x) : ''}\n\n#ColegioPauloFreire #LaRomana</div>` +
+    (NUEVAS.length ? `<div class="pi">${NUEVAS.slice(0, 2).map((f) => `<img src="${f.vista}" alt="">`).join('')}</div>${NUEVAS.length > 2 ? `<p class="sub" style="padding:8px 12px">+${NUEVAS.length - 2} fotos más</p>` : ''}` : '<div class="vac">Agrega fotos para que se vea mejor</div>');
+}
+$('#pFecha').value = new Date().toISOString().slice(0, 10);
+$('#pFile').onchange = async (e) => {
+  const fs = [...e.target.files].slice(0, 10 - NUEVAS.length); e.target.value = '';
+  for (const f of fs) { try { NUEVAS.push(await procesarFoto(f)); } catch { toast('No se pudo leer una de las fotos'); } }
+  previewPub();
+};
+['#pTit', '#pTxt'].forEach((s) => $(s).addEventListener('input', previewPub));
+['#dFb', '#dIg', '#dWeb'].forEach((s) => $(s).addEventListener('change', previewPub));
+$('#pubForm').onsubmit = (e) => {
+  e.preventDefault();
+  if (!$('#pTit').value.trim()) { toast('Escribe un título'); return; }
+  if (!$('#dWeb').checked && !$('#dFb').checked && !$('#dIg').checked) { toast('Elige al menos dónde publicar'); return; }
+  if ($('#dIg').checked && !NUEVAS.length) { toast('Instagram necesita al menos una foto'); return; }
+  act($('#pPub'), async () => {
+    $('#pPub').textContent = NUEVAS.length ? 'Subiendo fotos…' : 'Publicando…';
+    const subidas = []; for (const f of NUEVAS) subidas.push(await subir(f));
+    $('#pPub').textContent = 'Publicando…';
+    const r = await api('/publicaciones', { tipo: tipoPub, titulo: $('#pTit').value, texto: $('#pTxt').value, fecha: $('#pFecha').value, fotos: subidas.map((x) => x.url), fotosIg: subidas.map((x) => x.ig), web: $('#dWeb').checked, fb: $('#dFb').checked, ig: $('#dIg').checked });
+    NUEVAS = []; $('#pTit').value = ''; $('#pTxt').value = ''; $('#dFb').checked = $('#dIg').checked = false;
+    await cargarWeb();
+    const partes = [];
+    if (r.redes.fb) partes.push('Facebook: ' + (ESTADO[r.redes.fb.estado]?.[1] || r.redes.fb.estado).toLowerCase());
+    if (r.redes.ig) partes.push('Instagram: ' + (ESTADO[r.redes.ig.estado]?.[1] || r.redes.ig.estado).toLowerCase());
+    toast('Publicado' + (partes.length ? ' · ' + partes.join(' · ') : '') + (r.redes.error ? ' ⚠️ ' + r.redes.error : ''));
+  }).finally(() => { $('#pPub').textContent = 'Publicar'; });
+};
+$('#gFile').onchange = (e) => {
+  const fs = [...e.target.files]; e.target.value = '';
+  act(null, async () => { for (const f of fs) { const u = await subir(await procesarFoto(f)); await api('/galeria', { foto: u.url, texto: '' }); } await cargarWeb(); toast(`${fs.length} foto${fs.length === 1 ? '' : 's'} agregada${fs.length === 1 ? '' : 's'} a la galería`); });
+};
+$('#bFile').onchange = (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  act(null, async () => { const u = await subir(await procesarFoto(f)); await api('/portada', { banner: u.url }); await cargarWeb(); toast('Portada actualizada'); });
+};
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  const wt = t.closest('[data-wtab]'); if (wt) { wtab = wt.dataset.wtab; renderWeb(); return; }
+  const tp = t.closest('[data-tipo]'); if (tp) { tipoPub = tp.dataset.tipo; document.querySelectorAll('[data-tipo]').forEach((b) => b.classList.toggle('on', b === tp)); return; }
+  const qf = t.closest('[data-qfoto]'); if (qf) { NUEVAS.splice(+qf.dataset.qfoto, 1); previewPub(); return; }
+  const pw = t.closest('[data-pweb]'); if (pw) { act(pw, async () => { await api('/publicaciones/' + pw.dataset.pweb, { web: pw.dataset.v2 === '1' }); await cargarWeb(); }); return; }
+  const pr = t.closest('[data-pred]'); if (pr) { act(pr, async () => { const r = await api(`/publicaciones/${pr.dataset.pred}/redes`, { [pr.dataset.red]: true }); await cargarWeb(); toast(r.error ? '⚠️ ' + r.error : 'Publicado en ' + (pr.dataset.red === 'fb' ? 'Facebook' : 'Instagram')); }); return; }
+  const pd = t.closest('[data-pdel]'); if (pd) { if (!confirm('¿Borrar esta publicación de la página? Lo ya publicado en Facebook o Instagram no se borra de allá.')) return; act(pd, async () => { await api(`/publicaciones/${pd.dataset.pdel}/borrar`, {}); await cargarWeb(); toast('Publicación borrada'); }); return; }
+  const gd = t.closest('[data-gdel]'); if (gd) { if (!confirm('¿Borrar esta foto de la galería?')) return; act(gd, async () => { await api(`/galeria/${gd.dataset.gdel}/borrar`, {}); await cargarWeb(); }); }
+});
+document.addEventListener('change', (e) => {
+  const gv = e.target.closest('[data-gvis]'); if (gv) act(null, async () => { await api('/galeria/' + gv.dataset.gvis, { visible: gv.checked }); await cargarWeb(); });
+  const gt = e.target.closest('[data-gtxt]'); if (gt) act(null, async () => { await api('/galeria/' + gt.dataset.gtxt, { texto: gt.value }); toast('Descripción guardada'); });
+});
 
 // ================= Login =================
 function showLogin() { $('#login').classList.remove('hide'); setTimeout(() => $('#lUser').focus(), 50); }
