@@ -418,15 +418,42 @@ $('#loginForm').onsubmit = async (e) => {
   try {
     await api('/login', { usuario: $('#lUser').value, clave: $('#lPass').value });
     $('#login').classList.add('hide'); $('#lPass').value = '';
-    await load();
+    await load(); avisarNuevos();
   } catch (x) { $('#lErr').textContent = x.message; }
 };
 
 // ================= Arranque y actualización automática =================
-load().catch(() => {});
-setInterval(() => {
-  if (document.hidden || !DB || document.querySelector('.modal.show')) return;
-  load().catch(() => {});
-  if (vista === 'asistente') loadChats().catch(() => {});
-}, 10000);
-setInterval(() => { if (!document.hidden && DB && vista === 'asistente') loadChats().catch(() => {}); }, 4000);
+// Avisa cuando llega algo nuevo por WhatsApp (comprobantes, ausencias, citas, etc.)
+let vistos = null;
+function avisarNuevos() {
+  const ids = {
+    comp: DB.comps.filter((c) => c.estado === 'pend').map((c) => c.id),
+    aus: DB.aus.map((a) => a.id), cit: DB.citas.map((c) => c.id),
+    hum: DB.humano.map((h) => h.id), int: DB.ints.map((i) => i.id),
+  };
+  if (vistos) {
+    const nuevos = (k) => ids[k].filter((id) => !vistos[k].has(id));
+    const msgs = [];
+    nuevos('comp').forEach((id) => { const c = DB.comps.find((x) => x.id === id); msgs.push(`🧾 Nuevo comprobante de ${fam(c.fam)?.tutor || ''}`); });
+    nuevos('aus').forEach((id) => { const a = DB.aus.find((x) => x.id === id); msgs.push(`🤒 Ausencia: ${stu(a.est)?.nombre || ''}`); });
+    nuevos('cit').forEach(() => msgs.push('📅 Nueva cita por confirmar'));
+    nuevos('hum').forEach((id) => { const h = DB.humano.find((x) => x.id === id); msgs.push(`👩‍💼 ${h.nombre} quiere hablar con la secretaría`); });
+    nuevos('int').forEach((id) => { const i = DB.ints.find((x) => x.id === id); msgs.push(`🌱 Nuevo interesado: ${i.nombre}`); });
+    if (msgs.length) toast(msgs.join(' · '));
+  }
+  vistos = Object.fromEntries(Object.entries(ids).map(([k, v]) => [k, new Set(v)]));
+  const pend = ids.comp.length + DB.aus.filter((a) => !a.visto).length + DB.citas.filter((c) => c.estado === 'pend').length + DB.humano.filter((h) => !h.ok).length;
+  document.title = (pend ? `(${pend}) ` : '') + 'Sistema administrativo · ' + META.colegio;
+}
+let cargando = false;
+async function refrescar() {
+  if (cargando || !DB || document.querySelector('.modal.show')) return;
+  cargando = true;
+  try { await load(); avisarNuevos(); if (vista === 'asistente') await loadChats(); } catch { /* sin conexión: se reintenta */ }
+  finally { cargando = false; }
+}
+load().then(avisarNuevos).catch(() => {});
+setInterval(() => { if (!document.hidden) refrescar(); }, 5000);
+// Al volver a la pestaña o a la ventana, actualizar de inmediato
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescar(); });
+window.addEventListener('focus', refrescar);
