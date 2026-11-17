@@ -1,7 +1,7 @@
 {
   // Configuración de Cloudflare Workers para el sistema del colegio
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "paulo-freire",
+  "name": "colegiopaulofreire",
   "main": "src/index.js",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
