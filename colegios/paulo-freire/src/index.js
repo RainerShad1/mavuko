@@ -14,7 +14,7 @@ import { leerConfig } from './db.js';
 
 const json = (d, s = 200, h = {}) => new Response(JSON.stringify(d), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...h } });
 
-async function webhook(req, env, ctx, db) {
+async function webhook(req, env, ctx) {
   const url = new URL(req.url);
   if (req.method === 'GET') {
     // Verificación que hace Meta al configurar el webhook
@@ -24,6 +24,7 @@ async function webhook(req, env, ctx, db) {
     return new Response('Prohibido', { status: 403 });
   }
   if (req.method !== 'POST') return new Response('Método no permitido', { status: 405 });
+  const db = crearDB(env);
   const cuerpo = await req.text();
   if (!(await firmaValida(env, cuerpo, req.headers.get('x-hub-signature-256')))) return new Response('Firma inválida', { status: 401 });
   let data;
@@ -58,8 +59,9 @@ export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     const p = url.pathname;
-    if (p === '/webhook') return webhook(req, env, ctx, crearDB(env));
+    if (p === '/webhook') return webhook(req, env, ctx);
     if (p.startsWith('/api/')) {
+      if (!env.DATABASE_URL && !env.__db) return json({ error: 'Falta configurar DATABASE_URL en Cloudflare (Settings → Variables and Secrets)' }, 503);
       const db = crearDB(env);
       try {
         if (p === '/api/login' && req.method === 'POST') {
