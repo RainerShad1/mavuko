@@ -505,7 +505,8 @@ document.addEventListener('change', (e) => {
 });
 
 // ================= Login =================
-function showLogin() { $('#login').classList.remove('hide'); setTimeout(() => $('#lUser').focus(), 50); }
+function quitarCarga() { const c = $('#cargando'); if (c && !c.classList.contains('fuera')) { c.classList.add('fuera'); setTimeout(() => c.remove(), 600); } }
+function showLogin() { quitarCarga(); $('#login').classList.remove('hide'); setTimeout(() => $('#lUser').focus(), 50); }
 $('#loginForm').onsubmit = async (e) => {
   e.preventDefault(); $('#lErr').textContent = '';
   try {
@@ -545,7 +546,7 @@ async function refrescar() {
   try { await load(); avisarNuevos(); if (vista === 'asistente') await loadChats(); } catch { /* sin conexión: se reintenta */ }
   finally { cargando = false; }
 }
-load().then(avisarNuevos).catch(() => {});
+load().then(() => { avisarNuevos(); quitarCarga(); }).catch(() => quitarCarga());
 setInterval(() => { if (!document.hidden) refrescar(); }, 5000);
 // Al volver a la pestaña o a la ventana, actualizar de inmediato
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescar(); });

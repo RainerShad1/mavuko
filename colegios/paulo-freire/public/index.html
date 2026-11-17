@@ -7,6 +7,7 @@
 <meta property="og:title" content="Colegio Paulo Freire · La Romana">
 <meta property="og:description" content="Inicial, Primaria y Secundaria. Admisiones abiertas para el año escolar 2026–2027.">
 <meta property="og:image" content="/assets/fotos/admisiones.jpg">
+<link rel="preload" as="image" href="/assets/fotos/admisiones.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -69,8 +70,9 @@ p{max-width:62ch}
 .hero-nota{margin-top:34px;display:flex;gap:28px;flex-wrap:wrap;font-size:15px;color:var(--suave)}
 .hero-nota b{display:block;color:var(--tinta);font-size:15.5px}
 @media (prefers-reduced-motion:no-preference){
-  .silaba{animation:entra .6s cubic-bezier(.2,.9,.25,1.25) both}
-  .silaba:nth-child(2){animation-delay:.18s}.silaba:nth-child(3){animation-delay:.36s}
+  .silaba{opacity:0}
+  .listo .silaba{animation:entra .6s cubic-bezier(.2,.9,.25,1.25) both}
+  .listo .silaba:nth-child(2){animation-delay:.18s}.listo .silaba:nth-child(3){animation-delay:.36s}
   @keyframes entra{from{opacity:0;transform:translateY(.35em) rotate(-4deg)}to{opacity:1;transform:none}}
 }
 
@@ -200,7 +202,27 @@ footer a:hover{color:#fff}
   section{padding:68px 0}.dos{grid-template-columns:1fr}
   footer .w{grid-template-columns:1fr}
 }
+
+/* ---------- Pantalla de carga ---------- */
+.cargando{position:fixed;inset:0;z-index:200;background:#fff;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s;animation:failsafe 0s 4s forwards}
+.cargando.fuera{opacity:0;visibility:hidden}
+.cargando div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.cargando img{width:78px;height:auto;margin-bottom:10px}
+.cargando b{font:800 clamp(28px,4vw,40px)/1.05 "Bricolage Grotesque",system-ui,sans-serif;color:#0B2B5B;letter-spacing:-.02em}
+.cargando small{font:500 15px Figtree,system-ui,sans-serif;color:#56637A}
+.barra{display:flex;gap:6px;margin-top:22px}
+.barra i{width:42px;height:6px;border-radius:3px;background:#E3E9F2;position:relative;overflow:hidden}
+.barra i:after{content:"";position:absolute;inset:0;transform:scaleX(0);transform-origin:left;animation:llena .5s ease forwards}
+.barra i:nth-child(1):after{background:#0B2B5B}
+.barra i:nth-child(2):after{background:#12603F;animation-delay:.35s}
+.barra i:nth-child(3):after{background:#C99A3E;animation-delay:.7s}
+@keyframes llena{to{transform:scaleX(1)}}
+@keyframes failsafe{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.barra i:after{animation:none;transform:none}.cargando{transition:none}}
 </style></head><body>
+<div class="cargando" id="cargando" aria-hidden="true"><div><img src="/assets/monograma.png" alt="" width="78" height="108"><b>Colegio Paulo Freire</b><small>Instituto Dominicano · La Romana</small><span class="barra"><i></i><i></i><i></i></span></div></div>
+<noscript><style>.cargando{display:none}</style></noscript>
+
 
 <header class="top"><div class="w">
   <a class="marca" href="#inicio"><img src="/assets/monograma.png" alt="" width="34" height="47"><span><b>Paulo Freire</b><small>Instituto Dominicano · La Romana</small></span></a>
@@ -317,6 +339,18 @@ footer a:hover{color:#fff}
 
 <script>
 const $ = (s) => document.querySelector(s);
+// Pantalla de carga: se va cuando la portada está lista (mínimo 0.9 s, máximo 2.5 s; en visitas siguientes, al instante)
+(() => {
+  const c = $('#cargando'), t0 = performance.now();
+  let visto = false; try { visto = sessionStorage.getItem('pf_visto') === '1'; sessionStorage.setItem('pf_visto', '1'); } catch {}
+  let hecho = false;
+  const fin = () => { if (hecho) return; hecho = true; c.classList.add('fuera'); document.body.classList.add('listo'); setTimeout(() => c.remove(), 600); };
+  if (visto) { c.style.transition = 'none'; return fin(); }
+  const img = $('#banner');
+  const listo = Promise.all([document.fonts ? document.fonts.ready : 0, img.complete ? 0 : new Promise((r) => { img.onload = img.onerror = r; })]);
+  listo.then(() => setTimeout(fin, Math.max(0, 900 - (performance.now() - t0))));
+  setTimeout(fin, 2500);
+})();
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fecha = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'long' });
 

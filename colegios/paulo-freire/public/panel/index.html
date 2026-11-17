@@ -292,7 +292,27 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
  .mtop button{background:none;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;font:600 13px Figtree,sans-serif;color:var(--navy)}
  .top h1{font-size:24px}
 }
+
+/* ---------- Pantalla de carga ---------- */
+.cargando{position:fixed;inset:0;z-index:200;background:#fff;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s;animation:failsafe 0s 8s forwards}
+.cargando.fuera{opacity:0;visibility:hidden}
+.cargando div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.cargando img{width:78px;height:auto;margin-bottom:10px}
+.cargando b{font:800 clamp(28px,4vw,40px)/1.05 "Bricolage Grotesque",system-ui,sans-serif;color:#0B2B5B;letter-spacing:-.02em}
+.cargando small{font:500 15px Figtree,system-ui,sans-serif;color:#56637A}
+.barra{display:flex;gap:6px;margin-top:22px}
+.barra i{width:42px;height:6px;border-radius:3px;background:#E3E9F2;position:relative;overflow:hidden}
+.barra i:after{content:"";position:absolute;inset:0;transform:scaleX(0);transform-origin:left;animation:llena .5s ease forwards}
+.barra i:nth-child(1):after{background:#0B2B5B}
+.barra i:nth-child(2):after{background:#12603F;animation-delay:.35s}
+.barra i:nth-child(3):after{background:#C99A3E;animation-delay:.7s}
+@keyframes llena{to{transform:scaleX(1)}}
+@keyframes failsafe{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.barra i:after{animation:none;transform:none}.cargando{transition:none}}
 </style></head><body>
+<div class="cargando" id="cargando" aria-hidden="true"><div><img src="/assets/monograma.png" alt="" width="78" height="108"><b>Colegio Paulo Freire</b><small>Sistema administrativo</small><span class="barra"><i></i><i></i><i></i></span></div></div>
+<noscript><style>.cargando{display:none}</style></noscript>
+
 <div class="login hide" id="login"><form id="loginForm"><img src="/assets/monograma.png" alt=""><h2>Colegio Paulo Freire</h2><p>Sistema administrativo</p><input id="lUser" placeholder="Usuario" autocomplete="username" required><input id="lPass" type="password" placeholder="Contraseña" autocomplete="current-password" required><button class="btn btn-p" type="submit">Entrar</button><div class="er" id="lErr"></div></form></div>
 
 <div class="app">
