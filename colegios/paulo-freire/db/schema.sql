@@ -228,3 +228,31 @@ create table if not exists facturas (
 create index if not exists facturas_fecha on facturas(fecha desc);
 create index if not exists facturas_familia on facturas(familia_id, fecha desc);
 create index if not exists facturas_recibo on facturas(recibo);
+
+-- ===== Becas, retiros y cierre del año escolar =====
+alter table estudiantes add column if not exists hasta text;                          -- último mes que paga (retiro o egreso)
+alter table estudiantes add column if not exists estado text not null default 'activo'; -- activo | retirado | egresado
+alter table estudiantes add column if not exists baja_motivo text;
+alter table estudiantes add column if not exists beca_pct int not null default 0;     -- beca en % de la mensualidad
+alter table estudiantes add column if not exists beca_monto int not null default 0;   -- descuento fijo en RD$ por mes
+alter table estudiantes add column if not exists beca_motivo text;
+-- Deudas que quedan de un año escolar ya cerrado
+create table if not exists saldos (
+  id serial primary key,
+  estudiante_id text not null references estudiantes(id) on delete cascade,
+  familia_id text,
+  ano text not null,                    -- '2026-2027'
+  meses text[] not null default '{}',
+  monto int not null,
+  pagado boolean not null default false,
+  factura text,
+  creado timestamptz not null default now()
+);
+create index if not exists saldos_est on saldos(estudiante_id) where not pagado;
+-- Historial de años cerrados
+create table if not exists anos (
+  inicio text primary key,              -- '2026-08'
+  cerrado_en timestamptz not null default now(),
+  usuario text,
+  resumen jsonb
+);

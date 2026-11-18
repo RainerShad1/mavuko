@@ -4,7 +4,7 @@
 //   /api/*       API del panel (requiere sesión)
 //   /webhook     mensajes de WhatsApp (Meta)
 //   cron diario  recordatorios de pago automáticos
-import { crearDB } from './db.js';
+import { crearDB, cargarAno } from './db.js';
 import { login, logout, usuarioActual, cookieSesion } from './auth.js';
 import { api } from './api.js';
 import { procesarMensaje } from './bot.js';
@@ -27,6 +27,7 @@ async function webhook(req, env, ctx) {
   }
   if (req.method !== 'POST') return new Response('Método no permitido', { status: 405 });
   const db = crearDB(env);
+  await cargarAno(db);
   const cuerpo = await req.text();
   if (!(await firmaValida(env, cuerpo, req.headers.get('x-hub-signature-256')))) return new Response('Firma inválida', { status: 401 });
   let data;
@@ -96,6 +97,7 @@ export default {
       if (!env.DATABASE_URL && !env.__db) return json({ error: 'Falta configurar DATABASE_URL en Cloudflare (Settings → Variables and Secrets)' }, 503);
       const db = crearDB(env);
       try {
+        await cargarAno(db);
         if (p === '/api/login' && req.method === 'POST') {
           const b = await req.json().catch(() => ({}));
           const r = await login(db, b.usuario, b.clave);
@@ -123,6 +125,7 @@ export default {
   async scheduled(event, env, ctx) {
     const db = crearDB(env);
     ctx.waitUntil((async () => {
+      await cargarAno(db);
       const cfg = await leerConfig(db);
       if (!cfg.modRec) return;
       const r = await enviarRecordatorios(env, db, { auto: true });

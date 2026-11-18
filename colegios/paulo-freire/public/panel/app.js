@@ -54,19 +54,29 @@ const hijosDe = (id) => DB.stus.filter((s) => s.fam === id);
 // ================= Lógica de cobros (igual que src/cobros.js) =================
 let PAGADOS = new Set();
 const paid = (e, k) => PAGADOS.has(e + '|' + k);
+// Mensualidad con beca y descuento fijo (igual que tarifaEst en src/cobros.js)
+const tarifaEst = (e) => Math.max(0, Math.round((TARIFA[e.nivel] || 0) * (1 - Math.min(100, e.beca_pct || 0) / 100)) - (e.beca_monto || 0));
+const aplica = (e, k) => (!e.desde || k >= e.desde) && (!e.hasta || k <= e.hasta);
+const activo = (e) => e.estado === 'activo';
+const becaTxt = (e) => e.beca_pct || e.beca_monto ? `${e.beca_motivo || 'Beca'}: ${[e.beca_pct ? e.beca_pct + ' %' : '', e.beca_monto ? rd(e.beca_monto) : ''].filter(Boolean).join(' + ')}` : '';
 function estadoEst(e) {
   const vencidos = [], porVencer = [];
+  if (!tarifaEst(e)) return { vencidos, porVencer };
   MESES.forEach(([k]) => {
-    if (paid(e.id, k) || (e.desde && k < e.desde)) return;
+    if (paid(e.id, k) || !aplica(e, k)) return;
     const v = venceDe(k);
     if (v < HOY) vencidos.push(k); else if (dias(HOY, v) <= 31) porVencer.push(k);
   });
   return { vencidos, porVencer };
 }
 function estadoFam(f) {
-  const hijos = hijosDe(f.id); let mora = 0, pend = 0; const mesesMora = [], mesesPend = [];
-  hijos.forEach((h) => { const s = estadoEst(h); mora += s.vencidos.length * TARIFA[h.nivel]; pend += s.porVencer.length * TARIFA[h.nivel]; s.vencidos.forEach((m) => mesesMora.push([h, m])); s.porVencer.forEach((m) => mesesPend.push([h, m])); });
-  return { hijos, mora, pend, st: mora > 0 ? 'bad' : pend > 0 ? 'warn' : 'ok', mesesMora, mesesPend };
+  const todos = hijosDe(f.id); let mora = 0, pend = 0; const mesesMora = [], mesesPend = [];
+  const saldos = (DB.saldos || []).filter((x) => x.fam === f.id), saldoAnt = saldos.reduce((a, x) => a + x.monto, 0);
+  mora += saldoAnt;
+  todos.forEach((h) => { const s = estadoEst(h), t = tarifaEst(h); mora += s.vencidos.length * t; pend += s.porVencer.length * t; s.vencidos.forEach((m) => mesesMora.push([h, m])); s.porVencer.forEach((m) => mesesPend.push([h, m])); });
+  const conDeuda = new Set([...mesesMora, ...mesesPend].map((z) => z[0].id).concat(saldos.map((x) => x.est)));
+  const hijos = todos.filter((h) => activo(h) || conDeuda.has(h.id));
+  return { hijos, todos, mora, pend, saldoAnt, saldos, st: mora > 0 ? 'bad' : pend > 0 ? 'warn' : 'ok', mesesMora, mesesPend, inactiva: !todos.some(activo) };
 }
 const proxVence = () => MESES.map(([k]) => k).find((k) => venceDe(k) >= HOY) || CUR;
 const PILL = { ok: ['p-ok', 'Al día'], warn: ['p-warn', 'Por vencer'], bad: ['p-bad', 'En mora'] };
@@ -94,7 +104,7 @@ function renderPanel() {
   const h = new Date().getHours();
   $('#saludo').textContent = `${h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches'}, ${DB.user.nombre} 👋`;
   $('#kEst').textContent = DB.stus.length; $('#kFam').textContent = DB.fams.length + ' familias';
-  const esp = DB.stus.reduce((a, e) => a + TARIFA[e.nivel], 0) || 1;
+  const esp = DB.stus.filter((e) => aplica(e, CUR)).reduce((a, e) => a + tarifaEst(e), 0) || 1;
   const cob = DB.pays.filter((p) => p.mes === CUR).reduce((a, p) => a + p.monto, 0);
   $('#kCobLbl').textContent = 'Cobrado en ' + MES_LARGO[CUR];
   $('#kCob').textContent = rd(cob); $('#kCobSub').textContent = Math.round(cob / esp * 100) + '% de ' + rd(esp); $('#kBar').style.width = Math.min(100, cob / esp * 100) + '%';
@@ -122,7 +132,8 @@ function renderPanel() {
 function renderFamilias() {
   const q = $('#q').value.toLowerCase().trim(), fe = $('#fEst').value, fn = $('#fNiv').value;
   const rows = DB.fams.map((f) => ({ f, ...estadoFam(f) })).filter((x) => {
-    if (fe && x.st !== fe) return false; if (fn && !x.hijos.some((h) => h.nivel === fn)) return false;
+    if (fe === 'inactivas') { if (!x.inactiva) return false; } else if (x.inactiva && !x.mora) return false;
+    if (fe && fe !== 'inactivas' && x.st !== fe) return false; if (fn && !x.hijos.some((h) => h.nivel === fn)) return false;
     if (q && !(x.f.tutor.toLowerCase().includes(q) || x.f.tel.includes(q) || x.hijos.some((h) => h.nombre.toLowerCase().includes(q)))) return false; return true;
   });
   const ord = { bad: 0, warn: 1, ok: 2 }; rows.sort((a, b) => ord[a.st] - ord[b.st] || b.mora - a.mora);
@@ -136,8 +147,10 @@ function openFam(id) {
   $('#dAv').textContent = ini(f.tutor); $('#dAv').style.background = colorAv(f.id);
   $('#dName').textContent = f.tutor; $('#dSub').innerHTML = `${esc(f.parent)} · ${esc(f.tel)} · ${pill(s.st)}`;
   $('#dBody').innerHTML = `<div class="kpis" style="grid-template-columns:1fr 1fr;margin-bottom:14px"><div class="kpi r"><small>En mora</small><b>${rd(s.mora)}</b></div><div class="kpi"><small>Por vencer</small><b>${rd(s.pend)}</b></div></div>` +
-    s.hijos.map((h) => { const es = estadoEst(h); return `<div class="stu"><h3>${esc(h.nombre)}</h3><div class="g">${esc(h.grado)} · Mensualidad ${rd(TARIFA[h.nivel])}</div><div class="months">${MESES.map(([k, n]) => { let c, t; if (paid(h.id, k)) { c = 'ok'; t = 'Pagado'; } else if (h.desde && k < h.desde) { c = 'fut'; t = 'No aplica'; } else if (venceDe(k) < HOY) { c = 'late'; t = 'Vencido'; } else if (es.porVencer.includes(k)) { c = 'due'; t = 'Vence ' + venceDe(k).slice(8); } else { c = 'fut'; t = '—'; } return `<div class="mo ${c}">${n}<small>${t}</small></div>`; }).join('')}</div></div>`; }).join('') +
+    s.hijos.map((h) => { const es = estadoEst(h); return `<div class="stu"><h3>${esc(h.nombre)}</h3><div class="g">${esc(h.grado)} · Mensualidad ${rd(tarifaEst(h))}${becaTxt(h) ? ` <span class="pill p-info">${esc(becaTxt(h))}</span>` : ''}${!activo(h) ? ` <span class="pill p-mute">${h.estado === 'egresado' ? 'Egresado' : 'Retirado'}${h.baja ? ' · ' + esc(h.baja) : ''}</span>` : ''}</div><div class="months">${MESES.map(([k, n]) => { let c, t; if (paid(h.id, k)) { c = 'ok'; t = 'Pagado'; } else if (!aplica(h, k)) { c = 'fut'; t = 'No aplica'; } else if (venceDe(k) < HOY) { c = 'late'; t = 'Vencido'; } else if (es.porVencer.includes(k)) { c = 'due'; t = 'Vence ' + venceDe(k).slice(8); } else { c = 'fut'; t = '—'; } return `<div class="mo ${c}">${n}<small>${t}</small></div>`; }).join('')}</div></div>`; }).join('') +
+    (s.saldos.length ? `<div class="stu" style="border-color:var(--bad)"><h3>Saldo de años anteriores</h3>${s.saldos.map((x) => `<div class="li" style="display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0"><span>${esc(stu(x.est)?.nombre || '')} · año ${esc(x.ano)} (${x.meses.length} ${x.meses.length === 1 ? 'mes' : 'meses'})</span><b style="color:var(--bad)">${rd(x.monto)}</b></div>`).join('')}<button class="btn btn-p btn-sm" id="dSaldo" type="button" style="margin-top:8px">Cobrar saldo</button></div>` : '') +
     (f.ultimoAviso ? `<p class="sub">Último mensaje enviado: ${esc(f.ultimoAviso)}</p>` : '');
+  if ($('#dSaldo')) $('#dSaldo').onclick = () => { closeAll(); act(null, async () => { if (!FAC) await cargarFacturas(); abrirNuevaFactura(id); s.saldos.forEach((x) => NF.lineas.push({ saldo: x.id })); renderNF(); }); };
   $('#ov').classList.add('show'); $('#drawer').classList.add('show');
 }
 function textoEstado(f) {
@@ -156,7 +169,7 @@ function renderPagos() {
 }
 let sel = [];
 function openPay(famId) {
-  const pool = famId ? hijosDe(famId) : DB.stus;
+  const pool = (famId ? hijosDe(famId) : DB.stus).filter((s) => activo(s) || MESES.some(([k]) => aplica(s, k) && !paid(s.id, k)));
   $('#pStu').innerHTML = pool.map((s) => `<option value="${s.id}">${esc(s.nombre)} · ${esc(s.grado)} — ${esc(fam(s.fam).tutor)}</option>`).join(''); $('#pRef').value = '';
   const first = pool.find((s) => MESES.some(([k]) => !paid(s.id, k) && k <= CUR)); if (first) $('#pStu').value = first.id;
   fillMonths(); openModal('#mPay');
@@ -166,7 +179,7 @@ function fillMonths() {
   const es = estadoEst(e); sel = [...es.vencidos, ...es.porVencer];
   $('#pMonths').innerHTML = MESES.map(([k, n]) => `<button class="chk ${sel.includes(k) ? 'on' : ''}" data-m="${k}" ${paid(e.id, k) || (e.desde && k < e.desde) ? 'disabled' : ''}>${n}${paid(e.id, k) ? ' ✓' : ''}</button>`).join(''); updTot();
 }
-function updTot() { const e = stu($('#pStu').value); $('#pTot').textContent = rd(sel.length * (e ? TARIFA[e.nivel] : 0)); }
+function updTot() { const e = stu($('#pStu').value); $('#pTot').textContent = rd(sel.length * (e ? tarifaEst(e) : 0)); }
 const reciboMsg = (f, e, r) => `✅ Hola, ${f.tutor.split(' ')[0]}. Recibimos su pago de *${rd(r.total)}* por la mensualidad de *${r.meses.map((k) => MES_LARGO[k]).join(', ')}* de ${e.nombre}.\nRecibo: ${r.id}\n¡Gracias por mantenerse al día! 🙌`;
 function showRecibo(e, r, met) {
   const f = fam(e.fam); const meses = r.meses.map((k) => MES_LARGO[k]).join(', ');
@@ -236,7 +249,7 @@ const TPL = {
 };
 let cDest = new Set(['Todo']), cWhen = 'now';
 function cGrupos() { const g = ['Todo', 'Inicial', 'Primaria', 'Secundaria']; const gr = [...new Set(DB.stus.map((s) => s.grado))].sort((a, b) => GRADOS.findIndex((x) => x[0] === a) - GRADOS.findIndex((x) => x[0] === b)); return g.concat(gr); }
-function destinatarios() { const st = DB.stus.filter((s) => cDest.has('Todo') || cDest.has(s.nivel) || cDest.has(s.grado)); return { est: st.length, fams: [...new Set(st.map((s) => s.fam))] }; }
+function destinatarios() { const st = DB.stus.filter(activo).filter((s) => cDest.has('Todo') || cDest.has(s.nivel) || cDest.has(s.grado)); return { est: st.length, fams: [...new Set(st.map((s) => s.fam))] }; }
 const etiquetaEnvio = () => DB.modoDemo ? ' · modo demo' : '';
 function renderCirc() {
   $('#cLocked').classList.toggle('hide', DB.modCirc); $('#cOn').classList.toggle('hide', !DB.modCirc); $('#cState').textContent = DB.modCirc ? 'Módulo activo' + etiquetaEnvio() : 'Módulo desactivado';
@@ -350,6 +363,7 @@ function closeAll() { document.querySelectorAll('.modal.show,.drawer.show').forE
 let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 3500); }
 function renderAll() {
   PAGADOS = new Set(DB.pays.map((p) => p.est + '|' + p.mes));
+  $('#anoTxt').textContent = META.ano; $('#navCierre').classList.toggle('hide', DB.user.rol !== 'director');
   $('#uNombre').textContent = DB.user.nombre; $('#mUser').textContent = DB.user.nombre;
   $('#demoNote').textContent = DB.modoDemo ? 'Modo demo: solo se envían mensajes a los números vinculados.' : '';
   $('#demoTag').classList.toggle('hide', !DB.modoDemo);
@@ -367,6 +381,7 @@ function go(v) {
   if (v === 'asistente') loadChats().catch(() => {});
   if (v === 'web') cargarWeb().catch(() => {});
   if (v === 'facturas') cargarFacturas().catch((e) => toast('⚠️ ' + e.message));
+  if (v === 'cierre') cargarCierre().catch((e) => toast('⚠️ ' + e.message));
 }
 document.querySelectorAll('#nav button').forEach((b) => (b.onclick = () => go(b.dataset.v)));
 document.addEventListener('click', (e) => {
@@ -655,24 +670,27 @@ function abrirNuevaFactura(famId) {
 function famCambio() {
   const f = fam($('#nfFam').value);
   $('#nfCli').value = f ? f.tutor : ''; $('#nfDoc').value = f?.doc || '';
-  NF.lineas = NF.lineas.filter((l) => !l.est);
-  const hs = f ? hijosDe(f.id) : [];
-  $('#nfRapidos').innerHTML = (hs.length ? '<button type="button" class="chk on" data-nfr="mens">Mensualidad</button>' : '') + (FAC?.conceptos || []).map((c, i) => `<button type="button" class="chk" data-nfr="${i}">${esc(c.n)}</button>`).join('') + '<button type="button" class="chk" data-nfr="libre">Otro…</button>';
+  NF.lineas = NF.lineas.filter((l) => !l.est && !l.saldo);
+  const hs = f ? estadoFam(f).hijos : [];
+  const sal = f ? (DB.saldos || []).filter((x) => x.fam === f.id) : [];
+  $('#nfRapidos').innerHTML = (hs.length ? '<button type="button" class="chk on" data-nfr="mens">Mensualidad</button>' : '') + (sal.length ? '<button type="button" class="chk" data-nfr="saldo">Saldo año anterior</button>' : '') + (FAC?.conceptos || []).map((c, i) => `<button type="button" class="chk" data-nfr="${i}">${esc(c.n)}</button>`).join('') + '<button type="button" class="chk" data-nfr="libre">Otro…</button>';
   $('#nfMens').classList.toggle('hide', !hs.length);
-  $('#nfEst').innerHTML = hs.map((h) => `<option value="${h.id}">${esc(h.nombre)} · ${esc(h.grado)} (${rd(TARIFA[h.nivel])})</option>`).join('');
+  $('#nfEst').innerHTML = hs.map((h) => `<option value="${h.id}">${esc(h.nombre)} · ${esc(h.grado)} (${rd(tarifaEst(h))}${becaTxt(h) ? ' · ' + esc(becaTxt(h)) : ''})</option>`).join('');
   NF.est = hs[0]?.id || null;
   renderNF();
 }
 function renderNF() {
   const e = stu(NF.est);
   if (e) $('#nfMeses').innerHTML = MESES.map(([k, n]) => { const ya = paid(e.id, k) || (e.desde && k < e.desde), on = NF.lineas.some((l) => l.est === e.id && l.mes === k); return `<button type="button" class="chk ${on ? 'on' : ''}" data-nfm="${k}" ${ya ? 'disabled' : ''}>${n}${ya ? ' ✓' : ''}</button>`; }).join('');
-  $('#nfLineas').innerHTML = NF.lineas.map((l, i) => l.est
-    ? `<div class="nfl"><span class="fija">Mensualidad ${MES_LARGO[l.mes]} · ${esc(stu(l.est).nombre)}</span><span class="fija" style="text-align:center">1</span><span class="fija" style="text-align:right">${rd(TARIFA[stu(l.est).nivel])}</span><button type="button" data-nfdel="${i}">×</button></div>`
+  $('#nfLineas').innerHTML = NF.lineas.map((l, i) => l.saldo
+    ? (() => { const x = DB.saldos.find((y) => y.id === l.saldo); return `<div class="nfl"><span class="fija">Saldo año ${esc(x.ano)} · ${esc(stu(x.est)?.nombre || '')}</span><span class="fija" style="text-align:center">1</span><span class="fija" style="text-align:right">${rd(x.monto)}</span><button type="button" data-nfdel="${i}">×</button></div>`; })()
+    : l.est
+    ? `<div class="nfl"><span class="fija">Mensualidad ${MES_LARGO[l.mes]} · ${esc(stu(l.est).nombre)}</span><span class="fija" style="text-align:center">1</span><span class="fija" style="text-align:right">${rd(tarifaEst(stu(l.est)))}</span><button type="button" data-nfdel="${i}">×</button></div>`
     : `<div class="nfl"><input data-nfd="${i}" value="${esc(l.d)}" placeholder="Descripción"><input data-nfc="${i}" type="number" min="1" value="${l.cant}"><input data-nfp="${i}" type="number" min="0" value="${l.precio}"><button type="button" data-nfdel="${i}">×</button></div>`).join('') || '<p class="muted" style="font-size:13px">Agrega mensualidades u otros conceptos con los botones de arriba.</p>';
   totNF();
 }
 function totNF() {
-  const sub = NF.lineas.reduce((a, l) => a + (l.est ? TARIFA[stu(l.est).nivel] : (Number(l.cant) || 0) * (Number(l.precio) || 0)), 0);
+  const sub = NF.lineas.reduce((a, l) => a + (l.est ? tarifaEst(stu(l.est)) : l.saldo ? DB.saldos.find((x) => x.id === l.saldo).monto : (Number(l.cant) || 0) * (Number(l.precio) || 0)), 0);
   const d = Math.max(0, Number($('#nfDesc').value) || 0);
   $('#nfSub').textContent = d ? `(${rd(sub)} − ${rd(d)})` : '';
   $('#nfTot').textContent = rd(Math.max(0, sub - d));
@@ -686,7 +704,7 @@ function guardarNF(enviar) {
     act(ev.currentTarget, async () => {
       const r = await api('/facturas', {
         fam: famId || null, cliente: $('#nfCli').value, doc: $('#nfDoc').value,
-        lineas: NF.lineas.map((l) => (l.est ? { est: l.est, mes: l.mes } : { d: l.d, cant: Number(l.cant), precio: Number(l.precio) })),
+        lineas: NF.lineas.map((l) => (l.saldo ? { saldo: l.saldo } : l.est ? { est: l.est, mes: l.mes } : { d: l.d, cant: Number(l.cant), precio: Number(l.precio) })),
         descuento: Number($('#nfDesc').value) || 0, metodo: met, pagada: !!met, ref: $('#nfRef').value, nota: $('#nfNota').value, enviar,
       });
       closeAll(); await load(); await cargarFacturas();
@@ -741,6 +759,7 @@ document.addEventListener('click', (e) => {
   const cd = t.closest('[data-cdel]'); if (cd) { cd.parentElement.remove(); return; }
   const r = t.closest('[data-nfr]'); if (r) {
     const k = r.dataset.nfr;
+    if (k === 'saldo') { (DB.saldos || []).filter((x) => x.fam === $('#nfFam').value && !NF.lineas.some((l) => l.saldo === x.id)).forEach((x) => NF.lineas.push({ saldo: x.id })); renderNF(); return; }
     if (k === 'mens') { r.classList.toggle('on', $('#nfMens').classList.toggle('hide') === false); return; }
     if (k === 'libre') NF.lineas.push({ d: '', cant: 1, precio: 0 });
     else { const c = FAC.conceptos[Number(k)]; NF.lineas.push({ d: c.n, cant: 1, precio: c.p }); }
@@ -806,10 +825,16 @@ $('#iOk').onclick = (ev) => {
 function abrirEdicion(id) {
   const f = fam(id); if (!f) return;
   $('#eTutor').value = f.tutor; $('#ePar').value = f.parent; $('#eTel').value = f.tel; $('#eDoc').value = f.doc || '';
-  $('#eEsts').innerHTML = hijosDe(id).map((h) => filaEst(h, false)).join('');
+  const motivos = (sel) => '<option value="">Sin beca</option>' + META.motivosBeca.map((m) => `<option ${m === sel ? 'selected' : ''}>${m}</option>`).join('');
+  $('#eEsts').innerHTML = hijosDe(id).map((h) => filaEst(h, false) + `<div class="becal" data-beca="${h.id}"><label>Beca %<input type="number" min="0" max="100" value="${h.beca_pct || 0}" data-bp></label><label>Descuento RD$<input type="number" min="0" value="${h.beca_monto || 0}" data-bm></label><label>Motivo<select data-bmo>${motivos(h.beca_motivo)}</select></label>` +
+    (activo(h) ? `<button type="button" class="btn btn-o btn-sm" data-retirar="${h.id}">Retirar</button>` : `<button type="button" class="btn btn-o btn-sm" data-reactivar="${h.id}">Reactivar</button>`) + `<small data-bt>Mensualidad: <b>${rd(tarifaEst(h))}</b>${!activo(h) ? ` · ${h.estado === 'egresado' ? 'Egresado' : 'Retirado'} (${esc(h.baja || '')})` : ''}</small></div>`).join('');
   $('#eOk').onclick = (ev) => act(ev.currentTarget, async () => {
     await api('/familias/' + id, { tutor: $('#eTutor').value, parentesco: $('#ePar').value, tel: $('#eTel').value, doc: $('#eDoc').value });
     for (const e of leerEsts('#eEsts')) { const h = stu(e.id); if (h && (h.nombre !== e.nombre.trim() || h.grado !== e.grado)) await api('/estudiantes/' + e.id, { nombre: e.nombre, grado: e.grado }); }
+    for (const b of document.querySelectorAll('#eEsts [data-beca]')) {
+      const h = stu(b.dataset.beca), pct = Number(b.querySelector('[data-bp]').value) || 0, monto = Number(b.querySelector('[data-bm]').value) || 0, motivo = b.querySelector('[data-bmo]').value;
+      if (pct !== (h.beca_pct || 0) || monto !== (h.beca_monto || 0) || ((pct || monto) && motivo !== (h.beca_motivo || ''))) await api(`/estudiantes/${h.id}/beca`, { pct, monto, motivo: motivo || 'Otro' });
+    }
     closeAll(); await load(); toast('Datos actualizados ✅'); openFam(id);
   });
   openModal('#mEdit');
@@ -823,3 +848,61 @@ document.addEventListener('click', (e) => {
   const d = t.closest('[data-estdel]'); if (d) { d.parentElement.remove(); return; }
   const ii = t.closest('[data-intins]'); if (ii) { abrirInscripcion({ interesado: DB.ints.find((x) => x.id === ii.dataset.intins) }); }
 });
+
+
+// ================= Retiro de estudiantes =================
+let retId = null;
+document.addEventListener('input', (e) => {
+  const b = e.target.closest('[data-beca]'); if (!b) return;
+  const h = stu(b.dataset.beca), x = { ...h, beca_pct: Number(b.querySelector('[data-bp]').value) || 0, beca_monto: Number(b.querySelector('[data-bm]').value) || 0 };
+  b.querySelector('[data-bt]').innerHTML = `Mensualidad: <b>${rd(tarifaEst(x))}</b>`;
+});
+document.addEventListener('click', (e) => {
+  const r = e.target.closest('[data-retirar]'); if (r) {
+    retId = r.dataset.retirar; const h = stu(retId);
+    $('#retSub').textContent = `${h.nombre} · ${h.grado}. Lo que deba hasta el último mes seguirá pendiente; los meses siguientes ya no se cobran.`;
+    $('#retHasta').innerHTML = MESES.filter(([k]) => aplica(h, k)).map(([k]) => `<option value="${k}">${cap(MES_LARGO[k])}</option>`).join('');
+    $('#retHasta').value = MESES.some(([k]) => k === CUR) ? CUR : MESES[0][0]; $('#retMot').value = '';
+    closeAll(); openModal('#mRet'); return;
+  }
+  const a = e.target.closest('[data-reactivar]'); if (a) { const f = stu(a.dataset.reactivar).fam; act(a, async () => { await api(`/estudiantes/${a.dataset.reactivar}/reactivar`, {}); closeAll(); await load(); toast('Estudiante reactivado'); openFam(f); }); }
+});
+$('#retOk').onclick = (ev) => act(ev.currentTarget, async () => {
+  const f = stu(retId).fam;
+  const r = await api(`/estudiantes/${retId}/retirar`, { hasta: $('#retHasta').value, motivo: $('#retMot').value });
+  closeAll(); await load(); toast(r.pagosDespues.length ? `Retirado. Ojo: tiene pagados meses posteriores (${r.pagosDespues.map((k) => MES_LARGO[k]).join(', ')}); anula esa factura si corresponde devolverlos.` : 'Estudiante retirado'); openFam(f);
+});
+
+// ================= Cierre del año escolar =================
+let CIE = null, cieFil = '';
+const DEC = { promovido: 'Pasa de grado', repite: 'Repite', egresado: 'Egresa', retirado: 'No continúa' };
+async function cargarCierre() { CIE = await api('/ano/cierre'); CIE.dec = {}; renderCierre(); }
+function renderCierre() {
+  if (!CIE) return;
+  const act_ = CIE.estudiantes.filter((x) => x.estado === 'activo');
+  const dec = (x) => CIE.dec[x.id] || x.sugerencia;
+  const n = { promovido: 0, repite: 0, egresado: 0, retirado: 0 }; act_.forEach((x) => n[dec(x)]++);
+  $('#ciAno').textContent = CIE.ano; $('#ciNuevo').textContent = CIE.siguiente.nombre;
+  $('#ciK').innerHTML = `<div class="kpi"><small>Estudiantes activos</small><b>${act_.length}</b><span>${n.promovido} pasan · ${n.repite} repiten · ${n.egresado} egresan · ${n.retirado} no continúan</span></div>
+   <div class="kpi r"><small>Deuda que pasa al año nuevo</small><b>${rd(CIE.totalDeuda)}</b><span>${CIE.estudiantes.filter((x) => x.debe).length} estudiantes · queda como "saldo del año anterior"</span></div>
+   <div class="kpi"><small>Último mes del año</small><b>${cap(MES_LARGO[CIE.ultimoMes] || CIE.ultimoMes)}</b><span>Año ${esc(CIE.ano)}</span></div>`;
+  if (!$('#ciIni').value) { $('#ciIni').value = CIE.siguiente.inicio; $('#ciTar').innerHTML = Object.entries(CIE.siguiente.tarifas).map(([k, v]) => `<label>${k}<input class="field" type="number" min="1" value="${v}" data-tar="${k}"></label>`).join(''); }
+  $('#ciGrado').innerHTML = '<option value="">Todos los grados</option>' + CIE.grados.map((g) => `<option ${g === cieFil ? 'selected' : ''}>${esc(g)}</option>`).join('');
+  const rows = act_.filter((x) => !cieFil || x.grado === cieFil);
+  $('#ciBody').innerHTML = rows.map((x) => `<tr><td><b>${esc(x.nombre)}</b>${x.beca ? ' <span class="pill p-info">Beca</span>' : ''}</td><td>${esc(x.grado)}</td><td><select class="selst" data-dec="${x.id}">${Object.entries(DEC).map(([k, t]) => `<option value="${k}" ${dec(x) === k ? 'selected' : ''} ${k === 'promovido' && x.grado === CIE.grados.at(-1) ? 'disabled' : ''}>${t}${k === 'promovido' ? ' → ' + esc(x.siguienteGrado) : ''}</option>`).join('')}</select></td><td style="text-align:right" class="amt">${x.debe ? `<span style="color:var(--bad)">${rd(x.debe)}</span>` : '—'}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin estudiantes</td></tr>';
+  const temprano = CIE.sinVencer.length ? `⚠️ El año todavía no ha terminado: faltan ${CIE.sinVencer.length} mensualidades por vencer (${CIE.sinVencer.map((k) => MES_LARGO[k]).join(', ')}). Si cierras ahora, esos meses no se cobrarán. <br>` : '';
+  $('#ciAviso').innerHTML = temprano + (CIE.facturasPendientes.length ? `⚠️ Antes de cerrar, cobra o anula estas facturas pendientes con mensualidades del año: <b>${CIE.facturasPendientes.map((f) => f.id + ' (' + esc(f.cliente) + ')').join(', ')}</b>` : '');
+  $('#ciHist').innerHTML = (CIE.historial || []).map((h) => `<div class="row"><div class="who"><b>Año ${esc(h.resumen?.nombre || h.inicio)}</b><span>Cerrado el ${new Date(h.cerrado_en).toLocaleDateString('es-DO')} por ${esc(h.usuario || '—')} · ${h.resumen?.promovido || 0} pasaron · ${h.resumen?.egresado || 0} egresaron · ${rd(h.resumen?.deuda || 0)} en saldos</span></div></div>`).join('') || '<p class="empty">Todavía no se ha cerrado ningún año</p>';
+}
+document.addEventListener('change', (e) => { const d = e.target.closest('[data-dec]'); if (d) { CIE.dec[d.dataset.dec] = d.value; renderCierre(); } });
+$('#ciGrado').onchange = () => { cieFil = $('#ciGrado').value; renderCierre(); };
+$('#ciTodos').onchange = () => { const v = $('#ciTodos').value; if (!v) return; CIE.estudiantes.filter((x) => x.estado === 'activo' && (!cieFil || x.grado === cieFil)).forEach((x) => { CIE.dec[x.id] = v === 'promovido' && x.grado === CIE.grados.at(-1) ? 'egresado' : v; }); $('#ciTodos').value = ''; renderCierre(); };
+$('#ciOk').onclick = (ev) => {
+  if ($('#ciConf').value.trim().toUpperCase() !== 'CERRAR') { toast('Escribe CERRAR para confirmar'); return; }
+  const tarifas = Object.fromEntries([...document.querySelectorAll('[data-tar]')].map((i) => [i.dataset.tar, Number(i.value)]));
+  act(ev.currentTarget, async () => {
+    const r = await api('/ano/cerrar', { confirmar: 'CERRAR', inicio: $('#ciIni').value, tarifas, decisiones: CIE.dec, conservarBecas: $('#ciBecas').checked });
+    $('#ciConf').value = ''; $('#ciIni').value = ''; await load(); await cargarCierre();
+    toast(`Año ${r.cerrado} cerrado ✅ Empieza ${r.nuevo}: ${r.promovido} pasaron de grado, ${r.egresado} egresaron, ${r.saldos} saldos pendientes.`);
+  });
+};

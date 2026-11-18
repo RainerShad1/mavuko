@@ -1,6 +1,6 @@
 // Asistente de WhatsApp: recibe cada mensaje de un padre (o de un número nuevo) y responde.
 import { COLEGIO, FAQ, FAQR } from './colegio.js';
-import { meses, mesLargo, venceDe, hoyRD, rd, cap, ahoraRD, aplica } from './cobros.js';
+import { meses, mesLargo, venceDe, hoyRD, rd, cap, ahoraRD, aplica, tarifaEst } from './cobros.js';
 import { enviar, registrarMensaje, descargarMedia, marcarLeido } from './wa.js';
 import { nuevoId, telWA, telBonito } from './db.js';
 import { estadoDeFamilia, primerNombre } from './avisos.js';
@@ -140,7 +140,7 @@ class Bot {
       const p = s.pagados.has(h.id + '|' + k);
       const venc = venceDe(k) < hoy;
       return `${p ? '✅' : venc ? '❌' : '⏳'} ${cap(mesLargo(k))} — ${p ? 'Pagado' : venc ? 'Pendiente' : 'Vence ' + venceDe(k).slice(8) + '/' + k.slice(5)}`;
-    }).join('\n')).join('\n');
+    }).join('\n') + s.saldos.filter((x) => x.estudiante_id === h.id).map((x) => `\n❌ Saldo del año ${x.ano} — ${rd(x.monto)}`).join('')).join('\n');
     const pie = `\n\n${s.mora ? 'Total vencido: *' + rd(s.mora) + '*\n' : ''}${s.pend ? 'Por vencer: *' + rd(s.pend) + '*' : ''}${!s.mora && !s.pend ? '¡Está al día! 🙌' : ''}`;
     return this.say('📄 *Estado de cuenta*\n' + cuerpo + pie + (s.mora || s.pend ? '\n\n_Escriba FACTURAS para ver sus facturas._' : ''),
       s.mora || s.pend ? [['comp', '🧾 Comprobante'], ['faq:pagar', '💳 Cómo pagar'], ['menu', '↩️ Menú']] : [['fac', '🧾 Mis facturas'], ['menu', '↩️ Menú']]);
@@ -162,7 +162,8 @@ class Bot {
   }
 
   async elegirHijo(para) {
-    const hs = await this.db.q('select * from estudiantes where familia_id = $1 order by id', [this.fam.id]);
+    const hs = await this.db.q("select * from estudiantes where familia_id = $1 and estado = 'activo' order by id", [this.fam.id]);
+    if (!hs.length) return this.humano('Consulta sin estudiantes activos', true);
     if (hs.length === 1) return this.conHijo(para, hs[0].id);
     return this.say('¿Para cuál estudiante?', hs.slice(0, 10).map((h) => [`hijo:${para}:${h.id}`, `${primerNombre(h.nombre)} (${h.grado})`]));
   }
@@ -199,7 +200,7 @@ class Bot {
     let ms = [...s.mesesMora, ...s.mesesPend].filter((z) => z[0].id === h.id).map((z) => z[1]);
     if (!ms.length) { const n = meses().find(({ k }) => aplica(h, k) && !s.pagados.has(h.id + '|' + k)); ms = n ? [n.k] : []; }
     if (!ms.length) { this.paso('menu'); return this.say(`🙌 ${primerNombre(h.nombre)} ya tiene todo el año escolar pagado. Si es un pago distinto, escriba *secretaría*.`, VOLVER); }
-    const monto = ms.length * COLEGIO.tarifas[h.nivel];
+    const monto = ms.length * tarifaEst(h);
     const arch = await descargarMedia(this.env, media.id).catch(() => null);
     const id = await nuevoId(this.db, 'C');
     await this.db.q(

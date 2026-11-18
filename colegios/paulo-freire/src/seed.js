@@ -1,7 +1,7 @@
 // Datos de prueba para la demostración. Los teléfonos usan el rango 555-01XX,
 // reservado para ficción en el plan de numeración (no pertenecen a nadie).
 import { COLEGIO } from './colegio.js';
-import { meses, venceDe, hoyRD, mesLargo } from './cobros.js';
+import { meses, venceDe, hoyRD, mesLargo, fijarAno, tarifaEst } from './cobros.js';
 import { numFactura, tokenNuevo, CONCEPTOS_BASE } from './facturas.js';
 
 // Contactos reales para probar el asistente (reciben mensajes aunque el modo demo esté activo)
@@ -39,6 +39,11 @@ export function generarDatos(hoy = hoyRD()) {
     fams.push({ id, tutor: c.tutor, parentesco: c.parentesco, tel: c.tel, tel_wa: '1' + c.tel.replace(/\D/g, ''), perfil: c.perfil, real: true });
     for (const [nombre, grado, nivel] of c.hijos) ests.push({ id: 'E' + (ests.length + 1), familia_id: id, nombre, grado, nivel });
   }
+  // Algunas becas de ejemplo: 10 % al segundo hermano y media beca a un hijo de empleado
+  const vistos = new Set();
+  for (const e of ests) { if (vistos.has(e.familia_id)) Object.assign(e, { beca_pct: 10, beca_monto: 0, beca_motivo: 'Hermanos' }); vistos.add(e.familia_id); }
+  Object.assign(ests[6], { beca_pct: 50, beca_monto: 0, beca_motivo: 'Hijo de empleado' });
+  Object.assign(ests[11], { beca_pct: 0, beca_monto: 1000, beca_motivo: 'Beca académica' });
   // Hasta qué mes pagó cada perfil: puntual = el próximo que vence, normal = uno menos, etc.
   const ms = meses().map((m) => m.k);
   const idxProx = Math.max(0, ms.findIndex((k) => venceDe(k) >= hoy));
@@ -50,7 +55,7 @@ export function generarDatos(hoy = hoyRD()) {
       const v = Date.parse(venceDe(k) + 'T12:00:00Z');
       let d = v - Math.floor(r() * 9) * 864e5;
       if (d > Date.parse(hoy + 'T12:00:00Z')) d = Date.parse(hoy + 'T12:00:00Z') - Math.floor(1 + r() * 4) * 864e5;
-      pagos.push({ recibo: 'R-' + rec++, estudiante_id: e.id, mes: k, monto: COLEGIO.tarifas[e.nivel], fecha: new Date(d).toISOString(), metodo: pick(['Efectivo', 'Efectivo', 'Transferencia', 'Transferencia', 'Tarjeta']), ref: '' });
+      pagos.push({ recibo: 'R-' + rec++, estudiante_id: e.id, mes: k, monto: tarifaEst(e), fecha: new Date(d).toISOString(), metodo: pick(['Efectivo', 'Efectivo', 'Transferencia', 'Transferencia', 'Tarjeta']), ref: '' });
     });
   }
   const interesados = [
@@ -81,10 +86,13 @@ export function generarDatos(hoy = hoyRD()) {
 
 // Borra todo (menos usuarios) y vuelve a cargar los datos de prueba.
 export async function sembrar(db, hoy) {
+  // La demo vuelve siempre al año escolar original
+  await db.q("delete from config where clave = 'ano'");
+  fijarAno(null);
   const d = generarDatos(hoy);
-  await db.q('truncate facturas, familias, estudiantes, pagos, comprobantes, ausencias, citas, humano, interesados, circulares, enviados, mensajes, wa_sesiones restart identity cascade');
+  await db.q('truncate saldos, anos, facturas, familias, estudiantes, pagos, comprobantes, ausencias, citas, humano, interesados, circulares, enviados, mensajes, wa_sesiones restart identity cascade');
   await db.q("insert into familias(id, tutor, parentesco, tel, tel_wa, real) select id, tutor, parentesco, tel, tel_wa, coalesce(real, false) from jsonb_to_recordset($1::jsonb) as x(id text, tutor text, parentesco text, tel text, tel_wa text, real boolean)", [JSON.stringify(d.fams)]);
-  await db.q('insert into estudiantes(id, familia_id, nombre, grado, nivel) select * from jsonb_to_recordset($1::jsonb) as x(id text, familia_id text, nombre text, grado text, nivel text)', [JSON.stringify(d.ests)]);
+  await db.q('insert into estudiantes(id, familia_id, nombre, grado, nivel, beca_pct, beca_monto, beca_motivo) select id, familia_id, nombre, grado, nivel, coalesce(beca_pct, 0), coalesce(beca_monto, 0), beca_motivo from jsonb_to_recordset($1::jsonb) as x(id text, familia_id text, nombre text, grado text, nivel text, beca_pct int, beca_monto int, beca_motivo text)', [JSON.stringify(d.ests)]);
   await db.q('insert into pagos(recibo, estudiante_id, mes, monto, fecha, metodo, ref) select * from jsonb_to_recordset($1::jsonb) as x(recibo text, estudiante_id text, mes text, monto int, fecha timestamptz, metodo text, ref text)', [JSON.stringify(d.pagos)]);
   await db.q('insert into interesados(id, nombre, tel, grado, fecha, estado) select * from jsonb_to_recordset($1::jsonb) as x(id text, nombre text, tel text, grado text, fecha timestamptz, estado text)', [JSON.stringify(d.interesados)]);
   await db.q(`insert into facturas(id, token, familia_id, cliente, tel, items, subtotal, total, metodo, recibo, estado, fecha, pagada_en, usuario)
@@ -99,7 +107,7 @@ export async function sembrar(db, hoy) {
     const e = d.ests.find((x) => x.familia_id === f.id);
     const prox = meses().map((m) => m.k).find((k) => !d.pagos.some((p) => p.estudiante_id === e.id && p.mes === k));
     await db.q('insert into comprobantes(id, familia_id, estudiante_id, meses, monto, banco, ref, fecha) values($1,$2,$3,$4,$5,$6,$7,$8)',
-      ['C' + (i + 1), f.id, e.id, [prox], COLEGIO.tarifas[e.nivel], ['Banreservas', 'Banco Popular'][i], String(48000000 + i * 7919), new Date(Date.now() - (i ? 20 : 2.5) * 3600e3).toISOString()]);
+      ['C' + (i + 1), f.id, e.id, [prox], tarifaEst(e), ['Banreservas', 'Banco Popular'][i], String(48000000 + i * 7919), new Date(Date.now() - (i ? 20 : 2.5) * 3600e3).toISOString()]);
   }
   await db.q('insert into ausencias(id, estudiante_id, familia_id, motivo) values($1,$2,$3,$4)', ['A1', d.ests[3].id, d.ests[3].familia_id, 'Enfermedad']);
   await db.q('insert into citas(id, familia_id, con, dia, hora) values($1,$2,$3,$4,$5)', ['T1', d.fams[5].id, 'Orientación', 'Próxima semana', '10:00 a. m.']);

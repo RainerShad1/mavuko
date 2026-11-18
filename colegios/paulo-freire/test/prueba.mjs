@@ -222,8 +222,67 @@ check((await call('/api/inscripciones', 'POST', { fam: ins.data.fam, estudiantes
 check((await call('/api/familias/' + ins.data.fam, 'POST', { tutor: 'Laura M. Gómez', tel: '829-555-0188' }, cookie)).status === 200, 'editar familia');
 check((await call('/api/estudiantes/' + ins.data.estudiantes[0], 'POST', { grado: '4.º Primaria' }, cookie)).status === 200, 'cambiar de grado');
 
+// ---- Becas y descuentos ----
+st = (await call('/api/state', 'GET', null, cookie)).data;
+check(st.stus.filter((x) => x.beca_pct || x.beca_monto).length >= 3, 'becas de ejemplo');
+const { tarifaEst, ANO } = await import('../src/cobros.js');
+const eb = st.stus.find((x) => x.estado === 'activo' && x.nivel === 'Primaria' && !x.beca_pct && !x.beca_monto && !x.desde);
+check((await call(`/api/estudiantes/${eb.id}/beca`, 'POST', { pct: 150 }, cookie)).status === 400, 'beca mayor de 100 %');
+const bk = await call(`/api/estudiantes/${eb.id}/beca`, 'POST', { pct: 25, monto: 200, motivo: 'Hermanos' }, cookie);
+check(bk.data.mensualidad === Math.round(5200 * .75) - 200, 'mensualidad con beca ' + JSON.stringify(bk.data));
+st = (await call('/api/state', 'GET', null, cookie)).data;
+const pagEb = new Set(st.pays.filter((x) => x.est === eb.id).map((x) => x.mes));
+const mesEb = st.meta.meses.map((m) => m.k).find((k) => !pagEb.has(k));
+const fb = await call('/api/facturas', 'POST', { fam: eb.fam, lineas: [{ est: eb.id, mes: mesEb }] }, cookie);
+check(fb.data.factura.total === 3700 && fb.data.factura.items[0].d.includes('Hermanos'), 'factura con beca ' + fb.data.factura?.total);
+// beca completa: no debe nada
+await call(`/api/estudiantes/${eb.id}/beca`, 'POST', { pct: 100, motivo: 'Beca académica' }, cookie);
+let sb = await estadoDeFamilia(db, eb.fam);
+check(![...sb.mesesMora, ...sb.mesesPend].some((z) => z[0].id === eb.id), 'beca completa no genera deuda');
+await call(`/api/estudiantes/${eb.id}/beca`, 'POST', { pct: 0, monto: 0 }, cookie);
+// ---- Retiro ----
+const er = st.stus.find((x) => x.estado === 'activo' && x.id !== eb.id && st.stus.filter((y) => y.fam === x.fam).length === 1 && !x.desde);
+const ret = await call(`/api/estudiantes/${er.id}/retirar`, 'POST', { hasta: st.meta.meses[2].k, motivo: 'Mudanza' }, cookie);
+check(ret.status === 200, 'retirar ' + JSON.stringify(ret.data));
+const sr = await estadoDeFamilia(db, er.fam);
+check(![...sr.mesesMora, ...sr.mesesPend].some((z) => z[1] > st.meta.meses[2].k), 'retirado no debe meses después del retiro');
+check((await call('/api/facturas', 'POST', { fam: er.fam, lineas: [{ est: er.id, mes: st.meta.meses[5].k }] }, cookie)).status === 400, 'no se factura después del retiro');
+// ---- Cierre del año ----
+const pre = (await call('/api/ano/cierre', 'GET', null, cookie)).data;
+check(pre.ano === '2026–2027' && pre.siguiente.inicio === '2027-08' && pre.totalDeuda > 0, 'resumen de cierre ' + pre.ano + ' ' + pre.totalDeuda);
+// las facturas pendientes con mensualidades bloquean el cierre
+if (pre.facturasPendientes.length) check((await call('/api/ano/cerrar', 'POST', { confirmar: 'CERRAR', inicio: '2027-08' }, cookie)).status === 400, 'pendientes bloquean el cierre');
+for (const f of (await call('/api/ano/cierre', 'GET', null, cookie)).data.facturasPendientes) await call(`/api/facturas/${f.id}/anular`, 'POST', { motivo: 'Cierre de prueba' }, cookie);
+check((await call('/api/ano/cerrar', 'POST', { confirmar: 'no', inicio: '2027-08' }, cookie)).status === 400, 'cierre exige confirmación');
+const pre2 = (await call('/api/ano/cierre', 'GET', null, cookie)).data;
+const egr = pre2.estudiantes.find((x) => x.grado === '6.º Secundaria' && x.estado === 'activo');
+const rep = pre2.estudiantes.find((x) => x.grado === '2.º Primaria' && x.estado === 'activo');
+const prom = pre2.estudiantes.find((x) => x.grado === 'Pre-primario' && x.estado === 'activo');
+const conDeuda = pre2.estudiantes.find((x) => x.debe > 0 && x.estado === 'activo');
+const dec = {}; if (rep) dec[rep.id] = 'repite';
+const cierre = await call('/api/ano/cerrar', 'POST', { confirmar: 'CERRAR', inicio: '2027-08', tarifas: { Inicial: 4800, Primaria: 5500, Secundaria: 6200 }, decisiones: dec, conservarBecas: true }, cookie);
+check(cierre.status === 200 && cierre.data.nuevo === '2027–2028' && cierre.data.saldos > 0, 'cerrar año ' + JSON.stringify(cierre.data));
+st = (await call('/api/state', 'GET', null, cookie)).data;
+check(st.meta.ano === '2027–2028' && st.meta.meses[0].k === '2027-08' && st.meta.tarifas.Primaria === 5500, 'año nuevo con tarifas nuevas');
+if (prom) check(st.stus.find((x) => x.id === prom.id).grado === '1.º Primaria' && st.stus.find((x) => x.id === prom.id).nivel === 'Primaria', 'promovido de grado y nivel');
+if (rep) check(st.stus.find((x) => x.id === rep.id).grado === '2.º Primaria', 'repite el grado');
+if (egr) check(st.stus.find((x) => x.id === egr.id).estado === 'egresado', 'egresado');
+check(st.saldos.some((x) => x.est === conDeuda.id && x.monto === conDeuda.debe), 'deuda pasa a saldo del año anterior');
+check(st.stus.filter((x) => x.beca_pct || x.beca_monto).length >= 3, 'se conservan las becas');
+const sc = await estadoDeFamilia(db, conDeuda.fam);
+check(sc.saldoAnt === st.saldos.filter((x) => x.fam === conDeuda.fam).reduce((a, x) => a + x.monto, 0) && sc.mora >= sc.saldoAnt, 'saldo anterior en el estado de cuenta');
+// cobrar el saldo con una factura y anularla
+const sal = st.saldos.find((x) => x.est === conDeuda.id);
+const fs1 = await call('/api/facturas', 'POST', { fam: conDeuda.fam, lineas: [{ saldo: sal.id }] }, cookie);
+check(fs1.status === 200 && fs1.data.factura.total === sal.monto && (await db.one('select pagado from saldos where id = $1', [sal.id])).pagado, 'cobrar saldo anterior');
+check((await call('/api/facturas', 'POST', { fam: conDeuda.fam, lineas: [{ saldo: sal.id }] }, cookie)).status === 400, 'saldo no se cobra dos veces');
+await call(`/api/facturas/${fs1.data.factura.id}/anular`, 'POST', { motivo: 'prueba' }, cookie);
+check(!(await db.one('select pagado from saldos where id = $1', [sal.id])).pagado, 'anular devuelve el saldo');
+check((await call('/api/ano/cierre', 'GET', null, cookie)).data.historial.length === 1, 'historial de años');
+
 const reset = await call('/api/demo/reiniciar', 'POST', {}, cookie);
 check(reset.status === 200, 'reiniciar');
+check((await call('/api/state', 'GET', null, cookie)).data.meta.ano === '2026–2027', 'reiniciar vuelve al año de la demo');
 const tipos = llamadas.filter((l) => l.body?.type).map((l) => l.body.type + (l.body.interactive ? ':' + l.body.interactive.type : ''));
 console.log('llamadas a Meta:', [...new Set(tipos)].join(', '), '· total', llamadas.length);
 const REALES = new Set([TEL, N2, '18496538063', '18097527776', '18098422800']);

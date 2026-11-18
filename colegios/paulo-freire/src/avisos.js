@@ -1,11 +1,13 @@
 // Mensajes que el colegio le envía a las familias: recibos, recordatorios, circulares.
 import { COLEGIO } from './colegio.js';
 import { estadoFam, mesLargo, rd, hoyRD, venceDe, mesActual } from './cobros.js';
+
+const CAMPOS_EST = 'id, familia_id as fam, nombre, grado, nivel, desde, hasta, estado, beca_pct, beca_monto';
 import { enviar, enviarPlantilla, ventanaAbierta } from './wa.js';
 import { leerConfig } from './db.js';
 
 export async function hijosDe(db, famId) {
-  return db.q('select id, familia_id as fam, nombre, grado, nivel, desde from estudiantes where familia_id = $1 order by id', [famId]);
+  return db.q(`select ${CAMPOS_EST} from estudiantes where familia_id = $1 order by id`, [famId]);
 }
 
 export async function pagadosDe(db, estIds) {
@@ -14,20 +16,33 @@ export async function pagadosDe(db, estIds) {
   return new Set(rows.map((r) => r.estudiante_id + '|' + r.mes));
 }
 
+export async function saldosDe(db, estIds) {
+  if (!estIds.length) return [];
+  return db.q('select * from saldos where not pagado and estudiante_id = any($1::text[]) order by id', [estIds]);
+}
+
 export async function estadoDeFamilia(db, famId, hoy = hoyRD()) {
-  const hijos = await hijosDe(db, famId);
-  const pagados = await pagadosDe(db, hijos.map((h) => h.id));
-  return { hijos, pagados, ...estadoFam(hijos, pagados, hoy) };
+  const todos = await hijosDe(db, famId);
+  const ids = todos.map((h) => h.id);
+  const [pagados, saldos] = await Promise.all([pagadosDe(db, ids), saldosDe(db, ids)]);
+  // Los egresados y retirados solo se muestran si todavía deben algo
+  const s = estadoFam(todos, pagados, hoy, saldos);
+  const conDeuda = new Set([...s.mesesMora, ...s.mesesPend].map((z) => z[0].id).concat(s.saldos.map((x) => x.estudiante_id)));
+  const hijos = todos.filter((h) => h.estado === 'activo' || conDeuda.has(h.id));
+  return { hijos, pagados, ...s };
 }
 
 export const primerNombre = (n) => String(n).split(' ')[0];
 
 export function textoRecordatorio(f, s, tipo) {
   const nom = primerNombre(f.tutor);
+  if (tipo === 'mora' && !s.mesesMora.length) {
+    return `⚠️ Hola, ${nom}. Su cuenta tiene un *saldo pendiente del año escolar anterior* de *${rd(s.saldoAnt)}*.\nPuede pagar en la secretaría o por transferencia y enviarnos el comprobante por aquí. Si ya pagó, ignore este mensaje.`;
+  }
   if (tipo === 'mora') {
     const meses = [...new Set(s.mesesMora.map((z) => mesLargo(z[1])))].join(', ');
     const hijos = [...new Set(s.mesesMora.map((z) => z[0].nombre))].join(' y ');
-    return `⚠️ Hola, ${nom}. La cuenta de *${hijos}* tiene pendiente la mensualidad de *${meses}*.\nMonto pendiente: *${rd(s.mora)}*\nPuede pagar en la secretaría o por transferencia y enviarnos el comprobante por aquí. Si ya pagó, ignore este mensaje.`;
+    return `⚠️ Hola, ${nom}. La cuenta de *${hijos}* tiene pendiente la mensualidad de *${meses}*${s.saldoAnt ? ' y un saldo del año anterior' : ''}.\nMonto pendiente: *${rd(s.mora)}*\nPuede pagar en la secretaría o por transferencia y enviarnos el comprobante por aquí. Si ya pagó, ignore este mensaje.`;
   }
   const hijos = [...new Set(s.mesesPend.map((z) => z[0].nombre))].join(' y ');
   const k = s.mesesPend[0][1];
@@ -71,7 +86,8 @@ export async function colaRecordatorios(db, { auto = false, hoy = hoyRD() } = {}
   const cfg = await leerConfig(db);
   if (!cfg.modRec) return [];
   const fams = await db.q('select * from familias order by id');
-  const ests = await db.q('select id, familia_id as fam, nombre, grado, nivel, desde from estudiantes');
+  const ests = await db.q(`select ${CAMPOS_EST} from estudiantes`);
+  const saldos = await db.q('select * from saldos where not pagado');
   const pays = await db.q('select estudiante_id, mes from pagos');
   const yaHoy = new Set((await db.q("select familia_id from enviados where rec and fecha > now() - interval '20 hours'")).map((r) => r.familia_id));
   const pagados = new Set(pays.map((r) => r.estudiante_id + '|' + r.mes));
@@ -79,7 +95,7 @@ export async function colaRecordatorios(db, { auto = false, hoy = hoyRD() } = {}
   const out = [];
   for (const f of fams) {
     if (yaHoy.has(f.id)) continue;
-    const s = estadoFam(ests.filter((e) => e.fam === f.id), pagados, hoy);
+    const s = estadoFam(ests.filter((e) => e.fam === f.id), pagados, hoy, saldos);
     if (s.mora > 0 && cfg.rules.mora && (!auto || dia === dv + 3 || dia === dv + 10)) out.push({ f, s, tipo: 'mora' });
     else if (s.pend > 0) {
       const k = s.mesesPend[0][1];

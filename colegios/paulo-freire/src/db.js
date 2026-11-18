@@ -23,6 +23,13 @@ export async function nuevoRecibo(db) {
   return 'R-' + r.n;
 }
 
+// Carga el año escolar en curso (inicio y tarifas) guardado en la configuración
+export async function cargarAno(db) {
+  const { fijarAno } = await import('./cobros.js');
+  const r = await db.one("select valor from config where clave = 'ano'");
+  fijarAno(r ? r.valor : null);
+}
+
 export async function leerConfig(db) {
   const rows = await db.q('select clave, valor from config');
   const c = { rules: { previo: true, dia: true, mora: true }, modRec: false, modCirc: false, modoDemo: true };

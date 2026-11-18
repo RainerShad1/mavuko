@@ -1,6 +1,7 @@
 // API del panel administrativo (requiere sesión iniciada).
 import { COLEGIO } from './colegio.js';
-import { meses, hoyRD, mesActual } from './cobros.js';
+import { meses, hoyRD, mesActual, ANO, nombreAno } from './cobros.js';
+import { fijarBeca, retirar, reactivar, resumenCierre, cerrarAno, historialAnos, MOTIVOS_BECA } from './ano.js';
 import { leerConfig, guardarConfig, nuevoId, nuevoRecibo, telWA, telBonito } from './db.js';
 import { enviar, ventanaAbierta, VENTANA } from './wa.js';
 import { enviarAFamilia, enviarRecordatorios, colaRecordatorios, primerNombre } from './avisos.js';
@@ -16,7 +17,7 @@ const iso = (d) => (d ? new Date(d).toISOString() : null);
 const horaDe = (d) => new Date(new Date(d).getTime() + COLEGIO.zonaHoraria * 3600e3).toISOString().slice(11, 16);
 
 export async function estado(env, db, user) {
-  const [cfg, fams, ests, pays, comps, aus, citas, hum, ints, circs, sent, lastIn, esperando, facRec] = await Promise.all([
+  const [cfg, fams, ests, pays, comps, aus, citas, hum, ints, circs, sent, lastIn, esperando, facRec, saldos] = await Promise.all([
     leerConfig(db),
     db.q('select * from familias order by id'),
     db.q('select * from estudiantes order by id'),
@@ -33,19 +34,21 @@ export async function estado(env, db, user) {
     db.q(`select h.tel, min(h.nombre) as nombre, max(m.fecha) as ult from humano h
           left join mensajes m on m.tel = h.tel and m.dir = 'in' where not h.ok group by h.tel`),
     db.q("select recibo, id, token from facturas where recibo is not null and estado <> 'anulada'"),
+    db.q('select * from saldos where not pagado order by id'),
   ]);
   const hoyIni = Date.parse(hoyRD() + 'T00:00:00Z') - COLEGIO.zonaHoraria * 3600e3;
   return {
     user: { nombre: user.nombre, rol: user.rol },
     meta: {
-      colegio: COLEGIO.nombre, whatsapp: COLEGIO.whatsapp, tarifas: COLEGIO.tarifas, grados: COLEGIO.grados,
+      colegio: COLEGIO.nombre, whatsapp: COLEGIO.whatsapp, tarifas: ANO.tarifas, grados: COLEGIO.grados, ano: nombreAno(), anoInicio: ANO.inicio, motivosBeca: MOTIVOS_BECA,
       meses: meses(), hoy: hoyRD(), cur: mesActual(), diaVence: COLEGIO.diaVence, costoUtil: COLEGIO.costoUtil, costoMkt: COLEGIO.costoMkt,
       waConectado: !!(env.WA_TOKEN && env.WA_PHONE_ID), plantilla: !!env.WA_PLANTILLA_AVISO,
     },
     rules: cfg.rules, modRec: cfg.modRec, modCirc: cfg.modCirc, modoDemo: cfg.modoDemo,
     fams: fams.map((f) => ({ id: f.id, tutor: f.tutor, parent: f.parentesco, tel: f.tel, doc: f.doc, real: f.real, ultimoAviso: f.ultimo_aviso })),
     fac: Object.fromEntries(facRec.map((x) => [x.recibo, [x.id, x.token]])),
-    stus: ests.map((e) => ({ id: e.id, fam: e.familia_id, nombre: e.nombre, grado: e.grado, nivel: e.nivel, desde: e.desde })),
+    stus: ests.map((e) => ({ id: e.id, fam: e.familia_id, nombre: e.nombre, grado: e.grado, nivel: e.nivel, desde: e.desde, hasta: e.hasta, estado: e.estado, baja: e.baja_motivo, beca_pct: e.beca_pct, beca_monto: e.beca_monto, beca_motivo: e.beca_motivo })),
+    saldos: saldos.map((x) => ({ id: x.id, est: x.estudiante_id, fam: x.familia_id, ano: x.ano, meses: x.meses, monto: x.monto })),
     pays: pays.map((p) => ({ id: p.recibo, est: p.estudiante_id, mes: p.mes, monto: p.monto, fecha: iso(p.fecha), met: p.metodo, ref: p.ref })),
     comps: comps.map((c) => ({ id: c.id, fam: c.familia_id, est: c.estudiante_id, meses: c.meses, monto: c.monto, banco: c.banco, ref: c.ref, fecha: iso(c.fecha), estado: c.estado, motivo: c.motivo, recibo: c.recibo, via: c.via, img: c.img })),
     aus: aus.map((a) => ({ id: a.id, est: a.estudiante_id, fam: a.familia_id, motivo: a.motivo, fecha: iso(a.fecha), hora: horaDe(a.fecha), visto: a.visto })),
@@ -141,6 +144,22 @@ export async function api(req, env, db, user, ctx) {
   }
   if ((r = p.match(/^\/estudiantes\/([\w-]+)$/)) && m === 'POST') {
     try { return json(await editarEstudiante(db, r[1], body)); } catch (x) { return err(x.message); }
+  }
+
+  // ---- Becas, retiros y cierre del año ----
+  if ((r = p.match(/^\/estudiantes\/([\w-]+)\/beca$/)) && m === 'POST') {
+    try { return json(await fijarBeca(db, r[1], body)); } catch (x) { return err(x.message); }
+  }
+  if ((r = p.match(/^\/estudiantes\/([\w-]+)\/retirar$/)) && m === 'POST') {
+    try { return json(await retirar(db, r[1], body)); } catch (x) { return err(x.message); }
+  }
+  if ((r = p.match(/^\/estudiantes\/([\w-]+)\/reactivar$/)) && m === 'POST') {
+    try { return json(await reactivar(db, r[1])); } catch (x) { return err(x.message); }
+  }
+  if (p === '/ano/cierre' && m === 'GET') return json({ ...(await resumenCierre(db)), historial: await historialAnos(db) });
+  if (p === '/ano/cerrar' && m === 'POST') {
+    if (user.rol !== 'director') return err('Solo la dirección puede cerrar el año escolar', 403);
+    try { return json(await cerrarAno(db, body, user.nombre)); } catch (x) { return err(x.message); }
   }
 
   // ---- Facturación ----
@@ -245,7 +264,7 @@ export async function api(req, env, db, user, ctx) {
     if (!tit || !msg) return err('Falta el título o el mensaje');
     const todos = dest.includes('Todo');
     const fams = await db.q(
-      `select distinct f.* from familias f join estudiantes e on e.familia_id = f.id
+      `select distinct f.* from familias f join estudiantes e on e.familia_id = f.id and e.estado = 'activo'
        where $1 or e.nivel = any($2::text[]) or e.grado = any($2::text[]) order by f.id`, [todos, dest]);
     const prog = !!body.prog;
     const id = await nuevoId(db, 'K');

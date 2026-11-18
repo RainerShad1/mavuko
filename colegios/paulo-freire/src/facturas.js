@@ -2,7 +2,7 @@
 // Son facturas de control (NO son comprobantes fiscales e-CF de la DGII).
 // Los campos ncf y fiscal quedan reservados para conectar más adelante un proveedor de e-CF.
 import { COLEGIO } from './colegio.js';
-import { meses, mesLargo, rd, cap, aplica } from './cobros.js';
+import { meses, mesLargo, rd, cap, aplica, tarifaEst } from './cobros.js';
 import { nuevoRecibo, leerConfig } from './db.js';
 
 export const METODOS = ['Efectivo', 'Transferencia', 'Tarjeta', 'Cheque'];
@@ -52,12 +52,20 @@ export async function prepararLineas(db, lineas) {
       const e = await db.one('select * from estudiantes where id = $1', [l.est]);
       if (!e) throw new Error('Estudiante no encontrado');
       if (!orden.includes(l.mes)) throw new Error('Mes inválido');
-      if (!aplica(e, l.mes)) throw new Error(`${e.nombre} se inscribió para pagar desde ${mesLargo(e.desde)}`);
+      if (!aplica(e, l.mes)) throw new Error(e.hasta && l.mes > e.hasta ? `${e.nombre} no tiene mensualidades después de ${mesLargo(e.hasta)}` : `${e.nombre} se inscribió para pagar desde ${mesLargo(e.desde)}`);
       const k = e.id + '|' + l.mes;
       if (vistos.has(k)) throw new Error(`${cap(mesLargo(l.mes))} de ${e.nombre} está repetido`);
       vistos.add(k);
-      const precio = COLEGIO.tarifas[e.nivel];
-      out.push({ d: `Mensualidad ${mesLargo(l.mes)} · ${e.nombre} (${e.grado})`, cant: 1, precio, est: e.id, mes: l.mes, fam: e.familia_id });
+      const precio = tarifaEst(e);
+      const beca = e.beca_pct || e.beca_monto ? ` · ${e.beca_motivo || 'beca'}` : '';
+      out.push({ d: `Mensualidad ${mesLargo(l.mes)} · ${e.nombre} (${e.grado})${beca}`, cant: 1, precio, est: e.id, mes: l.mes, fam: e.familia_id });
+    } else if (l.saldo) {
+      const x = await db.one('select s.*, e.nombre, e.familia_id as fam from saldos s join estudiantes e on e.id = s.estudiante_id where s.id = $1', [l.saldo]);
+      if (!x) throw new Error('Saldo no encontrado');
+      if (x.pagado) throw new Error(`El saldo del año ${x.ano} de ${x.nombre} ya está pagado`);
+      if (vistos.has('s' + x.id)) throw new Error('Saldo repetido');
+      vistos.add('s' + x.id);
+      out.push({ d: `Saldo pendiente año escolar ${x.ano} · ${x.nombre}`, cant: 1, precio: x.monto, saldo: x.id, fam: x.fam });
     } else {
       const d = String(l.d || '').trim().slice(0, 120);
       const cant = entero(l.cant ?? 1, 1, 999), precio = entero(l.precio, 0);
@@ -75,6 +83,12 @@ async function mesesYaPagados(db, lineas) {
   const rows = await db.q('select estudiante_id, mes from pagos where estudiante_id = any($1::text[])', [[...new Set(ms.map((l) => l.est))]]);
   const p = new Set(rows.map((r) => r.estudiante_id + '|' + r.mes));
   return ms.filter((l) => p.has(l.est + '|' + l.mes));
+}
+
+// Marca como pagados los saldos de años anteriores incluidos en la factura
+async function aplicarSaldos(db, lineas, facId) {
+  const ids = lineas.filter((l) => l.saldo).map((l) => l.saldo);
+  if (ids.length) await db.q('update saldos set pagado = true, factura = $2 where id = any($1::int[]) and not pagado', [ids, facId]);
 }
 
 // Registra en "pagos" las mensualidades de la factura (para el estado de cuenta)
@@ -118,6 +132,7 @@ export async function crearFactura(db, d) {
 
   const recibo = pagada ? await aplicarMensualidades(db, lineas, metodo, ref, d.recibo) : null;
   const n = (await db.one("select nextval('sec_factura') as n")).n;
+  if (pagada) await aplicarSaldos(db, lineas, numFactura(n));
   const fac = {
     id: numFactura(n), token: tokenNuevo(), familia_id: famId, cliente, doc, tel: f?.tel || null,
     items: lineas.map(({ fam, ...l }) => l), subtotal, descuento, total, metodo, ref, recibo,
@@ -141,7 +156,10 @@ export async function cobrarFactura(db, id, metodo, ref) {
   const met = METODOS.includes(metodo) ? metodo : 'Efectivo';
   const dobles = await mesesYaPagados(db, f.items);
   if (dobles.length) throw new Error('Algún mes de esta factura ya se pagó por otro lado. Anúlala y crea otra.');
+  const sIds = f.items.filter((l) => l.saldo).map((l) => l.saldo);
+  if (sIds.length && (await db.one('select 1 as x from saldos where pagado and id = any($1::int[])', [sIds]))) throw new Error('Un saldo de esta factura ya se pagó por otro lado. Anúlala y crea otra.');
   const recibo = await aplicarMensualidades(db, f.items, met, ref);
+  await aplicarSaldos(db, f.items, id);
   await db.q("update facturas set estado = 'pagada', metodo = $2, ref = $3, recibo = $4, pagada_en = now() where id = $1", [id, met, String(ref || '').slice(0, 60), recibo]);
   return db.one('select * from facturas where id = $1', [id]);
 }
@@ -157,6 +175,7 @@ export async function anularFactura(db, id, motivo, usuario) {
     const ms = f.items.filter((l) => l.est);
     for (const l of ms) await db.q('delete from pagos where recibo = $1 and estudiante_id = $2 and mes = $3', [f.recibo, l.est, l.mes]);
   }
+  await db.q('update saldos set pagado = false, factura = null where factura = $1', [id]);
   await db.q("update facturas set estado = 'anulada', motivo = $2, anulada_por = $3, anulada_en = now() where id = $1", [id, m, usuario || null]);
   return db.one('select * from facturas where id = $1', [id]);
 }

@@ -76,3 +76,9 @@ Mientras `modoDemo` esté activo, el sistema **solo envía mensajes reales a las
 - Son documentos internos, **no** comprobantes fiscales (e-CF). Los campos `ncf` y `fiscal` de la tabla `facturas` quedan listos para conectar un proveedor autorizado por la DGII.
 - Para instalar en una base existente, vuelve a ejecutar `db/schema.sql` (solo agrega lo nuevo).
 - Opcional: `PUBLIC_URL` define el dominio de los enlaces que se envían por WhatsApp.
+
+## Becas, retiros y cierre del año escolar
+
+- **Becas y descuentos fijos:** en la ficha de la familia → Editar datos, cada estudiante tiene beca en % y/o descuento fijo en RD$ con su motivo. La mensualidad con descuento se usa en cobros, facturas, recordatorios y el asistente.
+- **Retiro:** "Retirar" fija el último mes que paga; lo anterior sigue pendiente y lo posterior ya no se cobra. Se puede reactivar.
+- **Cierre del año** (solo dirección): sugiere promover a todos y egresar 6.º de Secundaria; se ajustan los que repiten o no siguen. Las mensualidades vencidas sin pagar pasan a "saldo del año anterior" (tabla `saldos`), que se cobra desde Facturación. Se fijan el primer mes y las tarifas del año nuevo (config `ano`). No borra pagos ni facturas; queda en el historial (tabla `anos`).

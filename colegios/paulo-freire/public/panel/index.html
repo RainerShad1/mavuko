@@ -326,6 +326,13 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 .facl{cursor:pointer}.facl:hover td{background:#f7f9fc}
 @media(max-width:560px){.dos2{grid-template-columns:1fr}.nfl{grid-template-columns:1fr 54px 92px 30px}}
 .facl td:first-child b{white-space:nowrap}
+.becal{display:grid;grid-template-columns:90px 120px 1fr auto;gap:8px;align-items:end;margin:-2px 0 10px;padding:8px 10px;background:var(--bg);border-radius:10px}
+.becal label{font-size:11.5px;font-weight:700;color:var(--muted);display:grid;gap:3px}.becal input,.becal select{padding:7px 9px!important;font-size:13px!important}
+.becal small{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.ciTar input{padding:9px 10px!important}#ciBody select{font-size:12.5px;max-width:230px}
+.ciTar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ciTar label{font-size:12px;font-weight:700;color:var(--navy);display:grid;gap:4px}
+@media(max-width:980px){#v-cierre .grid2{grid-template-columns:1fr!important}#ciK{grid-template-columns:1fr!important}}
+@media(max-width:560px){.becal{grid-template-columns:1fr 1fr}}
 .estl{display:grid;grid-template-columns:1fr 170px 30px;gap:6px}.estl button{border:0;background:var(--badbg);color:var(--bad);border-radius:8px;font-weight:800;cursor:pointer}
 @media(max-width:560px){.estl{grid-template-columns:1fr 130px 30px}}
 </style></head><body>
@@ -351,6 +358,8 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
    <button data-v="interesados"><span class="ico">🌱</span>Interesados<span class="badge" id="bInt"></span></button>
    <button data-v="circulares"><span class="ico">📢</span>Circulares</button>
    <button data-v="avisos"><span class="ico">🔔</span>Recordatorios<span class="badge" id="qBadge"></span></button>
+   <div class="navlbl" id="navCierreLbl">Administración</div>
+   <button data-v="cierre" id="navCierre"><span class="ico">🎓</span>Cierre del año</button>
    <div class="navlbl">Página web</div>
    <button data-v="web"><span class="ico">🌐</span>Web y redes</button>
   </nav>
@@ -360,7 +369,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
   <div class="mtop"><span id="mUser"></span><button id="mLogout">Cerrar sesión</button></div>
   <!-- PANEL -->
   <section id="v-panel">
-   <div class="top"><div><h1 id="saludo">Hola 👋</h1><p>Resumen del colegio · Año escolar 2026–2027</p></div><span class="demo" id="demoTag">Modo demo · datos de prueba</span></div>
+   <div class="top"><div><h1 id="saludo">Hola 👋</h1><p>Resumen del colegio · Año escolar <span id="anoTxt">2026–2027</span></p></div><span class="demo" id="demoTag">Modo demo · datos de prueba</span></div>
    <div class="kpis">
     <div class="kpi"><small>Estudiantes</small><b id="kEst">0</b><span id="kFam">0 familias</span></div>
     <div class="kpi g"><small id="kCobLbl">Cobrado este mes</small><b id="kCob">RD$0</b><span id="kCobSub"></span><div class="bar"><i id="kBar"></i></div></div>
@@ -442,7 +451,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 <!-- FAMILIAS -->
   <section id="v-familias" class="hide">
    <div class="top"><div><h1>Familias</h1><p>Toca una familia para ver su estado de cuenta</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-o" data-ins>🎒 Inscribir estudiante</button><button class="btn btn-p" data-pay>＋ Registrar pago</button></div></div>
-   <div class="tools"><input id="q" placeholder="Buscar tutor, estudiante o teléfono…"><select id="fEst"><option value="">Todos los estados</option><option value="ok">Al día</option><option value="warn">Por vencer</option><option value="bad">En mora</option></select><select id="fNiv"><option value="">Todos los niveles</option><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div>
+   <div class="tools"><input id="q" placeholder="Buscar tutor, estudiante o teléfono…"><select id="fEst"><option value="">Todos los estados</option><option value="ok">Al día</option><option value="warn">Por vencer</option><option value="bad">En mora</option><option value="inactivas">Egresados y retirados</option></select><select id="fNiv"><option value="">Todos los niveles</option><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div>
    <div class="card" style="padding:6px 8px">
     <div class="tbl desk"><table><thead><tr><th>Tutor</th><th>Estudiantes</th><th>Teléfono</th><th>Estado</th><th style="text-align:right">Debe</th></tr></thead><tbody id="famBody"></tbody></table></div>
     <div class="list mcards" id="famCards" style="padding:4px 8px"></div>
@@ -483,6 +492,30 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-o btn-sm" id="concAdd" type="button">＋ Agregar concepto</button><button class="btn btn-p btn-sm" id="concSave" type="button">Guardar cambios</button></div>
     </div>
     <div class="card" style="margin-top:16px"><h2>Sobre la factura fiscal</h2><p class="sub" style="margin:0">Estas facturas son de control interno: sirven para llevar las cuentas y enviárselas a las familias. No sustituyen el comprobante fiscal electrónico (e-CF) de la DGII. El sistema guarda la cédula o RNC de cada familia para conectar más adelante un proveedor de facturación electrónica.</p></div>
+   </div>
+  </section>
+
+  <!-- CIERRE DEL AÑO -->
+  <section id="v-cierre" class="hide">
+   <div class="top"><div><h1>Cierre del año escolar</h1><p>Termina el año <b id="ciAno"></b> y abre el <b id="ciNuevo"></b>. Lo que se deba pasa como saldo del año anterior; no se borra ningún pago ni factura.</p></div><span class="demo">Solo dirección</span></div>
+   <div class="kpis" id="ciK" style="grid-template-columns:repeat(3,1fr)"></div>
+   <p class="aviso" id="ciAviso" style="color:var(--bad);font-weight:600;margin:0 0 12px"></p>
+   <div class="grid2" style="grid-template-columns:1.6fr 1fr;align-items:start">
+    <div class="card" style="padding:14px 16px">
+     <div class="row-head" style="margin-bottom:10px"><div><h2>1. ¿Qué pasa con cada estudiante?</h2><p class="sub" style="margin:0">Ya viene sugerido: todos pasan de grado y 6.º de Secundaria egresa. Cambia solo los que repiten o no siguen.</p></div></div>
+     <div class="tools" style="margin-bottom:8px"><select id="ciGrado"></select><select id="ciTodos"><option value="">Cambiar todos los de la lista a…</option><option value="promovido">Pasa de grado</option><option value="repite">Repite</option><option value="retirado">No continúa</option></select></div>
+     <div class="tbl"><table><thead><tr><th>Estudiante</th><th>Grado</th><th>Año nuevo</th><th style="text-align:right">Debe</th></tr></thead><tbody id="ciBody"></tbody></table></div>
+    </div>
+    <div>
+     <div class="card"><h2>2. El año nuevo</h2>
+      <label class="lbl" for="ciIni">Primer mes del año nuevo</label><input class="field" id="ciIni" type="month">
+      <label class="lbl">Mensualidades del año nuevo (RD$)</label><div class="ciTar" id="ciTar"></div>
+      <label class="chkline"><input type="checkbox" id="ciBecas" checked> Mantener las becas y descuentos</label>
+     </div>
+     <div class="card" style="margin-top:16px;border:2px solid var(--badbg)"><h2>3. Confirmar</h2><p class="sub">Este paso no se puede deshacer desde el panel. Escribe <b>CERRAR</b> para confirmar.</p>
+      <input class="field" id="ciConf" placeholder="CERRAR" autocomplete="off"><button class="btn btn-r" id="ciOk" style="width:100%;margin-top:12px">Cerrar el año escolar</button></div>
+     <div class="card" style="margin-top:16px"><h2>Años cerrados</h2><div class="list" id="ciHist"></div></div>
+    </div>
    </div>
   </section>
 
@@ -664,6 +697,12 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
  <div class="dos2"><div><label>WhatsApp</label><input id="eTel" inputmode="tel"></div><div><label>Cédula o RNC</label><input id="eDoc" inputmode="numeric"></div></div>
  <label>Estudiantes</label><div id="eEsts" class="nf-lineas" style="margin-top:0"></div>
  <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" id="eOk">Guardar cambios</button></div>
+</div>
+<div class="modal" id="mRet">
+ <h2>Retirar estudiante</h2><p class="sub" id="retSub"></p>
+ <label>Último mes que paga</label><select id="retHasta"></select>
+ <label>Motivo</label><input id="retMot" placeholder="Ej.: se mudó, cambio de colegio">
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-r" id="retOk">Retirar</button></div>
 </div>
 <div class="toast" id="toast"></div>
 
