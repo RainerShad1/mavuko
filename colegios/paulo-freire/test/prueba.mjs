@@ -158,6 +158,42 @@ check((await call('/api/portada', 'POST', { banner: md.data.url }, cookie)).stat
 pub = (await call('/api/publico/contenido')).data;
 check(pub.portada.banner === md.data.url && pub.galeria.length === 3, 'web refleja cambios');
 
+// ---- Facturación ----
+let fx = (await call('/api/facturas', 'GET', null, cookie)).data;
+check(fx.facturas.length > 100 && fx.conceptos.length > 3, 'facturas sembradas ' + fx.facturas.length);
+check(fx.facturas.some((f) => f.estado === 'pendiente'), 'hay facturas pendientes de ejemplo');
+const pagoFac = fx.facturas.find((f) => f.recibo === pg1.data.id);
+check(pagoFac && pg1.data.factura === pagoFac.id && pg1.data.texto.includes('/f/' + pagoFac.token), 'el pago genera factura con enlace');
+const pag = await worker.fetch(new Request('https://x.test/f/' + pagoFac.token), env, ctx);
+const html = await pag.text();
+check(pag.status === 200 && html.includes(pagoFac.id) && html.includes('PAGADA') && html.includes('No es un comprobante fiscal'), 'página pública de la factura');
+check((await worker.fetch(new Request('https://x.test/f/noexisteestetokenxx'), env, ctx)).status === 404, 'token inválido = 404');
+// Factura con mensualidad + conceptos + descuento, guardando cédula
+st = (await call('/api/state', 'GET', null, cookie)).data;
+const pagadosSt = new Set(st.pays.map((p) => p.est + '|' + p.mes));
+const e5 = st.stus.find((s) => s.fam === 'F4');
+const libre = st.meta.meses.map((m) => m.k).find((k) => !pagadosSt.has(e5.id + '|' + k));
+let nf = await call('/api/facturas', 'POST', { fam: 'F4', doc: '001-1234567-8', lineas: [{ est: e5.id, mes: libre }, { d: 'Uniforme (polo)', cant: 2, precio: 850 }], descuento: 200, metodo: 'Tarjeta', enviar: true }, cookie);
+check(nf.status === 200 && nf.data.factura.total === st.meta.tarifas[e5.nivel] + 1700 - 200 && nf.data.envio, 'factura combinada ' + JSON.stringify(nf.data).slice(0, 200));
+check((await db.one("select doc from familias where id='F4'")).doc === '001-1234567-8', 'guarda la cédula en la familia');
+check((await db.one('select 1 as x from pagos where estudiante_id=$1 and mes=$2', [e5.id, libre])), 'la mensualidad facturada queda pagada');
+check((await call('/api/facturas', 'POST', { fam: 'F4', lineas: [{ est: e5.id, mes: libre }] }, cookie)).status === 400, 'no permite cobrar dos veces el mismo mes');
+check((await call('/api/facturas', 'POST', { fam: 'F4', lineas: [{ d: 'X', precio: 100 }], descuento: 500 }, cookie)).status === 400, 'descuento mayor que el total');
+// Pendiente → cobrar
+const libre2 = st.meta.meses.map((m) => m.k).find((k) => k !== libre && !pagadosSt.has(e5.id + '|' + k));
+const pend = await call('/api/facturas', 'POST', { fam: 'F4', pagada: false, lineas: [{ est: e5.id, mes: libre2 }] }, cookie);
+check(pend.data.factura.estado === 'pendiente' && !(await db.one('select 1 as x from pagos where estudiante_id=$1 and mes=$2', [e5.id, libre2])), 'factura pendiente no marca el mes');
+const cob = await call(`/api/facturas/${pend.data.factura.id}/cobrar`, 'POST', { metodo: 'Efectivo' }, cookie);
+check(cob.data.factura.estado === 'pagada' && cob.data.factura.recibo && (await db.one('select 1 as x from pagos where estudiante_id=$1 and mes=$2', [e5.id, libre2])), 'cobrar factura pendiente');
+// Anular devuelve el mes a pendiente
+const an = await call(`/api/facturas/${nf.data.factura.id}/anular`, 'POST', { motivo: 'Error de digitación' }, cookie);
+check(an.data.factura.estado === 'anulada' && !(await db.one('select 1 as x from pagos where estudiante_id=$1 and mes=$2', [e5.id, libre])), 'anular libera la mensualidad');
+check((await call(`/api/facturas/${nf.data.factura.id}/anular`, 'POST', { motivo: 'x' }, cookie)).status === 400, 'no se anula dos veces');
+check((await call('/api/facturas/conceptos', 'POST', { conceptos: [{ n: 'Inscripción', p: 7000 }] }, cookie)).data.conceptos[0].p === 7000, 'editar conceptos');
+// El asistente comparte las facturas
+t = await wa({ type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'fac', title: 'Mis facturas' } } });
+check(t.includes('Sus últimas facturas') && t.includes('/f/'), 'bot facturas: ' + t.slice(0, 80));
+
 const reset = await call('/api/demo/reiniciar', 'POST', {}, cookie);
 check(reset.status === 200, 'reiniciar');
 const tipos = llamadas.filter((l) => l.body?.type).map((l) => l.body.type + (l.body.interactive ? ':' + l.body.interactive.type : ''));

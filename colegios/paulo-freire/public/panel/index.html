@@ -311,6 +311,21 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 @keyframes llena{to{transform:scaleX(1)}}
 @keyframes failsafe{to{opacity:0;visibility:hidden}}
 @media (prefers-reduced-motion:reduce){.barra i:after{animation:none;transform:none}.cargando{transition:none}}
+
+/* Facturación */
+.fac-m{width:min(640px,96vw)}
+.dos2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nf-mens{background:var(--bg);border-radius:12px;padding:10px;margin-top:10px}.nf-mens .chips{margin-top:8px}
+.nf-lineas{margin-top:12px;display:grid;gap:8px}
+.nfl{display:grid;grid-template-columns:1fr 64px 110px 30px;gap:6px;align-items:center}
+.nfl input{padding:9px 10px!important}.nfl .fija{font-size:13px;font-weight:600;padding:9px 4px}.nfl .imp{grid-column:1/-1;font-size:11.5px;color:var(--muted);margin-top:-4px}
+.nfl button{border:0;background:var(--badbg);color:var(--bad);border-radius:8px;height:30px;font-weight:800;cursor:pointer}
+.conc{display:grid;grid-template-columns:1fr 140px 34px;gap:8px;margin-bottom:8px}
+.conc button{border:0;background:var(--badbg);color:var(--bad);border-radius:10px;font-weight:800;cursor:pointer}
+.chkline{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:13.5px;font-weight:600;color:var(--ink)}.chkline input{width:auto!important}
+.facl{cursor:pointer}.facl:hover td{background:#f7f9fc}
+@media(max-width:560px){.dos2{grid-template-columns:1fr}.nfl{grid-template-columns:1fr 54px 92px 30px}}
+.facl td:first-child b{white-space:nowrap}
 </style></head><body>
 <div class="cargando" id="cargando" aria-hidden="true"><div><img src="/assets/monograma.png" alt="" width="78" height="108"><b>Colegio Paulo Freire</b><small>Sistema administrativo</small><span class="barra"><i></i><i></i><i></i></span></div></div>
 <noscript><style>.cargando{display:none}</style></noscript>
@@ -327,6 +342,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
    <div class="navlbl">Cobros</div>
    <button data-v="familias"><span class="ico">👨‍👩‍👧</span>Familias</button>
    <button data-v="pagos"><span class="ico">💳</span>Pagos</button>
+   <button data-v="facturas"><span class="ico">📑</span>Facturación<span class="badge" id="bFac"></span></button>
    <button data-v="comprobantes"><span class="ico">🧾</span>Comprobantes<span class="badge" id="bComp"></span></button>
    <div class="navlbl">Atención</div>
    <button data-v="solicitudes"><span class="ico">📥</span>Solicitudes<span class="badge" id="bSol"></span></button>
@@ -441,6 +457,33 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
    </div>
   </section>
 
+  <!-- FACTURACIÓN -->
+  <section id="v-facturas" class="hide">
+   <div class="top"><div><h1>Facturación</h1><p>Facturas de mensualidades, inscripción, libros, uniformes y otros cobros. Cada pago de mensualidad genera su factura automáticamente.</p></div><button class="btn btn-p" id="facNueva">＋ Nueva factura</button></div>
+   <div class="kpis">
+    <div class="kpi g"><small>Facturado este mes</small><b id="fkMes">RD$0</b><span id="fkMesSub"></span></div>
+    <div class="kpi"><small>Otros conceptos este mes</small><b id="fkOtros">RD$0</b><span>Inscripción, libros, uniformes…</span></div>
+    <div class="kpi r"><small>Pendiente de cobro</small><b id="fkPend">RD$0</b><span id="fkPendSub"></span></div>
+    <div class="kpi"><small>Anuladas este mes</small><b id="fkAn">0</b><span>Quedan guardadas en el historial</span></div>
+   </div>
+   <div class="tabs"><button class="tab on" data-ftab="lista" type="button">Facturas</button><button class="tab" data-ftab="conceptos" type="button">Conceptos y precios</button></div>
+   <div id="fLista">
+    <div class="tools"><input id="qf" placeholder="Buscar número, nombre, cédula o concepto…"><select id="fEstF"><option value="">Todos los estados</option><option value="pagada">Pagadas</option><option value="pendiente">Pendientes de cobro</option><option value="anulada">Anuladas</option></select><select id="fMesF"></select></div>
+    <div class="card" style="padding:6px 8px">
+     <div class="tbl desk"><table><thead><tr><th>Factura</th><th>Fecha</th><th>Facturado a</th><th>Concepto</th><th>Estado</th><th style="text-align:right">Total</th></tr></thead><tbody id="facBody"></tbody></table></div>
+     <div class="list mcards" id="facCards" style="padding:4px 8px"></div>
+     <p class="sub" id="facPie" style="margin:10px 12px"></p>
+    </div>
+   </div>
+   <div id="fConceptos" class="hide">
+    <div class="card"><h2>Conceptos y precios</h2><p class="sub">Aparecen como botones rápidos al crear una factura. El precio se puede cambiar en cada factura. Las mensualidades usan las tarifas de cada nivel.</p>
+     <div id="concList"></div>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-o btn-sm" id="concAdd" type="button">＋ Agregar concepto</button><button class="btn btn-p btn-sm" id="concSave" type="button">Guardar cambios</button></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Sobre la factura fiscal</h2><p class="sub" style="margin:0">Estas facturas son de control interno: sirven para llevar las cuentas y enviárselas a las familias. No sustituyen el comprobante fiscal electrónico (e-CF) de la DGII. El sistema guarda la cédula o RNC de cada familia para conectar más adelante un proveedor de facturación electrónica.</p></div>
+   </div>
+  </section>
+
   <!-- COMPROBANTES -->
   <section id="v-comprobantes" class="hide">
    <div class="top"><div><h1>Comprobantes de transferencia</h1><p>Los padres envían la foto por WhatsApp. Al aprobarla, el pago queda registrado y el padre recibe su recibo. Meta da <b>24 horas</b> desde el mensaje del padre para responder como mensaje de servicio; después, el recibo sale como plantilla con costo.</p></div></div>
@@ -530,7 +573,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 
 <div class="ov" id="ov"></div>
 <div class="drawer" id="drawer"><div class="dh"><div class="av" id="dAv"></div><div><h2 id="dName"></h2><p id="dSub"></p></div><button class="x" data-close>×</button></div><div class="db" id="dBody"></div>
- <div class="df"><button class="btn btn-w" id="dWa">Enviar estado de cuenta</button><button class="btn btn-p" id="dPay">＋ Registrar pago</button></div></div>
+ <div class="df"><button class="btn btn-w" id="dWa">Enviar estado de cuenta</button><button class="btn btn-o" id="dFac">📑 Facturar</button><button class="btn btn-p" id="dPay">＋ Registrar pago</button></div></div>
 
 <div class="modal" id="mPay">
  <h2>Registrar pago</h2><p class="sub">Selecciona el estudiante y los meses que paga</p>
@@ -545,10 +588,10 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 </div>
 
 <div class="modal" id="mRec">
- <h2>Pago registrado ✅</h2><p class="sub">Recibo generado automáticamente</p>
+ <h2>Pago registrado ✅</h2><p class="sub">Factura generada automáticamente · <a id="recFac" target="_blank" rel="noopener">Ver factura</a></p>
  <div class="rec" id="recBody"></div>
  <label>Mensaje que recibe el tutor</label><div class="wa"><div class="bub" id="recWa"></div></div>
- <div class="mfoot"><button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-w" id="recSend">Enviar recibo por WhatsApp</button></div>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-w" id="recSend">Enviar factura por WhatsApp</button></div>
 </div>
 
 <div class="modal" id="mWa">
@@ -561,6 +604,39 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
  <h2>Rechazar comprobante</h2><p class="sub">El padre recibirá el motivo por WhatsApp</p>
  <div class="chips" id="rejOpts"><button class="chk on">El monto no coincide</button><button class="chk">No se ve claro</button><button class="chk">No aparece en el banco</button><button class="chk">Comprobante duplicado</button></div>
  <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-r" id="rejOk">Rechazar y avisar</button></div>
+</div>
+<div class="modal fac-m" id="mFac">
+ <h2>Nueva factura</h2><p class="sub">Elige la familia, agrega lo que paga y guarda</p>
+ <label>Familia</label><select id="nfFam"></select>
+ <div class="dos2"><div><label>Facturar a nombre de</label><input id="nfCli" placeholder="Nombre completo"></div><div><label>Cédula o RNC <span class="muted">(opcional)</span></label><input id="nfDoc" placeholder="000-0000000-0" inputmode="numeric"></div></div>
+ <label>Agregar</label>
+ <div class="chips" id="nfRapidos"></div>
+ <div id="nfMens" class="nf-mens hide"><select id="nfEst"></select><div class="chips" id="nfMeses"></div></div>
+ <div id="nfLineas" class="nf-lineas"></div>
+ <div class="dos2"><div><label>Descuento (RD$)</label><input id="nfDesc" type="number" min="0" step="1" value="0"></div><div><label>Forma de pago</label><select id="nfMet"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Cheque</option><option value="">Pendiente de pago</option></select></div></div>
+ <div class="dos2"><div><label>Referencia <span class="muted">(opcional)</span></label><input id="nfRef" placeholder="Núm. de transferencia"></div><div><label>Nota <span class="muted">(opcional)</span></label><input id="nfNota" placeholder="Aparece en la factura"></div></div>
+ <div class="total"><span>Total <small class="muted" id="nfSub"></small></span><b id="nfTot">RD$0</b></div>
+ <div class="mfoot"><button class="btn btn-o" id="nfGuardar">Guardar</button><button class="btn btn-w" id="nfEnviar">Guardar y enviar por WhatsApp</button></div>
+</div>
+
+<div class="modal" id="mFacVer">
+ <h2 id="fvTit">Factura</h2><p class="sub" id="fvSub"></p>
+ <div class="rec" id="fvBody"></div>
+ <div class="mfoot" style="flex-wrap:wrap"><a class="btn btn-o" id="fvAbrir" target="_blank" rel="noopener">Ver e imprimir</a><button class="btn btn-o" id="fvCopiar" type="button">Copiar enlace</button><button class="btn btn-w" id="fvWa" type="button">Enviar por WhatsApp</button></div>
+ <div class="mfoot" id="fvAcc"></div>
+</div>
+
+<div class="modal" id="mFacAnular">
+ <h2>Anular factura</h2><p class="sub">La factura queda guardada como anulada. Si incluía mensualidades, esos meses vuelven a quedar pendientes.</p>
+ <label>Motivo</label><input id="faMot" placeholder="Ej.: error en el monto">
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-r" id="faOk">Anular</button></div>
+</div>
+
+<div class="modal" id="mFacCobrar">
+ <h2>Cobrar factura</h2><p class="sub" id="fcSub"></p>
+ <div class="dos2"><div><label>Forma de pago</label><select id="fcMet"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Cheque</option></select></div><div><label>Referencia</label><input id="fcRef" placeholder="Opcional"></div></div>
+ <label class="chkline"><input type="checkbox" id="fcEnv" checked> Enviar la factura pagada por WhatsApp</label>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" id="fcOk">Registrar cobro</button></div>
 </div>
 <div class="toast" id="toast"></div>
 

@@ -9,7 +9,7 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*", "/webhook", "/panel", "/media/*"]
+    "run_worker_first": ["/api/*", "/webhook", "/panel", "/media/*", "/f/*"]
   },
   // 12:00 UTC = 8:00 a. m. en República Dominicana
   "triggers": { "crons": ["0 12 * * *"] },

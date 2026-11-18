@@ -3,9 +3,10 @@ import { COLEGIO } from './colegio.js';
 import { meses, hoyRD, mesActual } from './cobros.js';
 import { leerConfig, guardarConfig, nuevoId, nuevoRecibo, telWA, telBonito } from './db.js';
 import { enviar, ventanaAbierta, VENTANA } from './wa.js';
-import { enviarAFamilia, enviarRecordatorios, colaRecordatorios, textoRecibo, primerNombre } from './avisos.js';
+import { enviarAFamilia, enviarRecordatorios, colaRecordatorios, primerNombre } from './avisos.js';
 import { sembrar } from './seed.js';
 import { apiContenido } from './contenido.js';
+import { crearFactura, cobrarFactura, anularFactura, facturaJSON, textoFactura, conceptos, baseURL, urlFactura, METODOS } from './facturas.js';
 
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers } });
@@ -14,7 +15,7 @@ const iso = (d) => (d ? new Date(d).toISOString() : null);
 const horaDe = (d) => new Date(new Date(d).getTime() + COLEGIO.zonaHoraria * 3600e3).toISOString().slice(11, 16);
 
 export async function estado(env, db, user) {
-  const [cfg, fams, ests, pays, comps, aus, citas, hum, ints, circs, sent, lastIn, esperando] = await Promise.all([
+  const [cfg, fams, ests, pays, comps, aus, citas, hum, ints, circs, sent, lastIn, esperando, facRec] = await Promise.all([
     leerConfig(db),
     db.q('select * from familias order by id'),
     db.q('select * from estudiantes order by id'),
@@ -30,6 +31,7 @@ export async function estado(env, db, user) {
     // Conversaciones que pidieron una persona y aún no se marcan como atendidas
     db.q(`select h.tel, min(h.nombre) as nombre, max(m.fecha) as ult from humano h
           left join mensajes m on m.tel = h.tel and m.dir = 'in' where not h.ok group by h.tel`),
+    db.q("select recibo, id, token from facturas where recibo is not null and estado <> 'anulada'"),
   ]);
   const hoyIni = Date.parse(hoyRD() + 'T00:00:00Z') - COLEGIO.zonaHoraria * 3600e3;
   return {
@@ -40,7 +42,8 @@ export async function estado(env, db, user) {
       waConectado: !!(env.WA_TOKEN && env.WA_PHONE_ID), plantilla: !!env.WA_PLANTILLA_AVISO,
     },
     rules: cfg.rules, modRec: cfg.modRec, modCirc: cfg.modCirc, modoDemo: cfg.modoDemo,
-    fams: fams.map((f) => ({ id: f.id, tutor: f.tutor, parent: f.parentesco, tel: f.tel, real: f.real, ultimoAviso: f.ultimo_aviso })),
+    fams: fams.map((f) => ({ id: f.id, tutor: f.tutor, parent: f.parentesco, tel: f.tel, doc: f.doc, real: f.real, ultimoAviso: f.ultimo_aviso })),
+    fac: Object.fromEntries(facRec.map((x) => [x.recibo, [x.id, x.token]])),
     stus: ests.map((e) => ({ id: e.id, fam: e.familia_id, nombre: e.nombre, grado: e.grado, nivel: e.nivel })),
     pays: pays.map((p) => ({ id: p.recibo, est: p.estudiante_id, mes: p.mes, monto: p.monto, fecha: iso(p.fecha), met: p.metodo, ref: p.ref })),
     comps: comps.map((c) => ({ id: c.id, fam: c.familia_id, est: c.estudiante_id, meses: c.meses, monto: c.monto, banco: c.banco, ref: c.ref, fecha: iso(c.fecha), estado: c.estado, motivo: c.motivo, recibo: c.recibo, via: c.via, img: c.img })),
@@ -55,20 +58,15 @@ export async function estado(env, db, user) {
   };
 }
 
-async function registrarPago(db, estId, mesesSel, met, ref) {
+// Pago de mensualidades: se registra como una factura pagada
+async function registrarPago(db, estId, mesesSel, met, ref, usuario) {
   const e = await db.one('select * from estudiantes where id = $1', [estId]);
   if (!e) throw new Error('Estudiante no encontrado');
   const orden = meses().map((m) => m.k);
   const ms = [...new Set(mesesSel)].filter((k) => orden.includes(k)).sort((a, b) => orden.indexOf(a) - orden.indexOf(b));
   if (!ms.length) throw new Error('Selecciona al menos un mes');
-  const recibo = await nuevoRecibo(db);
-  const monto = COLEGIO.tarifas[e.nivel];
-  await db.q(
-    `insert into pagos(recibo, estudiante_id, mes, monto, metodo, ref)
-     select $1, $2, m, $3, $4, $5 from unnest($6::text[]) as m on conflict (estudiante_id, mes) do nothing`,
-    [recibo, e.id, monto, met, ref || '', ms]
-  );
-  return { e, r: { id: recibo, total: ms.length * monto, meses: ms } };
+  const fac = await crearFactura(db, { fam: e.familia_id, lineas: ms.map((mes) => ({ est: e.id, mes })), metodo: met, ref, usuario });
+  return { e, fac, r: { id: fac.recibo, total: fac.total, meses: ms, factura: fac.id, token: fac.token } };
 }
 
 export async function api(req, env, db, user, ctx) {
@@ -76,6 +74,7 @@ export async function api(req, env, db, user, ctx) {
   const p = url.pathname.replace(/^\/api/, '');
   const m = req.method;
   const body = m === 'POST' ? await req.json().catch(() => ({})) : {};
+  const base = env.PUBLIC_URL ? baseURL(env) : url.origin;
   let r;
 
   if (p === '/state' && m === 'GET') {
@@ -92,8 +91,8 @@ export async function api(req, env, db, user, ctx) {
   // ---- Pagos ----
   if (p === '/pagos' && m === 'POST') {
     try {
-      const { e, r: rec } = await registrarPago(db, body.est, body.meses || [], body.met || 'Efectivo', body.ref);
-      return json({ ...rec, est: e.id });
+      const { e, fac, r: rec } = await registrarPago(db, body.est, body.meses || [], body.met || 'Efectivo', body.ref, user.nombre);
+      return json({ ...rec, est: e.id, texto: textoFactura(fac, base) });
     } catch (x) { return err(x.message); }
   }
   // Enviar un mensaje ya armado a una familia (recibo, estado de cuenta)
@@ -115,9 +114,10 @@ export async function api(req, env, db, user, ctx) {
     if (!c || c.estado !== 'pend') return err('Comprobante no disponible');
     const pagados = new Set((await db.q('select mes from pagos where estudiante_id = $1', [c.estudiante_id])).map((x) => x.mes));
     const ms = c.meses.filter((k) => !pagados.has(k));
-    const { e, r: rec } = await registrarPago(db, c.estudiante_id, ms.length ? ms : c.meses, 'Transferencia', 'WhatsApp');
+    if (!ms.length) return err('Esos meses ya figuran como pagados. Si el comprobante está duplicado, recházalo.');
+    const { fac, r: rec } = await registrarPago(db, c.estudiante_id, ms, 'Transferencia', 'WhatsApp', user.nombre);
     const f = await db.one('select * from familias where id = $1', [c.familia_id]);
-    const envio = await enviarAFamilia(env, db, f, textoRecibo(f, e, rec), 'Recibo de pago');
+    const envio = await enviarAFamilia(env, db, f, textoFactura(fac, base), 'Factura ' + fac.id);
     await db.q("update comprobantes set estado = 'ok', recibo = $2, via = $3 where id = $1", [c.id, rec.id, envio.via]);
     return json({ recibo: rec, envio });
   }
@@ -129,6 +129,52 @@ export async function api(req, env, db, user, ctx) {
     const f = await db.one('select * from familias where id = $1', [c.familia_id]);
     const envio = await enviarAFamilia(env, db, f, `⚠️ Hola, ${primerNombre(f.tutor)}. No pudimos validar su comprobante: *${motivo}*.\nPor favor envíelo de nuevo o comuníquese con la secretaría.`, 'Comprobante rechazado');
     return json({ envio });
+  }
+
+  // ---- Facturación ----
+  if (p === '/facturas' && m === 'GET') {
+    const rows = await db.q('select * from facturas order by fecha desc limit 1000');
+    return json({ facturas: rows.map(facturaJSON), conceptos: await conceptos(db), metodos: METODOS, base });
+  }
+  if (p === '/facturas' && m === 'POST') {
+    try {
+      const fac = await crearFactura(db, { ...body, usuario: user.nombre });
+      let envio = null;
+      if (body.enviar && fac.familia_id) {
+        const f = await db.one('select * from familias where id = $1', [fac.familia_id]);
+        envio = await enviarAFamilia(env, db, f, textoFactura(fac, base), 'Factura ' + fac.id);
+      }
+      return json({ factura: facturaJSON(fac), url: urlFactura(base, fac.token), texto: textoFactura(fac, base), envio });
+    } catch (x) { return err(x.message); }
+  }
+  if ((r = p.match(/^\/facturas\/(FAC-\d+)\/enviar$/)) && m === 'POST') {
+    const fac = await db.one('select * from facturas where id = $1', [r[1]]);
+    if (!fac || !fac.familia_id) return err('Esta factura no está ligada a una familia con WhatsApp');
+    if (fac.estado === 'anulada') return err('La factura está anulada');
+    const f = await db.one('select * from familias where id = $1', [fac.familia_id]);
+    return json({ envio: await enviarAFamilia(env, db, f, textoFactura(fac, base), 'Factura ' + fac.id) });
+  }
+  if ((r = p.match(/^\/facturas\/(FAC-\d+)\/cobrar$/)) && m === 'POST') {
+    try {
+      const fac = await cobrarFactura(db, r[1], body.metodo, body.ref);
+      let envio = null;
+      if (body.enviar && fac.familia_id) {
+        const f = await db.one('select * from familias where id = $1', [fac.familia_id]);
+        envio = await enviarAFamilia(env, db, f, textoFactura(fac, base), 'Factura ' + fac.id);
+      }
+      return json({ factura: facturaJSON(fac), envio });
+    } catch (x) { return err(x.message); }
+  }
+  if ((r = p.match(/^\/facturas\/(FAC-\d+)\/anular$/)) && m === 'POST') {
+    if (user.rol !== 'director') return err('Solo la dirección puede anular facturas', 403);
+    try { return json({ factura: facturaJSON(await anularFactura(db, r[1], body.motivo, user.nombre)) }); }
+    catch (x) { return err(x.message); }
+  }
+  if (p === '/facturas/conceptos' && m === 'POST') {
+    if (!Array.isArray(body.conceptos)) return err('Lista inválida');
+    const lista = body.conceptos.map((c) => ({ n: String(c.n || '').trim().slice(0, 80), p: Math.max(0, Math.round(Number(c.p) || 0)) })).filter((c) => c.n).slice(0, 40);
+    await guardarConfig(db, 'conceptos', lista);
+    return json({ conceptos: lista });
   }
 
   // ---- Solicitudes ----

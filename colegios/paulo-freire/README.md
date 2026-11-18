@@ -67,3 +67,12 @@ Mientras `modoDemo` esté activo, el sistema **solo envía mensajes reales a las
 - Plantilla de Meta aprobada para escribir fuera de la ventana de 24 h (recordatorios y recibos tardíos). Se configura con `WA_PLANTILLA_AVISO`.
 - Carga real de familias desde el Excel de la secretaría y alta/edición de familias en el panel.
 - Fotos de comprobantes: hoy se guardan en la base de datos; con muchos meses de uso conviene pasarlas a R2.
+
+## Facturación interna
+
+- Cada pago de mensualidad (desde el panel o aprobando un comprobante de WhatsApp) genera una factura `FAC-000123`.
+- En **Facturación** se crean facturas de cualquier concepto (inscripción, libros, uniformes…), con descuento, cédula/RNC y estado pendiente o pagada. Solo la dirección puede anular.
+- La familia recibe un enlace privado `/f/TOKEN` para ver, imprimir o guardar la factura en PDF. En WhatsApp puede escribir *FACTURAS* para ver las últimas.
+- Son documentos internos, **no** comprobantes fiscales (e-CF). Los campos `ncf` y `fiscal` de la tabla `facturas` quedan listos para conectar un proveedor autorizado por la DGII.
+- Para instalar en una base existente, vuelve a ejecutar `db/schema.sql` (solo agrega lo nuevo).
+- Opcional: `PUBLIC_URL` define el dominio de los enlaces que se envían por WhatsApp.

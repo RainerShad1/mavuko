@@ -12,6 +12,7 @@ import { firmaValida } from './wa.js';
 import { enviarRecordatorios } from './avisos.js';
 import { leerConfig } from './db.js';
 import { contenidoPublico, servirMedio } from './contenido.js';
+import { paginaFactura } from './facturas.js';
 
 const json = (d, s = 200, h = {}) => new Response(JSON.stringify(d), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...h } });
 
@@ -60,10 +61,19 @@ export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     const p = url.pathname;
+    env.ORIGEN ??= url.origin; // para los enlaces que manda el asistente
     if (p === '/webhook') return webhook(req, env, ctx);
     // Fotos públicas (página web, Facebook e Instagram las descargan desde aquí)
     const md = p.match(/^\/media\/([\w-]+)$/);
     if (md && req.method === 'GET') return servirMedio(crearDB(env), md[1], url.searchParams.has('ig'));
+    // Factura que recibe la familia por WhatsApp (enlace privado, sin sesión)
+    const fc = p.match(/^\/f\/([\w-]{16,40})$/);
+    if (fc && req.method === 'GET') {
+      if (!env.DATABASE_URL && !env.__db) return new Response('No disponible', { status: 503 });
+      const f = await crearDB(env).one('select * from facturas where token = $1', [fc[1]]);
+      if (!f) return new Response('Factura no encontrada', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      return new Response(paginaFactura(f), { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex', 'Referrer-Policy': 'no-referrer' } });
+    }
     if (p === '/api/publico/inscripcion' && req.method === 'POST') {
       const b = await req.json().catch(() => ({}));
       if (b.web) return json({ ok: true }); // campo trampa para robots

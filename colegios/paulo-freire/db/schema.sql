@@ -192,3 +192,37 @@ create table if not exists galeria (
   visible boolean not null default true,
   creado timestamptz not null default now()
 );
+
+-- ===== Facturación interna =====
+-- Facturas de control del colegio. NO son comprobantes fiscales (e-CF):
+-- ncf y fiscal quedan reservados para conectar un proveedor autorizado por la DGII.
+alter table familias add column if not exists doc text;   -- cédula o RNC del tutor
+create sequence if not exists sec_factura start 1;
+create table if not exists facturas (
+  id text primary key,                  -- FAC-000123
+  token text unique not null,           -- enlace privado que recibe la familia (/f/TOKEN)
+  familia_id text references familias(id) on delete set null,
+  cliente text not null,
+  doc text,
+  tel text,
+  items jsonb not null,                 -- [{d, cant, precio, est?, mes?}]
+  subtotal int not null,
+  descuento int not null default 0,
+  total int not null,
+  metodo text,
+  ref text not null default '',
+  recibo text,                          -- recibo de las mensualidades incluidas (R-####)
+  estado text not null default 'pagada', -- pagada | pendiente | anulada
+  motivo text,
+  nota text,
+  usuario text,
+  fecha timestamptz not null default now(),
+  pagada_en timestamptz,
+  anulada_por text,
+  anulada_en timestamptz,
+  ncf text,
+  fiscal jsonb
+);
+create index if not exists facturas_fecha on facturas(fecha desc);
+create index if not exists facturas_familia on facturas(familia_id, fecha desc);
+create index if not exists facturas_recibo on facturas(recibo);

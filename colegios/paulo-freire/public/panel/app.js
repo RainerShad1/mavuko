@@ -151,7 +151,7 @@ function textoEstado(f) {
 function renderPagos() {
   const q = $('#qp').value.toLowerCase().trim(), fm = $('#fMet').value;
   const rows = [...DB.pays].sort((a, b) => b.fecha.localeCompare(a.fecha)).map((p) => ({ p, e: stu(p.est) })).filter((x) => x.e).map((x) => ({ ...x, f: fam(x.e.fam) })).filter((x) => (!fm || x.p.met === fm) && (!q || x.p.id.toLowerCase().includes(q) || x.e.nombre.toLowerCase().includes(q) || x.f.tutor.toLowerCase().includes(q))).slice(0, 100);
-  $('#payBody').innerHTML = rows.map(({ p, e }) => `<tr><td><b>${p.id}</b></td><td>${fmtF(p.fecha)}</td><td>${esc(e.nombre)}<div class="kids">${esc(e.grado)}</div></td><td>Mensualidad ${MES_LARGO[p.mes]}</td><td><span class="pill p-mute">${esc(p.met)}</span>${p.ref === 'WhatsApp' ? ' <span class="pill p-ok">WhatsApp</span>' : ''}</td><td style="text-align:right" class="amt">${rd(p.monto)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sin resultados</td></tr>';
+  $('#payBody').innerHTML = rows.map(({ p, e }) => `<tr><td><b>${p.id}</b>${DB.fac[p.id] ? `<div class="kids"><a href="/f/${DB.fac[p.id][1]}" target="_blank" rel="noopener">${DB.fac[p.id][0]}</a></div>` : ''}</td><td>${fmtF(p.fecha)}</td><td>${esc(e.nombre)}<div class="kids">${esc(e.grado)}</div></td><td>Mensualidad ${MES_LARGO[p.mes]}</td><td><span class="pill p-mute">${esc(p.met)}</span>${p.ref === 'WhatsApp' ? ' <span class="pill p-ok">WhatsApp</span>' : ''}</td><td style="text-align:right" class="amt">${rd(p.monto)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sin resultados</td></tr>';
   $('#payCards').innerHTML = rows.map(({ p, e }) => `<div class="row"><div class="av" style="background:var(--green)">✓</div><div class="who"><b>${esc(e.nombre)}</b><span>${p.id} · ${MES_LARGO[p.mes]} · ${esc(p.met)} · ${fmtF(p.fecha)}</span></div><span class="amt">${rd(p.monto)}</span></div>`).join('') || '<p class="empty">Sin resultados</p>';
 }
 let sel = [];
@@ -172,9 +172,11 @@ function showRecibo(e, r, met) {
   const f = fam(e.fam); const meses = r.meses.map((k) => MES_LARGO[k]).join(', ');
   $('#recBody').innerHTML = `<div class="rh"><img src="/assets/monograma.png" alt=""><div><b>${esc(META.colegio)}</b><small style="color:var(--muted)">Recibo ${r.id} · ${new Date().toLocaleDateString('es-DO')}</small></div></div>
  <div class="li"><span>Tutor</span><span>${esc(f.tutor)}</span></div><div class="li"><span>Estudiante</span><span>${esc(e.nombre)} (${esc(e.grado)})</span></div><div class="li"><span>Concepto</span><span>Mensualidad: ${meses}</span></div><div class="li"><span>Método</span><span>${esc(met)}</span></div><div class="li" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800"><span style="color:var(--navy)">Total pagado</span><span>${rd(r.total)}</span></div>`;
-  const txt = reciboMsg(f, e, r);
+  const txt = r.texto || reciboMsg(f, e, r);
+  $('#recFac').href = r.token ? '/f/' + r.token : '#'; $('#recFac').classList.toggle('hide', !r.token);
+  $('#recBody').querySelector('small').textContent = `Factura ${r.factura || ''} · Recibo ${r.id} · ${new Date().toLocaleDateString('es-DO')}`;
   $('#recWa').innerHTML = fmtWA(txt) + `<i>${hora()}</i>`;
-  $('#recSend').onclick = (ev) => act(ev.currentTarget, async () => { const x = await api('/enviar', { fam: f.id, tipo: 'Recibo de pago', texto: txt }); closeAll(); toast(resEnvio(x, 'Recibo enviado')); await load(); });
+  $('#recSend').onclick = (ev) => act(ev.currentTarget, async () => { const x = await api('/enviar', { fam: f.id, tipo: r.factura ? 'Factura ' + r.factura : 'Recibo de pago', texto: txt }); closeAll(); toast(resEnvio(x, 'Recibo enviado')); await load(); });
   openModal('#mRec');
 }
 function savePay(ev) {
@@ -353,6 +355,7 @@ function renderAll() {
   $('#demoTag').classList.toggle('hide', !DB.modoDemo);
   $('#reset').classList.toggle('hide', DB.user.rol !== 'director' || !DB.modoDemo);
   renderPanel(); renderFamilias(); renderPagos(); renderComps(); renderSol(); renderInt(); renderCirc(); renderAvisos(); renderDemoForm();
+  if (FAC && vista === 'facturas') cargarFacturas().catch(() => {});
   if (curFam && $('#drawer').classList.contains('show')) openFam(curFam);
 }
 let vista = 'panel';
@@ -363,6 +366,7 @@ function go(v) {
   window.scrollTo(0, 0);
   if (v === 'asistente') loadChats().catch(() => {});
   if (v === 'web') cargarWeb().catch(() => {});
+  if (v === 'facturas') cargarFacturas().catch((e) => toast('⚠️ ' + e.message));
 }
 document.querySelectorAll('#nav button').forEach((b) => (b.onclick = () => go(b.dataset.v)));
 document.addEventListener('click', (e) => {
@@ -375,7 +379,7 @@ document.addEventListener('click', (e) => {
   const pv = t.closest('[data-prev]'); if (pv) { preview(pv.dataset.prev); return; }
   const sw = t.closest('[data-rule]'); if (sw) { const rules = { ...DB.rules, [sw.dataset.rule]: !DB.rules[sw.dataset.rule] }; act(sw, async () => { await api('/config', { rules }); await load(); }); return; }
   const ct = t.closest('[data-ctab]'); if (ct) { ctab = ct.dataset.ctab; document.querySelectorAll('[data-ctab]').forEach((b) => b.classList.toggle('on', b === ct)); renderComps(); return; }
-  const cok = t.closest('[data-cok]'); if (cok) { act(cok, async () => { const r = await api(`/comprobantes/${cok.dataset.cok}/aprobar`, {}); await load(); toast(resEnvio(r.envio, `Pago registrado (${r.recibo.id}) y recibo enviado`)); }); return; }
+  const cok = t.closest('[data-cok]'); if (cok) { act(cok, async () => { const r = await api(`/comprobantes/${cok.dataset.cok}/aprobar`, {}); await load(); toast(resEnvio(r.envio, `Pago registrado (${r.recibo.factura || r.recibo.id}) y factura enviada`)); }); return; }
   const crej = t.closest('[data-crej]'); if (crej) { rejId = crej.dataset.crej; openModal('#mRej'); return; }
   const ro = t.closest('#rejOpts .chk'); if (ro) { document.querySelectorAll('#rejOpts .chk').forEach((b) => b.classList.toggle('on', b === ro)); return; }
   const st = t.closest('[data-stab]'); if (st) { stab = st.dataset.stab; renderSol(); return; }
@@ -391,6 +395,7 @@ document.addEventListener('change', (e) => { const s = e.target.closest('[data-i
 $('#pStu').onchange = fillMonths; $('#pSave').onclick = savePay;
 $('#rejOk').onclick = (ev) => { const motivo = [...document.querySelectorAll('#rejOpts .chk')].find((b) => b.classList.contains('on')).textContent; act(ev.currentTarget, async () => { const r = await api(`/comprobantes/${rejId}/rechazar`, { motivo }); closeAll(); await load(); toast(resEnvio(r.envio, 'Comprobante rechazado y padre avisado')); }); };
 $('#dPay').onclick = () => { const f = curFam; closeAll(); openPay(f); };
+$('#dFac').onclick = () => { const f = curFam; closeAll(); act(null, async () => { if (!FAC) await cargarFacturas(); abrirNuevaFactura(f); }); };
 $('#dWa').onclick = () => {
   const f = fam(curFam); const txt = textoEstado(f);
   $('#waTitle').textContent = 'Estado de cuenta por WhatsApp'; $('#waSub').textContent = `Para ${f.tutor} · ${f.tel}${f.real ? '' : ' · familia de prueba (simulado)'}`;
@@ -600,3 +605,153 @@ setInterval(() => { if (!document.hidden) refrescar(); }, 5000);
 // Al volver a la pestaña o a la ventana, actualizar de inmediato
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescar(); });
 window.addEventListener('focus', refrescar);
+
+
+// ================= Facturación =================
+let FAC = null, ftab = 'lista', NF = { lineas: [], est: null }, facSel = null;
+const ESTF = { pagada: ['p-ok', 'Pagada'], pendiente: ['p-warn', 'Pendiente'], anulada: ['p-bad', 'Anulada'] };
+const mesDe = (iso) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo' }).slice(0, 7);
+const urlFac = (f) => `${FAC.base}/f/${f.token}`;
+async function cargarFacturas() { FAC = await api('/facturas'); renderFacturas(); }
+function resumenItems(f) { return f.items.length === 1 ? f.items[0].d : `${f.items[0].d} +${f.items.length - 1}`; }
+function renderFacturas() {
+  if (!FAC) return;
+  const hoyMes = HOY.slice(0, 7);
+  const mesesF = [...new Set(FAC.facturas.map((f) => mesDe(f.fecha)))].sort().reverse();
+  const selMes = $('#fMesF').value;
+  $('#fMesF').innerHTML = '<option value="">Todos los meses</option>' + mesesF.map((k) => `<option value="${k}">${cap(new Date(k + '-15').toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }))}</option>`).join('');
+  $('#fMesF').value = selMes;
+  const delMes = FAC.facturas.filter((f) => mesDe(f.fecha) === hoyMes);
+  const vivas = delMes.filter((f) => f.estado !== 'anulada');
+  $('#fkMes').textContent = rd(vivas.filter((f) => f.estado === 'pagada').reduce((a, f) => a + f.total, 0));
+  $('#fkMesSub').textContent = `${vivas.length} facturas en ${MES_LARGO[CUR] || 'este mes'}`;
+  $('#fkOtros').textContent = rd(vivas.filter((f) => f.estado === 'pagada').reduce((a, f) => a + f.items.filter((l) => !l.mes).reduce((b, l) => b + l.cant * l.precio, 0), 0));
+  const pend = FAC.facturas.filter((f) => f.estado === 'pendiente');
+  $('#fkPend').textContent = rd(pend.reduce((a, f) => a + f.total, 0)); $('#fkPendSub').textContent = pend.length + ' factura' + (pend.length === 1 ? '' : 's');
+  $('#fkAn').textContent = delMes.filter((f) => f.estado === 'anulada').length;
+  $('#bFac').textContent = pend.length || '';
+  const q = $('#qf').value.toLowerCase().trim(), est = $('#fEstF').value, mes = $('#fMesF').value;
+  const rows = FAC.facturas.filter((f) => (!est || f.estado === est) && (!mes || mesDe(f.fecha) === mes) && (!q || [f.id, f.cliente, f.doc, f.recibo, ...f.items.map((l) => l.d)].join(' ').toLowerCase().includes(q)));
+  const vis = rows.slice(0, 150);
+  $('#facBody').innerHTML = vis.map((f) => `<tr class="facl" data-fac="${f.id}"><td><b>${f.id}</b>${f.recibo ? `<div class="kids">${f.recibo}</div>` : ''}</td><td>${fmtF(f.fecha)}</td><td>${esc(f.cliente)}${f.doc ? `<div class="kids">${esc(f.doc)}</div>` : ''}</td><td>${esc(resumenItems(f))}</td><td><span class="pill ${ESTF[f.estado][0]}">${ESTF[f.estado][1]}</span>${f.metodo ? ` <span class="pill p-mute">${esc(f.metodo)}</span>` : ''}</td><td style="text-align:right" class="amt">${rd(f.total)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sin facturas</td></tr>';
+  $('#facCards').innerHTML = vis.map((f) => `<div class="row facl" data-fac="${f.id}"><div class="av" style="background:${f.estado === 'anulada' ? 'var(--bad)' : f.estado === 'pendiente' ? 'var(--warn)' : 'var(--green)'}">📑</div><div class="who"><b>${esc(f.cliente)}</b><span>${f.id} · ${fmtF(f.fecha)} · ${esc(resumenItems(f))}</span></div><span class="amt">${rd(f.total)}</span></div>`).join('') || '<p class="empty">Sin facturas</p>';
+  const tot = rows.filter((f) => f.estado !== 'anulada').reduce((a, f) => a + f.total, 0);
+  $('#facPie').textContent = `${rows.length} factura${rows.length === 1 ? '' : 's'} · ${rd(tot)} sin contar anuladas${rows.length > vis.length ? ` · mostrando las ${vis.length} más recientes` : ''}`;
+  $('#fLista').classList.toggle('hide', ftab !== 'lista'); $('#fConceptos').classList.toggle('hide', ftab !== 'conceptos');
+  if (ftab === 'conceptos' && !$('#concList').children.length) renderConceptos(FAC.conceptos);
+}
+function renderConceptos(lista) {
+  $('#concList').innerHTML = lista.map((c) => `<div class="conc"><input class="field" value="${esc(c.n)}" placeholder="Concepto"><input class="field" type="number" min="0" value="${c.p}" placeholder="Precio"><button type="button" data-cdel>×</button></div>`).join('');
+}
+
+// ---- Nueva factura ----
+function abrirNuevaFactura(famId) {
+  NF = { lineas: [], est: null };
+  $('#nfFam').innerHTML = '<option value="">— Sin familia (otro cliente) —</option>' + [...DB.fams].sort((a, b) => a.tutor.localeCompare(b.tutor)).map((f) => `<option value="${f.id}">${esc(f.tutor)} · ${hijosDe(f.id).map((h) => esc(h.nombre.split(' ')[0])).join(', ')}</option>`).join('');
+  $('#nfFam').value = famId || '';
+  ['#nfRef', '#nfNota'].forEach((s) => ($(s).value = '')); $('#nfDesc').value = 0; $('#nfMet').value = 'Efectivo';
+  famCambio(); openModal('#mFac');
+}
+function famCambio() {
+  const f = fam($('#nfFam').value);
+  $('#nfCli').value = f ? f.tutor : ''; $('#nfDoc').value = f?.doc || '';
+  NF.lineas = NF.lineas.filter((l) => !l.est);
+  const hs = f ? hijosDe(f.id) : [];
+  $('#nfRapidos').innerHTML = (hs.length ? '<button type="button" class="chk on" data-nfr="mens">Mensualidad</button>' : '') + (FAC?.conceptos || []).map((c, i) => `<button type="button" class="chk" data-nfr="${i}">${esc(c.n)}</button>`).join('') + '<button type="button" class="chk" data-nfr="libre">Otro…</button>';
+  $('#nfMens').classList.toggle('hide', !hs.length);
+  $('#nfEst').innerHTML = hs.map((h) => `<option value="${h.id}">${esc(h.nombre)} · ${esc(h.grado)} (${rd(TARIFA[h.nivel])})</option>`).join('');
+  NF.est = hs[0]?.id || null;
+  renderNF();
+}
+function renderNF() {
+  const e = stu(NF.est);
+  if (e) $('#nfMeses').innerHTML = MESES.map(([k, n]) => { const ya = paid(e.id, k), on = NF.lineas.some((l) => l.est === e.id && l.mes === k); return `<button type="button" class="chk ${on ? 'on' : ''}" data-nfm="${k}" ${ya ? 'disabled' : ''}>${n}${ya ? ' ✓' : ''}</button>`; }).join('');
+  $('#nfLineas').innerHTML = NF.lineas.map((l, i) => l.est
+    ? `<div class="nfl"><span class="fija">Mensualidad ${MES_LARGO[l.mes]} · ${esc(stu(l.est).nombre)}</span><span class="fija" style="text-align:center">1</span><span class="fija" style="text-align:right">${rd(TARIFA[stu(l.est).nivel])}</span><button type="button" data-nfdel="${i}">×</button></div>`
+    : `<div class="nfl"><input data-nfd="${i}" value="${esc(l.d)}" placeholder="Descripción"><input data-nfc="${i}" type="number" min="1" value="${l.cant}"><input data-nfp="${i}" type="number" min="0" value="${l.precio}"><button type="button" data-nfdel="${i}">×</button></div>`).join('') || '<p class="muted" style="font-size:13px">Agrega mensualidades u otros conceptos con los botones de arriba.</p>';
+  totNF();
+}
+function totNF() {
+  const sub = NF.lineas.reduce((a, l) => a + (l.est ? TARIFA[stu(l.est).nivel] : (Number(l.cant) || 0) * (Number(l.precio) || 0)), 0);
+  const d = Math.max(0, Number($('#nfDesc').value) || 0);
+  $('#nfSub').textContent = d ? `(${rd(sub)} − ${rd(d)})` : '';
+  $('#nfTot').textContent = rd(Math.max(0, sub - d));
+}
+function guardarNF(enviar) {
+  return (ev) => {
+    if (!NF.lineas.length) { toast('Agrega al menos una línea'); return; }
+    const famId = $('#nfFam').value;
+    if (enviar && !famId) { toast('Para enviarla por WhatsApp elige una familia'); return; }
+    const met = $('#nfMet').value;
+    act(ev.currentTarget, async () => {
+      const r = await api('/facturas', {
+        fam: famId || null, cliente: $('#nfCli').value, doc: $('#nfDoc').value,
+        lineas: NF.lineas.map((l) => (l.est ? { est: l.est, mes: l.mes } : { d: l.d, cant: Number(l.cant), precio: Number(l.precio) })),
+        descuento: Number($('#nfDesc').value) || 0, metodo: met, pagada: !!met, ref: $('#nfRef').value, nota: $('#nfNota').value, enviar,
+      });
+      closeAll(); await load(); await cargarFacturas();
+      toast(r.envio ? resEnvio(r.envio, `Factura ${r.factura.id} creada y enviada`) : `Factura ${r.factura.id} creada ✅`);
+      verFactura(r.factura.id);
+    });
+  };
+}
+
+// ---- Ver, enviar, cobrar, anular ----
+function verFactura(id) {
+  const f = FAC.facturas.find((x) => x.id === id); if (!f) return;
+  facSel = f;
+  $('#fvTit').innerHTML = `${f.id} <span class="pill ${ESTF[f.estado][0]}" style="vertical-align:3px">${ESTF[f.estado][1]}</span>`;
+  $('#fvSub').textContent = `${new Date(f.fecha).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}${f.usuario ? ' · por ' + f.usuario : ''}`;
+  $('#fvBody').innerHTML = `<div class="li"><span>Facturado a</span><span>${esc(f.cliente)}${f.doc ? ' · ' + esc(f.doc) : ''}</span></div>` +
+    f.items.map((l) => `<div class="li"><span>${esc(l.d)}${l.cant > 1 ? ` × ${l.cant}` : ''}</span><span>${rd(l.cant * l.precio)}</span></div>`).join('') +
+    (f.descuento ? `<div class="li"><span>Descuento</span><span>−${rd(f.descuento)}</span></div>` : '') +
+    `<div class="li" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800"><span style="color:var(--navy)">Total</span><span>${rd(f.total)}</span></div>` +
+    (f.metodo ? `<div class="li"><span>Pago</span><span>${esc(f.metodo)}${f.ref ? ' · ' + esc(f.ref) : ''}${f.recibo ? ' · ' + f.recibo : ''}</span></div>` : '') +
+    (f.nota ? `<div class="li"><span>Nota</span><span>${esc(f.nota)}</span></div>` : '') +
+    (f.motivo ? `<div class="li"><span>Anulada</span><span>${esc(f.motivo)}</span></div>` : '');
+  $('#fvAbrir').href = '/f/' + f.token;
+  $('#fvWa').classList.toggle('hide', !f.fam || f.estado === 'anulada');
+  const esDir = DB.user.rol === 'director';
+  $('#fvAcc').innerHTML = (f.estado === 'pendiente' ? '<button class="btn btn-p" type="button" id="fvCobrar">Registrar cobro</button>' : '') +
+    (f.estado !== 'anulada' && esDir ? '<button class="btn btn-r" type="button" id="fvAnular">Anular</button>' : '');
+  $('#fvAcc').classList.toggle('hide', !$('#fvAcc').innerHTML);
+  if ($('#fvCobrar')) $('#fvCobrar').onclick = () => { closeAll(); $('#fcSub').textContent = `${f.id} · ${f.cliente} · ${rd(f.total)}`; $('#fcRef').value = ''; $('#fcEnv').checked = !!f.fam; $('#fcEnv').disabled = !f.fam; openModal('#mFacCobrar'); };
+  if ($('#fvAnular')) $('#fvAnular').onclick = () => { closeAll(); $('#faMot').value = ''; openModal('#mFacAnular'); setTimeout(() => $('#faMot').focus(), 50); };
+  openModal('#mFacVer');
+}
+$('#fvCopiar').onclick = async () => { try { await navigator.clipboard.writeText(urlFac(facSel)); toast('Enlace copiado'); } catch { prompt('Copia el enlace:', urlFac(facSel)); } };
+$('#fvWa').onclick = (ev) => act(ev.currentTarget, async () => { const r = await api(`/facturas/${facSel.id}/enviar`, {}); closeAll(); toast(resEnvio(r.envio, 'Factura enviada')); await load(); });
+$('#fcOk').onclick = (ev) => act(ev.currentTarget, async () => { const r = await api(`/facturas/${facSel.id}/cobrar`, { metodo: $('#fcMet').value, ref: $('#fcRef').value, enviar: $('#fcEnv').checked }); closeAll(); await load(); await cargarFacturas(); toast(r.envio ? resEnvio(r.envio, 'Cobro registrado y factura enviada') : 'Cobro registrado ✅'); });
+$('#faOk').onclick = (ev) => { const m = $('#faMot').value.trim(); if (!m) { toast('Escribe el motivo'); return; } act(ev.currentTarget, async () => { await api(`/facturas/${facSel.id}/anular`, { motivo: m }); closeAll(); await load(); await cargarFacturas(); toast(`Factura ${facSel.id} anulada`); }); };
+$('#facNueva').onclick = () => act(null, async () => { if (!FAC) await cargarFacturas(); abrirNuevaFactura(); });
+$('#nfFam').onchange = famCambio;
+$('#nfEst').onchange = () => { NF.est = $('#nfEst').value; renderNF(); };
+$('#nfDesc').addEventListener('input', totNF);
+$('#nfGuardar').onclick = guardarNF(false); $('#nfEnviar').onclick = guardarNF(true);
+['#qf', '#fEstF', '#fMesF'].forEach((s) => $(s).addEventListener('input', renderFacturas));
+$('#concAdd').onclick = () => { $('#concList').insertAdjacentHTML('beforeend', '<div class="conc"><input class="field" placeholder="Concepto"><input class="field" type="number" min="0" placeholder="Precio"><button type="button" data-cdel>×</button></div>'); $('#concList').lastElementChild.querySelector('input').focus(); };
+$('#concSave').onclick = (ev) => act(ev.currentTarget, async () => {
+  const lista = [...document.querySelectorAll('#concList .conc')].map((r) => { const [n, p] = r.querySelectorAll('input'); return { n: n.value.trim(), p: Number(p.value) || 0 }; }).filter((c) => c.n);
+  const r = await api('/facturas/conceptos', { conceptos: lista }); FAC.conceptos = r.conceptos; renderConceptos(r.conceptos); toast('Conceptos guardados ✅');
+});
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  const ft = t.closest('[data-ftab]'); if (ft) { ftab = ft.dataset.ftab; document.querySelectorAll('[data-ftab]').forEach((b) => b.classList.toggle('on', b === ft)); renderFacturas(); return; }
+  const fv = t.closest('[data-fac]'); if (fv) { verFactura(fv.dataset.fac); return; }
+  const cd = t.closest('[data-cdel]'); if (cd) { cd.parentElement.remove(); return; }
+  const r = t.closest('[data-nfr]'); if (r) {
+    const k = r.dataset.nfr;
+    if (k === 'mens') { r.classList.toggle('on', $('#nfMens').classList.toggle('hide') === false); return; }
+    if (k === 'libre') NF.lineas.push({ d: '', cant: 1, precio: 0 });
+    else { const c = FAC.conceptos[Number(k)]; NF.lineas.push({ d: c.n, cant: 1, precio: c.p }); }
+    renderNF(); if (k === 'libre') $('#nfLineas').querySelector(`[data-nfd="${NF.lineas.length - 1}"]`)?.focus(); return;
+  }
+  const nm = t.closest('[data-nfm]'); if (nm && !nm.disabled) { const k = nm.dataset.nfm, i = NF.lineas.findIndex((l) => l.est === NF.est && l.mes === k); if (i >= 0) NF.lineas.splice(i, 1); else NF.lineas.push({ est: NF.est, mes: k }); renderNF(); return; }
+  const nd = t.closest('[data-nfdel]'); if (nd) { NF.lineas.splice(Number(nd.dataset.nfdel), 1); renderNF(); }
+});
+document.addEventListener('input', (e) => {
+  const t = e.target, i = t.dataset.nfd ?? t.dataset.nfc ?? t.dataset.nfp; if (i === undefined) return;
+  const l = NF.lineas[Number(i)]; if (!l) return;
+  if ('nfd' in t.dataset) l.d = t.value; else if ('nfc' in t.dataset) l.cant = t.value; else l.precio = t.value;
+  totNF();
+});

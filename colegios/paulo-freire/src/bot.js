@@ -4,6 +4,7 @@ import { meses, mesLargo, venceDe, hoyRD, rd, cap, ahoraRD } from './cobros.js';
 import { enviar, registrarMensaje, descargarMedia, marcarLeido } from './wa.js';
 import { nuevoId, telWA, telBonito } from './db.js';
 import { estadoDeFamilia, primerNombre } from './avisos.js';
+import { facturasDeFamilia, urlFactura, baseURL } from './facturas.js';
 
 const SALUDO = /^(hola|buen[oa]s?|menu|menú|inicio|saludos|hey|ola|q tal|que tal|saludo)/i;
 const VOLVER = [['menu', '↩️ Menú']];
@@ -67,6 +68,7 @@ class Bot {
     if (SALUDO.test(l)) return this.menu(true);
     if (/(estado|debo|deuda|balance|cuánto|cuanto)/.test(l)) return this.estadoCuenta();
     if (/(no va|no irá|no ira|enferm|ausen|falt)/.test(l)) return this.elegirHijo('aus');
+    if (/factura/.test(l)) return this.facturas();
     if (/(comprobante|transfer[ií]|recibo|ya pagu|ya pag[oó])/.test(l)) {
       const pc = await this.compPendiente();
       if (pc) return this.say(`🧾 Su comprobante de *${rd(pc.monto)}* sigue en revisión. La secretaría lo valida en horario de oficina y le enviaremos el recibo por aquí. 🙏`, VOLVER);
@@ -85,11 +87,12 @@ class Bot {
     const resto = i < 0 ? '' : a.slice(i + 1);
     let x = resto, y = '';
     if (cmd === 'hijo' || cmd === 'mot') { const j = resto.indexOf(':'); x = resto.slice(0, j); y = resto.slice(j + 1); }
-    const soloPadres = ['menu', 'estado', 'comp', 'aus', 'cita', 'info', 'hijo', 'mot', 'con', 'dia', 'hora'];
+    const soloPadres = ['menu', 'estado', 'fac', 'comp', 'aus', 'cita', 'info', 'hijo', 'mot', 'con', 'dia', 'hora'];
     if (!this.fam && soloPadres.includes(cmd)) return this.bienvenidaNuevo();
     switch (cmd) {
       case 'menu': return this.menu();
       case 'estado': return this.estadoCuenta();
+      case 'fac': return this.facturas();
       case 'comp': return this.elegirHijo('comp');
       case 'aus': return this.elegirHijo('aus');
       case 'cita': return this.cita();
@@ -138,8 +141,17 @@ class Bot {
       return `${p ? '✅' : venc ? '❌' : '⏳'} ${cap(mesLargo(k))} — ${p ? 'Pagado' : venc ? 'Pendiente' : 'Vence ' + venceDe(k).slice(8) + '/' + k.slice(5)}`;
     }).join('\n')).join('\n');
     const pie = `\n\n${s.mora ? 'Total vencido: *' + rd(s.mora) + '*\n' : ''}${s.pend ? 'Por vencer: *' + rd(s.pend) + '*' : ''}${!s.mora && !s.pend ? '¡Está al día! 🙌' : ''}`;
-    return this.say('📄 *Estado de cuenta*\n' + cuerpo + pie,
-      s.mora || s.pend ? [['comp', '🧾 Comprobante'], ['faq:pagar', '💳 Cómo pagar'], ['menu', '↩️ Menú']] : VOLVER);
+    return this.say('📄 *Estado de cuenta*\n' + cuerpo + pie + (s.mora || s.pend ? '\n\n_Escriba FACTURAS para ver sus facturas._' : ''),
+      s.mora || s.pend ? [['comp', '🧾 Comprobante'], ['faq:pagar', '💳 Cómo pagar'], ['menu', '↩️ Menú']] : [['fac', '🧾 Mis facturas'], ['menu', '↩️ Menú']]);
+  }
+
+  async facturas() {
+    const fs = await facturasDeFamilia(this.db, this.fam.id, 5);
+    if (!fs.length) return this.say('🧾 Todavía no tiene facturas registradas. Cuando pague, le llegará su factura por aquí.', VOLVER);
+    const base = baseURL(this.env);
+    const fecha = (d) => new Date(new Date(d).getTime() + COLEGIO.zonaHoraria * 3600e3).toISOString().slice(0, 10).split('-').reverse().join('/');
+    const t = '🧾 *Sus últimas facturas*\n\n' + fs.map((f) => `*${f.id}* · ${fecha(f.fecha)} · ${rd(f.total)}${f.estado === 'pendiente' ? ' · ⏳ pendiente' : ''}\n${urlFactura(base, f.token)}`).join('\n\n');
+    return this.say(t, VOLVER);
   }
 
   async elegirHijo(para) {
