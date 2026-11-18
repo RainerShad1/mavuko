@@ -1,6 +1,6 @@
 // API del panel administrativo (requiere sesión iniciada).
 import { COLEGIO } from './colegio.js';
-import { meses, hoyRD, mesActual, ANO, nombreAno } from './cobros.js';
+import { meses, hoyRD, mesActual, ANO, nombreAno, mesLargo } from './cobros.js';
 import { fijarBeca, retirar, reactivar, resumenCierre, cerrarAno, historialAnos, MOTIVOS_BECA } from './ano.js';
 import { leerConfig, guardarConfig, nuevoId, nuevoRecibo, telWA, telBonito } from './db.js';
 import { enviar, ventanaAbierta, VENTANA } from './wa.js';
@@ -117,12 +117,18 @@ export async function api(req, env, db, user, ctx) {
     const c = await db.one('select * from comprobantes where id = $1', [r[1]]);
     if (!c || c.estado !== 'pend') return err('Comprobante no disponible');
     const pagados = new Set((await db.q('select mes from pagos where estudiante_id = $1', [c.estudiante_id])).map((x) => x.mes));
-    const ms = c.meses.filter((k) => !pagados.has(k));
+    // La secretaría puede confirmar solo algunos de los meses (si el depósito no los cubre todos)
+    const pedidos = Array.isArray(body.meses) ? c.meses.filter((k) => body.meses.includes(k)) : c.meses;
+    if (Array.isArray(body.meses) && !pedidos.length) return err('Marca al menos un mes');
+    const ms = pedidos.filter((k) => !pagados.has(k));
     if (!ms.length) return err('Esos meses ya figuran como pagados. Si el comprobante está duplicado, recházalo.');
+    const quitados = c.meses.filter((k) => !ms.includes(k) && !pagados.has(k));
     const { fac, r: rec } = await registrarPago(db, c.estudiante_id, ms, 'Transferencia', 'WhatsApp', user.nombre);
     const f = await db.one('select * from familias where id = $1', [c.familia_id]);
-    const envio = await enviarAFamilia(env, db, f, textoFactura(fac, base), 'Factura ' + fac.id);
-    await db.q("update comprobantes set estado = 'ok', recibo = $2, via = $3 where id = $1", [c.id, rec.id, envio.via]);
+    const nota = quitados.length ? `\n\n⚠️ El depósito cubrió ${ms.map(mesLargo).join(', ')}. Sigue pendiente: *${quitados.map(mesLargo).join(', ')}*.` : '';
+    const envio = await enviarAFamilia(env, db, f, textoFactura(fac, base) + nota, 'Factura ' + fac.id);
+    await db.q("update comprobantes set estado = 'ok', recibo = $2, via = $3, meses = $4, monto = $5, motivo = $6 where id = $1",
+      [c.id, rec.id, envio.via, ms, fac.total, quitados.length ? 'Aplicado solo a ' + ms.map(mesLargo).join(', ') : null]);
     return json({ recibo: rec, envio });
   }
   if ((r = p.match(/^\/comprobantes\/([\w-]+)\/rechazar$/)) && m === 'POST') {

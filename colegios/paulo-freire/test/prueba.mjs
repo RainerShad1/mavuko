@@ -60,7 +60,7 @@ const wa = async (m) => {
   return r[0]?.texto || '';
 };
 let t = await wa({ type: 'text', text: { body: 'Hola' } });
-check(t.includes('asistente virtual') && t.includes('[💳 Estado de cuenta]'), 'menú: ' + t.slice(0, 80));
+check(t.includes('asistente virtual') && t.includes('[📄 Estado de cuenta]'), 'menú: ' + t.slice(0, 80));
 t = await wa({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: 'estado', title: 'Estado' } } });
 check(t.includes('Estado de cuenta'), 'estado de cuenta');
 console.log('---\n' + t + '\n---');
@@ -69,7 +69,21 @@ console.log(t.slice(0, 120));
 t = await wa({ type: 'image', image: { id: 'MEDIA1', mime_type: 'image/jpeg' } });
 check(t.includes('Recibimos su comprobante') || t.includes('De cuál estudiante'), 'comprobante: ' + t.slice(0, 100));
 if (t.includes('De cuál')) { const id = (await db.one("select ctx from wa_sesiones where tel=$1", [TEL])); const est = (await db.one("select id from estudiantes where familia_id='F4'")).id; t = await wa({ type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'hijo:compfoto:' + est, title: 'x' } } }); }
+if (t.includes('Cuántos meses')) { const est = (await db.one("select ctx from wa_sesiones where tel=$1", [TEL])).ctx.est; t = await wa({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: `mes:${est}:1`, title: '1' } } }); }
 check((await db.q("select * from comprobantes where familia_id='F4' and imagen is not null")).length === 1, 'comprobante guardado con foto');
+// Botón Pagar: elige 2 meses, ve el total y luego envía la foto
+{
+  const fam4 = await db.q("select * from estudiantes where familia_id='F4' and estado='activo' order by id");
+  await db.q("delete from comprobantes where familia_id='F4'");
+  let r = await wa({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: 'pagar', title: 'Pagar' } } });
+  if (fam4.length > 1) r = await wa({ type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'hijo:pagar:' + fam4[0].id, title: 'x' } } });
+  check(r.includes('Cuántos meses') && r.includes('meses)'), 'pagar pregunta los meses: ' + r.slice(0, 120));
+  r = await wa({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: `mes:${fam4[0].id}:2`, title: '2 meses' } } });
+  check(r.includes('Total a pagar') && r.includes('Cuentas') === false && r.includes('foto'), 'pagar muestra total y pide la foto: ' + r.slice(0, 80));
+  r = await wa({ type: 'image', image: { id: 'MEDIA1', mime_type: 'image/jpeg' } });
+  const cp = await db.one("select * from comprobantes where familia_id='F4' order by fecha desc limit 1");
+  check(cp && cp.meses.length === 2 && cp.estudiante_id === fam4[0].id && r.includes('Recibimos su comprobante'), 'comprobante con los 2 meses elegidos ' + JSON.stringify(cp?.meses));
+}
 t = await wa({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: 'aus', title: 'aus' } } });
 const est4 = (await db.one("select id from estudiantes where familia_id='F4' order by id")).id;
 t = await wa({ type: 'interactive', interactive: { type: 'list_reply', list_reply: { id: `mot:${est4}:Enfermedad`, title: 'Enfermedad' } } });
@@ -111,6 +125,16 @@ check((await db.q('select count(*)::int as c from mensajes'))[0].c === antes, 'd
 // Panel: aprobar comprobante, rechazar, confirmar cita, chats
 st = (await call('/api/state', 'GET', null, cookie)).data;
 const c4 = st.comps.find((c) => c.fam === 'F4' && c.img);
+// Comprobante de 2 meses, pero el depósito cubre solo 1: la secretaría desmarca el otro
+const est4b = (await db.one("select id from estudiantes where familia_id='F4' and estado='activo' order by id")).id;
+const pag4 = new Set((await db.q('select mes from pagos where estudiante_id=$1', [est4b])).map((x) => x.mes));
+const dosMeses = st.meta.meses.map((m) => m.k).filter((k) => !pag4.has(k)).slice(0, 2);
+await db.q("insert into comprobantes(id, familia_id, estudiante_id, meses, monto) values('CX','F4',$1,$2,10400)", [est4b, dosMeses]);
+const parc = await call('/api/comprobantes/CX/aprobar', 'POST', { meses: [dosMeses[0]] }, cookie);
+const cx = await db.one("select * from comprobantes where id='CX'");
+check(parc.status === 200 && cx.meses.length === 1 && cx.motivo.includes('solo') && (await db.one('select 1 as x from pagos where estudiante_id=$1 and mes=$2', [est4b, dosMeses[0]])) && !(await db.one('select 1 as x from pagos where estudiante_id=$1 and mes=$2', [est4b, dosMeses[1]])), 'aprobar solo un mes del comprobante');
+check((await db.q("select texto from mensajes where tel=$1 and dir='out' order by id desc limit 1", [TEL]))[0].texto.includes('Sigue pendiente'), 'al padre se le avisa el mes pendiente');
+check((await call('/api/comprobantes/' + c4.id + '/aprobar', 'POST', { meses: [] }, cookie)).status === 400, 'aprobar sin meses no se permite');
 const ap = await call(`/api/comprobantes/${c4.id}/aprobar`, 'POST', {}, cookie);
 check(ap.status === 200 && ap.data.recibo, 'aprobar ' + JSON.stringify(ap.data));
 console.log('envío del recibo:', ap.data.envio);
@@ -257,7 +281,7 @@ check((await call('/api/facturas', 'POST', { fam: er.fam, lineas: [{ est: er.id,
   const waK = async (m) => { await manejarEventos(env, db, { entry: [{ changes: [{ value: { messages: [{ from: telK, id: 'wamid.k' + (++n), ...m }] } }] }] }); return (await db.q("select texto from mensajes where dir='out' and tel=$1 order by id desc limit 1", [telK]))[0]?.texto || ''; };
   await waK({ type: 'text', text: { body: 'Hola' } });
   const tk = await waK({ type: 'image', image: { id: 'MEDIA1', mime_type: 'image/jpeg' } });
-  check(tk.includes('Recibimos su comprobante') && tk.includes(a1.nombre) && !tk.includes(a2.nombre), 'comprobante sin preguntar por el retirado: ' + tk.slice(0, 90));
+  check(tk.includes('Recibimos su comprobante') && tk.includes(a1.nombre.split(' ')[0]) && !tk.includes(a2.nombre.split(' ')[0]) && !tk.includes('cuál estudiante'), 'comprobante sin preguntar por el retirado: ' + tk.slice(0, 90));
   await call(`/api/estudiantes/${a2.id}/reactivar`, 'POST', {}, cookie);
 }
 

@@ -73,8 +73,9 @@ class Bot {
     if (/(comprobante|transfer[ií]|recibo|ya pagu|ya pag[oó])/.test(l)) {
       const pc = await this.compPendiente();
       if (pc) return this.say(`🧾 Su comprobante de *${rd(pc.monto)}* sigue en revisión. La secretaría lo valida en horario de oficina y le enviaremos el recibo por aquí. 🙏`, VOLVER);
-      return this.elegirHijo('comp');
+      return this.elegirHijo('pagar');
     }
+    if (/\bpag(ar|o)\b/.test(l)) return this.elegirHijo('pagar');
     if (/(cita|reuni[oó]n con|hablar con (la )?direc)/.test(l)) return this.cita();
     for (const k in FAQ) if (FAQ[k].some((w) => l.includes(w))) return this.faq(k);
     if (/(secretar|persona|humano|alguien)/.test(l)) return this.humano(texto);
@@ -87,14 +88,16 @@ class Bot {
     const cmd = i < 0 ? a : a.slice(0, i);
     const resto = i < 0 ? '' : a.slice(i + 1);
     let x = resto, y = '';
-    if (cmd === 'hijo' || cmd === 'mot') { const j = resto.indexOf(':'); x = resto.slice(0, j); y = resto.slice(j + 1); }
-    const soloPadres = ['menu', 'estado', 'fac', 'comp', 'aus', 'cita', 'info', 'hijo', 'mot', 'con', 'dia', 'hora'];
+    if (cmd === 'hijo' || cmd === 'mot' || cmd === 'mes') { const j = resto.indexOf(':'); x = resto.slice(0, j); y = resto.slice(j + 1); }
+    const soloPadres = ['menu', 'estado', 'fac', 'comp', 'pagar', 'mes', 'aus', 'cita', 'info', 'hijo', 'mot', 'con', 'dia', 'hora'];
     if (!this.fam && soloPadres.includes(cmd)) return this.bienvenidaNuevo();
     switch (cmd) {
       case 'menu': return this.menu();
       case 'estado': return this.estadoCuenta();
       case 'fac': return this.facturas();
-      case 'comp': return this.elegirHijo('comp');
+      case 'comp':
+      case 'pagar': return this.elegirHijo('pagar');
+      case 'mes': return this.elegirMeses(x, Number(y));
       case 'aus': return this.elegirHijo('aus');
       case 'cita': return this.cita();
       case 'info': return this.info();
@@ -123,8 +126,8 @@ class Bot {
       (pc ? `🧾 Su comprobante de *${rd(pc.monto)}* está en revisión. Le enviaremos el recibo por aquí en cuanto la secretaría lo valide.\n\n` : '') +
       '¿En qué le puedo ayudar?';
     return this.say(t, [
-      ['estado', '💳 Estado de cuenta', 'Mensualidades pagadas y pendientes'],
-      ['comp', '🧾 Enviar comprobante', 'Foto de su transferencia'],
+      ['pagar', '💳 Pagar', 'Elija los meses y envíe su comprobante'],
+      ['estado', '📄 Estado de cuenta', 'Mensualidades pagadas y pendientes'],
       ['aus', '🤒 Reportar ausencia', 'Avisar que no asistirá hoy'],
       ['cita', '📅 Agendar cita', 'Dirección, orientación o docente'],
       ['info', 'ℹ️ Información', 'Horario, uniforme, calendario…'],
@@ -143,7 +146,7 @@ class Bot {
     }).join('\n') + s.saldos.filter((x) => x.estudiante_id === h.id).map((x) => `\n❌ Saldo del año ${x.ano} — ${rd(x.monto)}`).join('')).join('\n');
     const pie = `\n\n${s.mora ? 'Total vencido: *' + rd(s.mora) + '*\n' : ''}${s.pend ? 'Por vencer: *' + rd(s.pend) + '*' : ''}${!s.mora && !s.pend ? '¡Está al día! 🙌' : ''}`;
     return this.say('📄 *Estado de cuenta*\n' + cuerpo + pie + (s.mora || s.pend ? '\n\n_Escriba FACTURAS para ver sus facturas._' : ''),
-      s.mora || s.pend ? [['comp', '🧾 Comprobante'], ['faq:pagar', '💳 Cómo pagar'], ['menu', '↩️ Menú']] : [['fac', '🧾 Mis facturas'], ['menu', '↩️ Menú']]);
+      s.mora || s.pend ? [['pagar', '💳 Pagar'], ['faq:pagar', 'ℹ️ Formas de pago'], ['menu', '↩️ Menú']] : [['fac', '🧾 Mis facturas'], ['menu', '↩️ Menú']]);
   }
 
   // El sistema no emite comprobantes fiscales: se aclara y se ofrece la secretaría
@@ -171,11 +174,8 @@ class Bot {
   async conHijo(para, estId) {
     const h = await this.db.one("select * from estudiantes where id = $1 and familia_id = $2 and estado = 'activo'", [estId, this.fam.id]);
     if (!h) return this.menu();
-    if (para === 'comp') {
-      this.paso('esperando_comp', { est: h.id });
-      return this.say(`Perfecto. Envíe la *foto o captura* del comprobante de transferencia de ${primerNombre(h.nombre)} 📎\n\nCuentas del colegio:\n${COLEGIO.cuentas}`, VOLVER);
-    }
-    if (para === 'compfoto') return this.crearComprobante(h, this.ses.ctx.media);
+    if (para === 'comp' || para === 'pagar') return this.preguntarMeses(h, null);
+    if (para === 'compfoto') return this.preguntarMeses(h, this.ses.ctx.media);
     if (para === 'aus') {
       return this.say(`¿Cuál es el motivo de la ausencia de ${primerNombre(h.nombre)} hoy?`,
         ['Enfermedad', 'Cita médica', 'Viaje familiar', 'Otro motivo'].map((m) => [`mot:${h.id}:${m}`, m]), 'Elegir motivo');
@@ -193,13 +193,60 @@ class Bot {
       this.paso('comp_hijo', { media });
       return this.say('📎 Recibimos su archivo. ¿De cuál estudiante es este comprobante?', hs.slice(0, 10).map((x) => [`hijo:compfoto:${x.id}`, `${primerNombre(x.nombre)} (${x.grado})`]));
     }
-    return this.crearComprobante(h, media);
+    // Ya eligió los meses con el botón Pagar
+    if (this.ses.paso === 'esperando_comp' && this.ses.ctx.est === h.id && this.ses.ctx.meses) return this.crearComprobante(h, media, this.ses.ctx.meses);
+    return this.preguntarMeses(h, media);
   }
 
-  async crearComprobante(h, media) {
+  // Meses que el estudiante puede pagar, del más atrasado al más nuevo (vencidos, el próximo y hasta 2 adelantados)
+  async mesesPorPagar(h) {
+    const s = await estadoDeFamilia(this.db, this.fam.id);
+    const todos = meses().map((m) => m.k).filter((k) => aplica(h, k) && !s.pagados.has(h.id + '|' + k));
+    const hoy = hoyRD();
+    const debe = todos.filter((k) => venceDe(k) < hoy || s.mesesPend.some((z) => z[0].id === h.id && z[1] === k));
+    const ms = [...debe, ...todos.filter((k) => !debe.includes(k)).slice(0, debe.length ? 2 : 3)].slice(0, 9);
+    return { ms, venc: debe.filter((k) => venceDe(k) < hoy), saldo: s.saldos.filter((x) => x.estudiante_id === h.id).reduce((a, x) => a + x.monto, 0) };
+  }
+
+  // Pregunta cuántos meses paga (siempre desde el más atrasado). media = foto ya recibida, o null si aún no la envía.
+  async preguntarMeses(h, media) {
+    if (!tarifaEst(h)) { this.paso('menu'); return this.say(`🎓 ${primerNombre(h.nombre)} tiene beca completa: no tiene mensualidades por pagar. Si es otro pago, escriba *secretaría*.`, VOLVER); }
+    const { ms, venc, saldo } = await this.mesesPorPagar(h);
+    if (!ms.length) { this.paso('menu'); return this.say(`🙌 ${primerNombre(h.nombre)} ya tiene todo el año escolar pagado. Si es un pago distinto, escriba *secretaría*.`, VOLVER); }
+    if (ms.length === 1) return media ? this.crearComprobante(h, media, ms) : this.pedirFoto(h, ms);
+    const t = tarifaEst(h);
+    this.paso(media ? 'comp_meses' : 'pagar_meses', { est: h.id, media: media || null });
+    const resumen = venc.length ? `${primerNombre(h.nombre)} tiene *${venc.length} ${venc.length === 1 ? 'mes vencido' : 'meses vencidos'}* (${venc.map(mesLargo).join(', ')}).` : `${primerNombre(h.nombre)} está al día.`;
+    const ab = (k) => cap(mesLargo(k)).slice(0, 3);
+    const opciones = ms.map((k, i) => {
+      const n = i + 1, hasta = ms.slice(0, n);
+      const titulo = n === 1 ? cap(mesLargo(k)) : `${ab(hasta[0])} a ${ab(k)} (${n} meses)`;
+      return [`mes:${h.id}:${n}`, titulo, `${rd(n * t)}${venceDe(k) < hoyRD() ? ' · incluye vencidos' : n > venc.length ? ' · por adelantado' : ''}`];
+    });
+    return this.say(`${media ? '📎 Recibimos su comprobante. ' : ''}${resumen}\nMensualidad: *${rd(t)}*\n\n¿Cuántos meses ${media ? 'cubre este pago' : 'va a pagar'}? Se pagan desde el más atrasado.${saldo ? `\n\n_Además tiene un saldo del año anterior de ${rd(saldo)}; para pagarlo escriba *secretaría*._` : ''}`, opciones, 'Elegir meses');
+  }
+
+  async elegirMeses(estId, n) {
+    const h = await this.db.one("select * from estudiantes where id = $1 and familia_id = $2 and estado = 'activo'", [estId, this.fam.id]);
+    if (!h || !(n >= 1)) return this.menu();
+    const { ms } = await this.mesesPorPagar(h);
+    const elegidos = ms.slice(0, n);
+    if (!elegidos.length) return this.menu();
+    const media = this.ses.paso === 'comp_meses' && this.ses.ctx.est === h.id ? this.ses.ctx.media : null;
+    return media ? this.crearComprobante(h, media, elegidos) : this.pedirFoto(h, elegidos);
+  }
+
+  pedirFoto(h, ms) {
+    this.paso('esperando_comp', { est: h.id, meses: ms });
+    const total = ms.length * tarifaEst(h);
+    return this.say(`💳 *Total a pagar: ${rd(total)}*\nMensualidad de ${h.nombre}:\n${ms.map((k) => '• ' + cap(mesLargo(k))).join('\n')}\n\nTransfiera a una de las cuentas del colegio:\n${COLEGIO.cuentas}\n\nLuego envíe aquí la *foto o captura* del comprobante 📎`, VOLVER);
+  }
+
+  async crearComprobante(h, media, elegidos) {
     if (!media) return this.menu();
     const s = await estadoDeFamilia(this.db, this.fam.id);
-    let ms = [...s.mesesMora, ...s.mesesPend].filter((z) => z[0].id === h.id).map((z) => z[1]);
+    let ms = (elegidos || []).filter((k) => !s.pagados.has(h.id + '|' + k));
+    if (!ms.length) ms = [...s.mesesMora, ...s.mesesPend].filter((z) => z[0].id === h.id).map((z) => z[1]).slice(0, 1);
     if (!ms.length) { const n = meses().find(({ k }) => aplica(h, k) && !s.pagados.has(h.id + '|' + k)); ms = n ? [n.k] : []; }
     if (!ms.length) { this.paso('menu'); return this.say(`🙌 ${primerNombre(h.nombre)} ya tiene todo el año escolar pagado. Si es un pago distinto, escriba *secretaría*.`, VOLVER); }
     const monto = ms.length * tarifaEst(h);

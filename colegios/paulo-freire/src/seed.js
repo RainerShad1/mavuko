@@ -105,9 +105,10 @@ export async function sembrar(db, hoy) {
   const debe = d.fams.filter((f) => f.perfil === 'norm').slice(0, 2);
   for (const [i, f] of debe.entries()) {
     const e = d.ests.find((x) => x.familia_id === f.id);
-    const prox = meses().map((m) => m.k).find((k) => !d.pagos.some((p) => p.estudiante_id === e.id && p.mes === k));
+    // El primero paga dos meses, para mostrar cómo se confirma solo una parte
+    const libres = meses().map((m) => m.k).filter((k) => !d.pagos.some((p) => p.estudiante_id === e.id && p.mes === k)).slice(0, i ? 1 : 2);
     await db.q('insert into comprobantes(id, familia_id, estudiante_id, meses, monto, banco, ref, fecha) values($1,$2,$3,$4,$5,$6,$7,$8)',
-      ['C' + (i + 1), f.id, e.id, [prox], tarifaEst(e), ['Banreservas', 'Banco Popular'][i], String(48000000 + i * 7919), new Date(Date.now() - (i ? 20 : 2.5) * 3600e3).toISOString()]);
+      ['C' + (i + 1), f.id, e.id, libres, libres.length * tarifaEst(e), ['Banreservas', 'Banco Popular'][i], String(48000000 + i * 7919), new Date(Date.now() - (i ? 20 : 2.5) * 3600e3).toISOString()]);
   }
   await db.q('insert into ausencias(id, estudiante_id, familia_id, motivo) values($1,$2,$3,$4)', ['A1', d.ests[3].id, d.ests[3].familia_id, 'Enfermedad']);
   await db.q('insert into citas(id, familia_id, con, dia, hora) values($1,$2,$3,$4,$5)', ['T1', d.fams[5].id, 'Orientación', 'Próxima semana', '10:00 a. m.']);

@@ -205,6 +205,17 @@ function savePay(ev) {
 
 // ================= Comprobantes =================
 let ctab = 'pend', rejId = null;
+// Meses del comprobante: la secretaría puede desmarcar los que no se depositaron
+const CSEL = {};
+function mesesComp(c, e) {
+  const sel = CSEL[c.id] || (CSEL[c.id] = new Set(c.meses.filter((k) => !paid(e.id, k))));
+  const t = tarifaEst(e), n = sel.size;
+  return `<div class="li" style="align-items:flex-start"><span>Meses que paga</span><span class="chips" style="justify-content:flex-end">${c.meses.map((k) => paid(e.id, k)
+    ? `<button type="button" class="chk" disabled title="Ya pagado">${cap(MES_LARGO[k] || k)} ✓</button>`
+    : `<button type="button" class="chk ${sel.has(k) ? 'on' : ''}" data-cm="${c.id}|${k}">${cap(MES_LARGO[k] || k)}</button>`).join('')}</span></div>
+   <div class="li"><span>Monto a confirmar</span><span style="font-weight:700">${rd(n * t)}${n < c.meses.length ? ` <small style="color:var(--warn);font-weight:600">(el padre indicó ${rd(c.monto)})</small>` : ''}</span></div>
+   <div class="li"><span></span><span style="font-size:12px;color:var(--muted)">Toca un mes para quitarlo si el depósito no lo cubre</span></div>`;
+}
 function renderComps() {
   const pend = DB.comps.filter((c) => c.estado === 'pend');
   $('#cPend').textContent = pend.length || ''; $('#bComp').textContent = pend.length || '';
@@ -213,9 +224,9 @@ function renderComps() {
     const f = fam(c.fam), e = stu(c.est); if (!f || !e) return '';
     const v = c.estado === 'pend' ? ventana(c) : null;
     return `<div class="comp">${voucherHTML(c)}<div><div style="display:flex;gap:10px;align-items:center"><div class="av" style="background:${colorAv(f.id)}">${esc(ini(f.tutor))}</div><div class="who"><b>${esc(f.tutor)}</b><span>${esc(f.tel)} · enviado ${fmtF(c.fecha)} ${horaDe(c.fecha)}</span></div>${c.estado === 'pend' ? '<span class="pill p-warn">Por revisar</span>' : c.estado === 'ok' ? '<span class="pill p-ok">Aprobado</span>' : '<span class="pill p-bad">Rechazado</span>'}</div>
-   <div class="rec" style="margin-top:12px;border-style:solid"><div class="li"><span>Estudiante</span><span>${esc(e.nombre)} · ${esc(e.grado)}</span></div><div class="li"><span>Paga</span><span>${c.meses.map((k) => cap(MES_LARGO[k] || k)).join(', ')}</span></div><div class="li"><span>Monto esperado</span><span style="font-weight:700">${rd(c.monto)}</span></div>${c.img && c.estado === 'pend' ? '<div class="li"><span>Revisar</span><span>Que el monto y el destino de la foto coincidan</span></div>' : ''}${c.motivo ? `<div class="li"><span>Motivo</span><span>${esc(c.motivo)}</span></div>` : ''}${c.recibo ? `<div class="li"><span>Recibo</span><span>${c.recibo} · enviado como ${c.via || 'servicio'}</span></div>` : ''}</div>
+   <div class="rec" style="margin-top:12px;border-style:solid"><div class="li"><span>Estudiante</span><span>${esc(e.nombre)} · ${esc(e.grado)}</span></div>${c.estado === 'pend' ? mesesComp(c, e) : `<div class="li"><span>Paga</span><span>${c.meses.map((k) => cap(MES_LARGO[k] || k)).join(', ')}</span></div><div class="li"><span>Monto</span><span style="font-weight:700">${rd(c.monto)}</span></div>`}${c.img && c.estado === 'pend' ? '<div class="li"><span>Revisar</span><span>Que el monto y el destino de la foto coincidan</span></div>' : ''}${c.motivo ? `<div class="li"><span>Motivo</span><span>${esc(c.motivo)}</span></div>` : ''}${c.recibo ? `<div class="li"><span>Recibo</span><span>${c.recibo} · enviado como ${c.via || 'servicio'}</span></div>` : ''}</div>
    ${v ? v.html : ''}
-   ${c.estado === 'pend' ? `<div class="act"><button class="btn btn-g btn-sm" data-cok="${c.id}">✓ Aprobar y registrar pago</button><button class="btn btn-r btn-sm" data-crej="${c.id}">Rechazar</button></div>` : ''}</div></div>`;
+   ${c.estado === 'pend' ? `<div class="act"><button class="btn btn-g btn-sm" data-cok="${c.id}" ${(CSEL[c.id] && !CSEL[c.id].size) ? 'disabled' : ''}>✓ Confirmar ${CSEL[c.id] ? CSEL[c.id].size : c.meses.length} ${(CSEL[c.id] ? CSEL[c.id].size : c.meses.length) === 1 ? 'mes' : 'meses'}</button><button class="btn btn-r btn-sm" data-crej="${c.id}">Rechazar</button></div>` : ''}</div></div>`;
   }).join('') : `<div class="card"><p class="empty">${ctab === 'pend' ? 'No hay comprobantes por revisar ✅<br><small>Los padres los envían por WhatsApp desde el menú del asistente.</small>' : 'Aún no hay comprobantes revisados'}</p></div>`;
 }
 
@@ -399,7 +410,8 @@ document.addEventListener('click', (e) => {
   const pv = t.closest('[data-prev]'); if (pv) { preview(pv.dataset.prev); return; }
   const sw = t.closest('[data-rule]'); if (sw) { const rules = { ...DB.rules, [sw.dataset.rule]: !DB.rules[sw.dataset.rule] }; act(sw, async () => { await api('/config', { rules }); await load(); }); return; }
   const ct = t.closest('[data-ctab]'); if (ct) { ctab = ct.dataset.ctab; document.querySelectorAll('[data-ctab]').forEach((b) => b.classList.toggle('on', b === ct)); renderComps(); return; }
-  const cok = t.closest('[data-cok]'); if (cok) { act(cok, async () => { const r = await api(`/comprobantes/${cok.dataset.cok}/aprobar`, {}); await load(); toast(resEnvio(r.envio, `Pago registrado (${r.recibo.factura || r.recibo.id}) y factura enviada`)); }); return; }
+  const cm = t.closest('[data-cm]'); if (cm) { const [id, k] = cm.dataset.cm.split('|'); const s = CSEL[id]; if (s) { s.has(k) ? s.delete(k) : s.add(k); renderComps(); } return; }
+  const cok = t.closest('[data-cok]'); if (cok) { act(cok, async () => { const sel = CSEL[cok.dataset.cok]; if (sel && !sel.size) { toast('Marca al menos un mes'); return; } const r = await api(`/comprobantes/${cok.dataset.cok}/aprobar`, sel ? { meses: [...sel] } : {}); delete CSEL[cok.dataset.cok]; await load(); toast(resEnvio(r.envio, `Pago registrado (${r.recibo.factura || r.recibo.id}) y factura enviada`)); }); return; }
   const crej = t.closest('[data-crej]'); if (crej) { rejId = crej.dataset.crej; openModal('#mRej'); return; }
   const ro = t.closest('#rejOpts .chk'); if (ro) { document.querySelectorAll('#rejOpts .chk').forEach((b) => b.classList.toggle('on', b === ro)); return; }
   const st = t.closest('[data-stab]'); if (st) { stab = st.dataset.stab; renderSol(); return; }
