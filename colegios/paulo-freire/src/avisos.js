@@ -5,7 +5,7 @@ import { enviar, enviarPlantilla, ventanaAbierta } from './wa.js';
 import { leerConfig } from './db.js';
 
 export async function hijosDe(db, famId) {
-  return db.q('select id, familia_id as fam, nombre, grado, nivel from estudiantes where familia_id = $1 order by id', [famId]);
+  return db.q('select id, familia_id as fam, nombre, grado, nivel, desde from estudiantes where familia_id = $1 order by id', [famId]);
 }
 
 export async function pagadosDe(db, estIds) {
@@ -71,7 +71,7 @@ export async function colaRecordatorios(db, { auto = false, hoy = hoyRD() } = {}
   const cfg = await leerConfig(db);
   if (!cfg.modRec) return [];
   const fams = await db.q('select * from familias order by id');
-  const ests = await db.q('select id, familia_id as fam, nombre, grado, nivel from estudiantes');
+  const ests = await db.q('select id, familia_id as fam, nombre, grado, nivel, desde from estudiantes');
   const pays = await db.q('select estudiante_id, mes from pagos');
   const yaHoy = new Set((await db.q("select familia_id from enviados where rec and fecha > now() - interval '20 hours'")).map((r) => r.familia_id));
   const pagados = new Set(pays.map((r) => r.estudiante_id + '|' + r.mes));

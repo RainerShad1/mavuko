@@ -1,6 +1,6 @@
 // Asistente de WhatsApp: recibe cada mensaje de un padre (o de un número nuevo) y responde.
 import { COLEGIO, FAQ, FAQR } from './colegio.js';
-import { meses, mesLargo, venceDe, hoyRD, rd, cap, ahoraRD } from './cobros.js';
+import { meses, mesLargo, venceDe, hoyRD, rd, cap, ahoraRD, aplica } from './cobros.js';
 import { enviar, registrarMensaje, descargarMedia, marcarLeido } from './wa.js';
 import { nuevoId, telWA, telBonito } from './db.js';
 import { estadoDeFamilia, primerNombre } from './avisos.js';
@@ -68,6 +68,7 @@ class Bot {
     if (SALUDO.test(l)) return this.menu(true);
     if (/(estado|debo|deuda|balance|cuánto|cuanto)/.test(l)) return this.estadoCuenta();
     if (/(no va|no irá|no ira|enferm|ausen|falt)/.test(l)) return this.elegirHijo('aus');
+    if (/(fiscal|\bncf\b|\brnc\b|\be-?cf\b)/.test(l)) return this.fiscal();
     if (/factura/.test(l)) return this.facturas();
     if (/(comprobante|transfer[ií]|recibo|ya pagu|ya pag[oó])/.test(l)) {
       const pc = await this.compPendiente();
@@ -135,7 +136,7 @@ class Bot {
     const s = await estadoDeFamilia(this.db, this.fam.id);
     const hoy = hoyRD();
     const visibles = meses().filter(({ k }) => venceDe(k) <= hoy || s.mesesPend.some((z) => z[1] === k));
-    const cuerpo = s.hijos.map((h) => `\n*${h.nombre} · ${h.grado}*\n` + visibles.map(({ k }) => {
+    const cuerpo = s.hijos.map((h) => `\n*${h.nombre} · ${h.grado}*\n` + visibles.filter(({ k }) => aplica(h, k)).map(({ k }) => {
       const p = s.pagados.has(h.id + '|' + k);
       const venc = venceDe(k) < hoy;
       return `${p ? '✅' : venc ? '❌' : '⏳'} ${cap(mesLargo(k))} — ${p ? 'Pagado' : venc ? 'Pendiente' : 'Vence ' + venceDe(k).slice(8) + '/' + k.slice(5)}`;
@@ -143,6 +144,12 @@ class Bot {
     const pie = `\n\n${s.mora ? 'Total vencido: *' + rd(s.mora) + '*\n' : ''}${s.pend ? 'Por vencer: *' + rd(s.pend) + '*' : ''}${!s.mora && !s.pend ? '¡Está al día! 🙌' : ''}`;
     return this.say('📄 *Estado de cuenta*\n' + cuerpo + pie + (s.mora || s.pend ? '\n\n_Escriba FACTURAS para ver sus facturas._' : ''),
       s.mora || s.pend ? [['comp', '🧾 Comprobante'], ['faq:pagar', '💳 Cómo pagar'], ['menu', '↩️ Menú']] : [['fac', '🧾 Mis facturas'], ['menu', '↩️ Menú']]);
+  }
+
+  // El sistema no emite comprobantes fiscales: se aclara y se ofrece la secretaría
+  async fiscal() {
+    return this.say('🧾 Por este medio le enviamos las *facturas de control* de sus pagos. Para un *comprobante fiscal*, por favor consulte con la secretaría del colegio.',
+      [['fac', '🧾 Mis facturas'], ['hum', '👩‍💼 Secretaría'], ['menu', '↩️ Menú']]);
   }
 
   async facturas() {
@@ -190,7 +197,7 @@ class Bot {
     if (!media) return this.menu();
     const s = await estadoDeFamilia(this.db, this.fam.id);
     let ms = [...s.mesesMora, ...s.mesesPend].filter((z) => z[0].id === h.id).map((z) => z[1]);
-    if (!ms.length) { const n = meses().find(({ k }) => !s.pagados.has(h.id + '|' + k)); ms = n ? [n.k] : []; }
+    if (!ms.length) { const n = meses().find(({ k }) => aplica(h, k) && !s.pagados.has(h.id + '|' + k)); ms = n ? [n.k] : []; }
     if (!ms.length) { this.paso('menu'); return this.say(`🙌 ${primerNombre(h.nombre)} ya tiene todo el año escolar pagado. Si es un pago distinto, escriba *secretaría*.`, VOLVER); }
     const monto = ms.length * COLEGIO.tarifas[h.nivel];
     const arch = await descargarMedia(this.env, media.id).catch(() => null);

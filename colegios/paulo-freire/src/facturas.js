@@ -2,7 +2,7 @@
 // Son facturas de control (NO son comprobantes fiscales e-CF de la DGII).
 // Los campos ncf y fiscal quedan reservados para conectar más adelante un proveedor de e-CF.
 import { COLEGIO } from './colegio.js';
-import { meses, mesLargo, rd, cap } from './cobros.js';
+import { meses, mesLargo, rd, cap, aplica } from './cobros.js';
 import { nuevoRecibo, leerConfig } from './db.js';
 
 export const METODOS = ['Efectivo', 'Transferencia', 'Tarjeta', 'Cheque'];
@@ -52,6 +52,7 @@ export async function prepararLineas(db, lineas) {
       const e = await db.one('select * from estudiantes where id = $1', [l.est]);
       if (!e) throw new Error('Estudiante no encontrado');
       if (!orden.includes(l.mes)) throw new Error('Mes inválido');
+      if (!aplica(e, l.mes)) throw new Error(`${e.nombre} se inscribió para pagar desde ${mesLargo(e.desde)}`);
       const k = e.id + '|' + l.mes;
       if (vistos.has(k)) throw new Error(`${cap(mesLargo(l.mes))} de ${e.nombre} está repetido`);
       vistos.add(k);
@@ -215,7 +216,64 @@ td{padding:10px 6px;border-bottom:1px solid #eef1f6}.n{text-align:right;white-sp
  ${f.estado === 'anulada' ? `<div class="nota" style="background:#fdecee;color:#8a1520">Factura anulada${f.motivo ? ': ' + escH(f.motivo) : ''}.</div>` : ''}
  <div class="pie">${f.ncf ? 'Comprobante fiscal electrónico.' : 'Documento interno de control de pagos. No es un comprobante fiscal (e-CF) de la DGII.'} Gracias por confiar en ${escH(COLEGIO.nombre)}.</div>
 </div>
-<div class="acc"><button class="p" onclick="print()">Imprimir o guardar PDF</button><a class="w" href="https://wa.me/${COLEGIO.whatsapp}" target="_blank" rel="noopener">Escribir al colegio</a></div>
+<div class="acc"><button class="p" onclick="print()">Imprimir o guardar PDF</button><a class="p" href="?t=80" style="background:#56637A">Ticket 80 mm</a><a class="w" href="https://wa.me/${COLEGIO.whatsapp}" target="_blank" rel="noopener">Escribir al colegio</a></div>
+</body></html>`;
+}
+
+// Versión para impresora térmica de 80 mm (ancho útil ~72 mm)
+export function ticketFactura(f, { imprimir = false } = {}) {
+  const t = new Date(new Date(f.fecha).getTime() + COLEGIO.zonaHoraria * 3600e3).toISOString();
+  const fecha = t.slice(0, 10).split('-').reverse().join('/'), hora = t.slice(11, 16);
+  const est = { pagada: 'PAGADA', pendiente: 'PENDIENTE DE PAGO', anulada: '*** ANULADA ***' }[f.estado];
+  const lineas = f.items.map((l) => `<div class="it"><div>${escH(l.d)}</div><div class="fila"><span>${l.cant} x ${rd(l.precio)}</span><span>${rd(l.cant * l.precio)}</span></div></div>`).join('');
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Ticket ${escH(f.id)}</title>
+<style>
+@page{size:80mm auto;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#fff;color:#000}
+body{width:80mm;padding:4mm 4mm 6mm;font:12px/1.35 "Courier New",ui-monospace,monospace}
+.c{text-align:center}.b{font-weight:700}.g{font-size:15px}
+img{width:16mm;filter:grayscale(1) contrast(1.4);display:block;margin:0 auto 2mm}
+hr{border:0;border-top:1px dashed #000;margin:2.5mm 0}
+.fila{display:flex;justify-content:space-between;gap:3mm}.fila span:last-child{white-space:nowrap}
+.it{margin-bottom:1.5mm}
+.tot{font-size:15px;font-weight:700}
+.est{border:1.5px solid #000;padding:1mm;margin:2mm 0;text-align:center;font-weight:700;letter-spacing:.05em}
+.peq{font-size:10.5px}
+.acc{margin-top:6mm;display:flex;gap:2mm}.acc button{flex:1;padding:3mm;font:600 13px system-ui;border:0;border-radius:6px;background:#0B2B5B;color:#fff;cursor:pointer}
+@media screen{html{background:#e9edf3}body{margin:16px auto;box-shadow:0 4px 18px rgba(0,0,0,.12)}}
+@media print{.acc{display:none}}
+</style></head><body>
+<img src="/assets/monograma.png" alt="">
+<div class="c b">${escH(COLEGIO.nombreLargo.toUpperCase())}</div>
+${COLEGIO.rnc ? `<div class="c">RNC ${escH(COLEGIO.rnc)}</div>` : ''}
+<div class="c peq">${escH(COLEGIO.direccion)}</div>
+<div class="c peq">Tel. ${escH(COLEGIO.telefonoOficina)} · WA ${escH(COLEGIO.telefono)}</div>
+<hr>
+<div class="c b g">FACTURA ${escH(f.id)}</div>
+<div class="fila"><span>Fecha: ${fecha}</span><span>${hora}</span></div>
+${f.recibo ? `<div>Recibo: ${escH(f.recibo)}</div>` : ''}
+${f.usuario ? `<div>Atendió: ${escH(f.usuario)}</div>` : ''}
+<hr>
+<div>Cliente: ${escH(f.cliente)}</div>
+${f.doc ? `<div>Céd./RNC: ${escH(f.doc)}</div>` : ''}
+<hr>
+${lineas}
+<hr>
+<div class="fila"><span>Subtotal</span><span>${rd(f.subtotal)}</span></div>
+${f.descuento ? `<div class="fila"><span>Descuento</span><span>-${rd(f.descuento)}</span></div>` : ''}
+<div class="fila tot"><span>TOTAL</span><span>${rd(f.total)}</span></div>
+<div class="fila"><span>Pago</span><span>${escH(f.metodo || 'Pendiente')}</span></div>
+${f.ref ? `<div class="fila"><span>Ref.</span><span>${escH(f.ref)}</span></div>` : ''}
+<div class="est">${est}</div>
+${f.nota ? `<div class="peq">${escH(f.nota)}</div>` : ''}
+${f.estado === 'anulada' && f.motivo ? `<div class="peq">Motivo: ${escH(f.motivo)}</div>` : ''}
+<hr>
+<div class="c peq">${f.ncf ? 'NCF ' + escH(f.ncf) : 'Documento interno de control. No es comprobante fiscal (e-CF).'}</div>
+<div class="c" style="margin-top:2mm">¡Gracias por su pago!</div>
+<div class="acc"><button onclick="print()">Imprimir</button></div>
+${imprimir ? '<script>addEventListener("load",()=>setTimeout(()=>print(),300))</script>' : ''}
 </body></html>`;
 }
 

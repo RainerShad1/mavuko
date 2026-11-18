@@ -6,6 +6,7 @@ import { enviar, ventanaAbierta, VENTANA } from './wa.js';
 import { enviarAFamilia, enviarRecordatorios, colaRecordatorios, primerNombre } from './avisos.js';
 import { sembrar } from './seed.js';
 import { apiContenido } from './contenido.js';
+import { inscribir, editarFamilia, editarEstudiante } from './inscripciones.js';
 import { crearFactura, cobrarFactura, anularFactura, facturaJSON, textoFactura, conceptos, baseURL, urlFactura, METODOS } from './facturas.js';
 
 const json = (data, status = 200, headers = {}) =>
@@ -44,7 +45,7 @@ export async function estado(env, db, user) {
     rules: cfg.rules, modRec: cfg.modRec, modCirc: cfg.modCirc, modoDemo: cfg.modoDemo,
     fams: fams.map((f) => ({ id: f.id, tutor: f.tutor, parent: f.parentesco, tel: f.tel, doc: f.doc, real: f.real, ultimoAviso: f.ultimo_aviso })),
     fac: Object.fromEntries(facRec.map((x) => [x.recibo, [x.id, x.token]])),
-    stus: ests.map((e) => ({ id: e.id, fam: e.familia_id, nombre: e.nombre, grado: e.grado, nivel: e.nivel })),
+    stus: ests.map((e) => ({ id: e.id, fam: e.familia_id, nombre: e.nombre, grado: e.grado, nivel: e.nivel, desde: e.desde })),
     pays: pays.map((p) => ({ id: p.recibo, est: p.estudiante_id, mes: p.mes, monto: p.monto, fecha: iso(p.fecha), met: p.metodo, ref: p.ref })),
     comps: comps.map((c) => ({ id: c.id, fam: c.familia_id, est: c.estudiante_id, meses: c.meses, monto: c.monto, banco: c.banco, ref: c.ref, fecha: iso(c.fecha), estado: c.estado, motivo: c.motivo, recibo: c.recibo, via: c.via, img: c.img })),
     aus: aus.map((a) => ({ id: a.id, est: a.estudiante_id, fam: a.familia_id, motivo: a.motivo, fecha: iso(a.fecha), hora: horaDe(a.fecha), visto: a.visto })),
@@ -129,6 +130,17 @@ export async function api(req, env, db, user, ctx) {
     const f = await db.one('select * from familias where id = $1', [c.familia_id]);
     const envio = await enviarAFamilia(env, db, f, `⚠️ Hola, ${primerNombre(f.tutor)}. No pudimos validar su comprobante: *${motivo}*.\nPor favor envíelo de nuevo o comuníquese con la secretaría.`, 'Comprobante rechazado');
     return json({ envio });
+  }
+
+  // ---- Inscripciones y datos de familias ----
+  if (p === '/inscripciones' && m === 'POST') {
+    try { return json(await inscribir(env, db, body, user.nombre, base)); } catch (x) { return err(x.message); }
+  }
+  if ((r = p.match(/^\/familias\/([\w-]+)$/)) && m === 'POST') {
+    try { return json(await editarFamilia(db, r[1], body)); } catch (x) { return err(x.message); }
+  }
+  if ((r = p.match(/^\/estudiantes\/([\w-]+)$/)) && m === 'POST') {
+    try { return json(await editarEstudiante(db, r[1], body)); } catch (x) { return err(x.message); }
   }
 
   // ---- Facturación ----

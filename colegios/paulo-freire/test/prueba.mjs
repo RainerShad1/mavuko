@@ -80,6 +80,10 @@ const dia = t.match(/\[([^\]]+)\]/)[1];
 await wa({ type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'dia:' + dia, title: dia } } });
 t = await wa({ type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'hora:10:00 a. m.', title: '10:00 a. m.' } } });
 check(t.includes('Solicitud enviada') && t.includes('10:00 a. m.'), 'cita: ' + t);
+t = await wa({ type: 'text', text: { body: 'Necesito un comprobante fiscal' } });
+check(t.includes('comprobante fiscal') && t.includes('[👩‍💼 Secretaría]') && !t.includes('foto'), 'pedido fiscal no se confunde con comprobante de pago: ' + t.slice(0, 60));
+t = await wa({ type: 'text', text: { body: 'factura con credito fiscal y mi RNC' } });
+check(t.includes('comprobante fiscal'), 'crédito fiscal / RNC');
 t = await wa({ type: 'text', text: { body: 'a que hora salen?' } });
 check(t.includes('Horario'), 'faq horario');
 t = await wa({ type: 'text', text: { body: 'quiero hablar de algo raro' } });
@@ -193,6 +197,30 @@ check((await call('/api/facturas/conceptos', 'POST', { conceptos: [{ n: 'Inscrip
 // El asistente comparte las facturas
 t = await wa({ type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'fac', title: 'Mis facturas' } } });
 check(t.includes('Sus últimas facturas') && t.includes('/f/'), 'bot facturas: ' + t.slice(0, 80));
+
+// ---- Ticket 80 mm ----
+const tk = await (await worker.fetch(new Request('https://x.test/f/' + pagoFac.token + '?t=80'), env, ctx)).text();
+check(tk.includes('80mm') && tk.includes('RNC 2600334623') && tk.includes(pagoFac.id), 'ticket 80 mm');
+check(html.includes('RNC 2600334623'), 'RNC en la factura');
+// ---- Inscripciones ----
+const int1 = st.ints[0];
+let ins = await call('/api/inscripciones', 'POST', { desde: null, familia: { tutor: 'Laura Gómez', parentesco: 'Madre', tel: '809-555-0188', doc: '001-7654321-0' }, estudiantes: [{ nombre: 'Ana Gómez', grado: '3.º Primaria' }, { nombre: 'Leo Gómez', grado: 'Pre-primario' }], interesado: int1.id, cobrar: true, metodo: 'Efectivo', bienvenida: true }, cookie);
+check(ins.status === 200 && ins.data.estudiantes.length === 2 && ins.data.factura, 'inscribir familia nueva ' + JSON.stringify(ins.data).slice(0, 150));
+st = (await call('/api/state', 'GET', null, cookie)).data;
+check(st.stus.filter((x) => x.fam === ins.data.fam).map((x) => x.nivel).join() === 'Primaria,Inicial', 'nivel según el grado');
+check(st.stus.filter((x) => x.fam === ins.data.fam).every((x) => x.desde && x.desde >= st.meta.cur), 'inscrito paga desde el primer mes sin vencer');
+const { estadoDeFamilia } = await import('../src/avisos.js');
+const sIns = await estadoDeFamilia(db, ins.data.fam);
+check(sIns.mora === 0, 'inscrito a mitad de año no queda en mora ' + sIns.mora);
+check((await call('/api/facturas', 'POST', { fam: ins.data.fam, lineas: [{ est: ins.data.estudiantes[0], mes: st.meta.meses[0].k }] }, cookie)).status === 400, 'no se factura un mes anterior a la inscripción');
+check(st.ints.find((i) => i.id === int1.id).estado === 'Inscrito', 'interesado pasa a inscrito');
+const facIns = await db.one('select * from facturas where id = $1', [ins.data.factura.id]);
+check(facIns.total === 7000 * 2 && facIns.estado === 'pagada', 'factura de inscripción con el precio del catálogo');
+check((await call('/api/inscripciones', 'POST', { familia: { tutor: 'Otro', tel: '809-555-0188' }, estudiantes: [{ nombre: 'X Y', grado: '1.º Primaria' }] }, cookie)).status === 400, 'teléfono repetido');
+check((await call('/api/inscripciones', 'POST', { fam: ins.data.fam, estudiantes: [{ nombre: 'Mar Gómez', grado: 'Grado raro' }] }, cookie)).status === 400, 'grado inválido');
+check((await call('/api/inscripciones', 'POST', { fam: ins.data.fam, estudiantes: [{ nombre: 'Mar Gómez', grado: '1.º Secundaria' }] }, cookie)).status === 200, 'agregar hermano a familia existente');
+check((await call('/api/familias/' + ins.data.fam, 'POST', { tutor: 'Laura M. Gómez', tel: '829-555-0188' }, cookie)).status === 200, 'editar familia');
+check((await call('/api/estudiantes/' + ins.data.estudiantes[0], 'POST', { grado: '4.º Primaria' }, cookie)).status === 200, 'cambiar de grado');
 
 const reset = await call('/api/demo/reiniciar', 'POST', {}, cookie);
 check(reset.status === 200, 'reiniciar');

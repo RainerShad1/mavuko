@@ -57,7 +57,7 @@ const paid = (e, k) => PAGADOS.has(e + '|' + k);
 function estadoEst(e) {
   const vencidos = [], porVencer = [];
   MESES.forEach(([k]) => {
-    if (paid(e.id, k)) return;
+    if (paid(e.id, k) || (e.desde && k < e.desde)) return;
     const v = venceDe(k);
     if (v < HOY) vencidos.push(k); else if (dias(HOY, v) <= 31) porVencer.push(k);
   });
@@ -136,7 +136,7 @@ function openFam(id) {
   $('#dAv').textContent = ini(f.tutor); $('#dAv').style.background = colorAv(f.id);
   $('#dName').textContent = f.tutor; $('#dSub').innerHTML = `${esc(f.parent)} · ${esc(f.tel)} · ${pill(s.st)}`;
   $('#dBody').innerHTML = `<div class="kpis" style="grid-template-columns:1fr 1fr;margin-bottom:14px"><div class="kpi r"><small>En mora</small><b>${rd(s.mora)}</b></div><div class="kpi"><small>Por vencer</small><b>${rd(s.pend)}</b></div></div>` +
-    s.hijos.map((h) => { const es = estadoEst(h); return `<div class="stu"><h3>${esc(h.nombre)}</h3><div class="g">${esc(h.grado)} · Mensualidad ${rd(TARIFA[h.nivel])}</div><div class="months">${MESES.map(([k, n]) => { let c, t; if (paid(h.id, k)) { c = 'ok'; t = 'Pagado'; } else if (venceDe(k) < HOY) { c = 'late'; t = 'Vencido'; } else if (es.porVencer.includes(k)) { c = 'due'; t = 'Vence ' + venceDe(k).slice(8); } else { c = 'fut'; t = '—'; } return `<div class="mo ${c}">${n}<small>${t}</small></div>`; }).join('')}</div></div>`; }).join('') +
+    s.hijos.map((h) => { const es = estadoEst(h); return `<div class="stu"><h3>${esc(h.nombre)}</h3><div class="g">${esc(h.grado)} · Mensualidad ${rd(TARIFA[h.nivel])}</div><div class="months">${MESES.map(([k, n]) => { let c, t; if (paid(h.id, k)) { c = 'ok'; t = 'Pagado'; } else if (h.desde && k < h.desde) { c = 'fut'; t = 'No aplica'; } else if (venceDe(k) < HOY) { c = 'late'; t = 'Vencido'; } else if (es.porVencer.includes(k)) { c = 'due'; t = 'Vence ' + venceDe(k).slice(8); } else { c = 'fut'; t = '—'; } return `<div class="mo ${c}">${n}<small>${t}</small></div>`; }).join('')}</div></div>`; }).join('') +
     (f.ultimoAviso ? `<p class="sub">Último mensaje enviado: ${esc(f.ultimoAviso)}</p>` : '');
   $('#ov').classList.add('show'); $('#drawer').classList.add('show');
 }
@@ -164,7 +164,7 @@ function openPay(famId) {
 function fillMonths() {
   const e = stu($('#pStu').value); if (!e) return;
   const es = estadoEst(e); sel = [...es.vencidos, ...es.porVencer];
-  $('#pMonths').innerHTML = MESES.map(([k, n]) => `<button class="chk ${sel.includes(k) ? 'on' : ''}" data-m="${k}" ${paid(e.id, k) ? 'disabled' : ''}>${n}${paid(e.id, k) ? ' ✓' : ''}</button>`).join(''); updTot();
+  $('#pMonths').innerHTML = MESES.map(([k, n]) => `<button class="chk ${sel.includes(k) ? 'on' : ''}" data-m="${k}" ${paid(e.id, k) || (e.desde && k < e.desde) ? 'disabled' : ''}>${n}${paid(e.id, k) ? ' ✓' : ''}</button>`).join(''); updTot();
 }
 function updTot() { const e = stu($('#pStu').value); $('#pTot').textContent = rd(sel.length * (e ? TARIFA[e.nivel] : 0)); }
 const reciboMsg = (f, e, r) => `✅ Hola, ${f.tutor.split(' ')[0]}. Recibimos su pago de *${rd(r.total)}* por la mensualidad de *${r.meses.map((k) => MES_LARGO[k]).join(', ')}* de ${e.nombre}.\nRecibo: ${r.id}\n¡Gracias por mantenerse al día! 🙌`;
@@ -173,7 +173,7 @@ function showRecibo(e, r, met) {
   $('#recBody').innerHTML = `<div class="rh"><img src="/assets/monograma.png" alt=""><div><b>${esc(META.colegio)}</b><small style="color:var(--muted)">Recibo ${r.id} · ${new Date().toLocaleDateString('es-DO')}</small></div></div>
  <div class="li"><span>Tutor</span><span>${esc(f.tutor)}</span></div><div class="li"><span>Estudiante</span><span>${esc(e.nombre)} (${esc(e.grado)})</span></div><div class="li"><span>Concepto</span><span>Mensualidad: ${meses}</span></div><div class="li"><span>Método</span><span>${esc(met)}</span></div><div class="li" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800"><span style="color:var(--navy)">Total pagado</span><span>${rd(r.total)}</span></div>`;
   const txt = r.texto || reciboMsg(f, e, r);
-  $('#recFac').href = r.token ? '/f/' + r.token : '#'; $('#recFac').classList.toggle('hide', !r.token);
+  $('#recFac').href = r.token ? '/f/' + r.token : '#'; $('#recFac').classList.toggle('hide', !r.token); $('#recTicket').href = r.token ? '/f/' + r.token + '?t=80&imprimir' : '#'; $('#recTicket').classList.toggle('hide', !r.token);
   $('#recBody').querySelector('small').textContent = `Factura ${r.factura || ''} · Recibo ${r.id} · ${new Date().toLocaleDateString('es-DO')}`;
   $('#recWa').innerHTML = fmtWA(txt) + `<i>${hora()}</i>`;
   $('#recSend').onclick = (ev) => act(ev.currentTarget, async () => { const x = await api('/enviar', { fam: f.id, tipo: r.factura ? 'Factura ' + r.factura : 'Recibo de pago', texto: txt }); closeAll(); toast(resEnvio(x, 'Recibo enviado')); await load(); });
@@ -223,7 +223,7 @@ function renderInt() {
   const n = DB.ints.filter((i) => i.estado === 'Nuevo').length; $('#bInt').textContent = n || '';
   const rows = DB.ints.slice().reverse();
   const s = (i) => `<select class="selst" data-int="${i.id}">${EST_INT.map((x) => `<option ${x === i.estado ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
-  $('#intBody').innerHTML = rows.map((i) => `<tr><td><b>${esc(i.nombre)}</b></td><td>${esc(i.tel)}</td><td>${esc(i.grado)}</td><td>${fmtF(i.fecha)}</td><td>${s(i)}</td><td><button class="btn btn-w btn-sm" data-intwa="${i.id}">WhatsApp</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sin interesados</td></tr>';
+  $('#intBody').innerHTML = rows.map((i) => `<tr><td><b>${esc(i.nombre)}</b></td><td>${esc(i.tel)}</td><td>${esc(i.grado)}</td><td>${fmtF(i.fecha)}</td><td>${s(i)}</td><td style="white-space:nowrap"><button class="btn btn-w btn-sm" data-intwa="${i.id}">WhatsApp</button> ${i.estado !== 'Inscrito' ? `<button class="btn btn-p btn-sm" data-intins="${i.id}">Inscribir</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sin interesados</td></tr>';
   $('#intCards').innerHTML = rows.map((i) => `<div class="row"><div class="av" style="background:#7a5a1e">${esc(ini(i.nombre))}</div><div class="who"><b>${esc(i.nombre)}</b><span>${esc(i.tel)} · ${esc(i.grado)} · ${fmtF(i.fecha)}</span></div>${s(i)}</div>`).join('');
 }
 
@@ -665,7 +665,7 @@ function famCambio() {
 }
 function renderNF() {
   const e = stu(NF.est);
-  if (e) $('#nfMeses').innerHTML = MESES.map(([k, n]) => { const ya = paid(e.id, k), on = NF.lineas.some((l) => l.est === e.id && l.mes === k); return `<button type="button" class="chk ${on ? 'on' : ''}" data-nfm="${k}" ${ya ? 'disabled' : ''}>${n}${ya ? ' ✓' : ''}</button>`; }).join('');
+  if (e) $('#nfMeses').innerHTML = MESES.map(([k, n]) => { const ya = paid(e.id, k) || (e.desde && k < e.desde), on = NF.lineas.some((l) => l.est === e.id && l.mes === k); return `<button type="button" class="chk ${on ? 'on' : ''}" data-nfm="${k}" ${ya ? 'disabled' : ''}>${n}${ya ? ' ✓' : ''}</button>`; }).join('');
   $('#nfLineas').innerHTML = NF.lineas.map((l, i) => l.est
     ? `<div class="nfl"><span class="fija">Mensualidad ${MES_LARGO[l.mes]} · ${esc(stu(l.est).nombre)}</span><span class="fija" style="text-align:center">1</span><span class="fija" style="text-align:right">${rd(TARIFA[stu(l.est).nivel])}</span><button type="button" data-nfdel="${i}">×</button></div>`
     : `<div class="nfl"><input data-nfd="${i}" value="${esc(l.d)}" placeholder="Descripción"><input data-nfc="${i}" type="number" min="1" value="${l.cant}"><input data-nfp="${i}" type="number" min="0" value="${l.precio}"><button type="button" data-nfdel="${i}">×</button></div>`).join('') || '<p class="muted" style="font-size:13px">Agrega mensualidades u otros conceptos con los botones de arriba.</p>';
@@ -709,7 +709,7 @@ function verFactura(id) {
     (f.metodo ? `<div class="li"><span>Pago</span><span>${esc(f.metodo)}${f.ref ? ' · ' + esc(f.ref) : ''}${f.recibo ? ' · ' + f.recibo : ''}</span></div>` : '') +
     (f.nota ? `<div class="li"><span>Nota</span><span>${esc(f.nota)}</span></div>` : '') +
     (f.motivo ? `<div class="li"><span>Anulada</span><span>${esc(f.motivo)}</span></div>` : '');
-  $('#fvAbrir').href = '/f/' + f.token;
+  $('#fvAbrir').href = '/f/' + f.token; $('#fvTicket').href = '/f/' + f.token + '?t=80&imprimir';
   $('#fvWa').classList.toggle('hide', !f.fam || f.estado === 'anulada');
   const esDir = DB.user.rol === 'director';
   $('#fvAcc').innerHTML = (f.estado === 'pendiente' ? '<button class="btn btn-p" type="button" id="fvCobrar">Registrar cobro</button>' : '') +
@@ -754,4 +754,72 @@ document.addEventListener('input', (e) => {
   const l = NF.lineas[Number(i)]; if (!l) return;
   if ('nfd' in t.dataset) l.d = t.value; else if ('nfc' in t.dataset) l.cant = t.value; else l.precio = t.value;
   totNF();
+});
+
+
+// ================= Inscripciones y edición de datos =================
+let INS = { modo: 'nueva', int: null };
+const optGrados = (sel) => GRADOS.map(([g]) => `<option ${g === sel ? 'selected' : ''}>${esc(g)}</option>`).join('');
+const filaEst = (e = {}, del = true) => `<div class="estl" ${e.id ? `data-eid="${e.id}"` : ''}><input placeholder="Nombre y apellidos del estudiante" value="${esc(e.nombre || '')}"><select><option value="">Grado…</option>${optGrados(e.grado)}</select>${del ? '<button type="button" data-estdel>×</button>' : '<span></span>'}</div>`;
+async function abrirInscripcion({ famId = null, interesado = null } = {}) {
+  if (!FAC) { try { FAC = await api('/facturas'); } catch { /* sin catálogo usa el precio por defecto */ } }
+  INS = { modo: famId ? 'existe' : 'nueva', int: interesado ? interesado.id : null };
+  ['#iTutor', '#iTel', '#iDoc'].forEach((x) => ($(x).value = ''));
+  $('#iPar').value = 'Madre';
+  $('#iFam').innerHTML = [...DB.fams].sort((a, b) => a.tutor.localeCompare(b.tutor)).map((f) => `<option value="${f.id}">${esc(f.tutor)} · ${esc(f.tel)}</option>`).join('');
+  if (famId) $('#iFam').value = famId;
+  let est = {};
+  if (interesado) {
+    $('#iTutor').value = interesado.nombre; $('#iTel').value = interesado.tel;
+    const [g, n] = String(interesado.grado).split(' · ');
+    est = { nombre: n || '', grado: GRADOS.some(([x]) => x === g) ? g : '' };
+  }
+  $('#iEsts').innerHTML = filaEst(est, false);
+  const c = (FAC?.conceptos || []).find((x) => /inscrip/i.test(x.n));
+  $('#iPrecio').textContent = c ? `(${rd(c.p)} por estudiante)` : '';
+  $('#iDesde').innerHTML = MESES.map(([k]) => `<option value="${k}">${cap(MES_LARGO[k])}</option>`).join('');
+  $('#iDesde').value = (MESES.find(([k]) => venceDe(k) >= HOY) || MESES[MESES.length - 1])[0];
+  $('#iCobrar').checked = true; $('#iMet').value = 'Efectivo'; $('#iBienv').checked = true; $('#iCobro').classList.remove('hide');
+  $('#insSub').textContent = interesado ? `Inscribiendo a un interesado que escribió por WhatsApp (${interesado.tel}).` : 'Registra a la familia y a sus hijos. Desde ese momento el asistente de WhatsApp los reconoce.';
+  modoIns(); openModal('#mIns');
+}
+function modoIns() {
+  document.querySelectorAll('[data-insmodo]').forEach((b) => b.classList.toggle('on', b.dataset.insmodo === INS.modo));
+  $('#insNueva').classList.toggle('hide', INS.modo !== 'nueva'); $('#insExiste').classList.toggle('hide', INS.modo !== 'existe');
+}
+const leerEsts = (cont) => [...document.querySelectorAll(cont + ' .estl')].map((r) => ({ id: r.dataset.eid, nombre: r.querySelector('input').value, grado: r.querySelector('select').value }));
+$('#iAddEst').onclick = () => $('#iEsts').insertAdjacentHTML('beforeend', filaEst());
+$('#iCobrar').onchange = () => $('#iCobro').classList.toggle('hide', !$('#iCobrar').checked);
+$('#iOk').onclick = (ev) => {
+  const ests = leerEsts('#iEsts').filter((e) => e.nombre.trim());
+  if (!ests.length) { toast('Escribe el nombre del estudiante'); return; }
+  act(ev.currentTarget, async () => {
+    const body = { estudiantes: ests, desde: $('#iDesde').value, interesado: INS.int, cobrar: $('#iCobrar').checked, metodo: $('#iMet').value, bienvenida: $('#iBienv').checked };
+    if (INS.modo === 'existe') body.fam = $('#iFam').value;
+    else body.familia = { tutor: $('#iTutor').value, parentesco: $('#iPar').value, tel: $('#iTel').value, doc: $('#iDoc').value };
+    const r = await api('/inscripciones', body);
+    closeAll(); await load(); if (FAC) await cargarFacturas().catch(() => {});
+    toast(`${ests.length > 1 ? ests.length + ' estudiantes inscritos' : 'Estudiante inscrito'} ✅${r.factura ? ' · factura ' + r.factura.id : ''}${r.envio?.estado === 'Simulado' ? ' · bienvenida simulada' : r.envio?.estado === 'Falló' ? ' · no se pudo enviar la bienvenida' : r.envio ? ' · bienvenida enviada' : ''}`);
+    openFam(r.fam);
+  });
+};
+function abrirEdicion(id) {
+  const f = fam(id); if (!f) return;
+  $('#eTutor').value = f.tutor; $('#ePar').value = f.parent; $('#eTel').value = f.tel; $('#eDoc').value = f.doc || '';
+  $('#eEsts').innerHTML = hijosDe(id).map((h) => filaEst(h, false)).join('');
+  $('#eOk').onclick = (ev) => act(ev.currentTarget, async () => {
+    await api('/familias/' + id, { tutor: $('#eTutor').value, parentesco: $('#ePar').value, tel: $('#eTel').value, doc: $('#eDoc').value });
+    for (const e of leerEsts('#eEsts')) { const h = stu(e.id); if (h && (h.nombre !== e.nombre.trim() || h.grado !== e.grado)) await api('/estudiantes/' + e.id, { nombre: e.nombre, grado: e.grado }); }
+    closeAll(); await load(); toast('Datos actualizados ✅'); openFam(id);
+  });
+  openModal('#mEdit');
+}
+$('#dEdit').onclick = () => { const f = curFam; closeAll(); abrirEdicion(f); };
+$('#dIns').onclick = () => { const f = curFam; closeAll(); abrirInscripcion({ famId: f }); };
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.closest('[data-ins]')) { abrirInscripcion(); return; }
+  const m = t.closest('[data-insmodo]'); if (m) { INS.modo = m.dataset.insmodo; modoIns(); return; }
+  const d = t.closest('[data-estdel]'); if (d) { d.parentElement.remove(); return; }
+  const ii = t.closest('[data-intins]'); if (ii) { abrirInscripcion({ interesado: DB.ints.find((x) => x.id === ii.dataset.intins) }); }
 });

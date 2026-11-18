@@ -7,7 +7,7 @@ export const COLEGIO = {
   whatsapp: '18298531204',
   telefono: '829-853-1204',
   telefonoOficina: '809-813-1059',
-  rnc: '', // RNC del colegio: aparece en las facturas cuando se complete
+  rnc: '2600334623', // aparece en facturas, página web y documentos legales
   web: 'https://colegiopaulofreire.tienda-cliente-frontend.workers.dev',
   direccion: 'Dr. Teófilo Ferry #35, Ens. María Rubio, La Romana',
   ubicacion: 'https://www.google.com/maps/place/Colegio+Instituto+Dominicano+Paulo+Freire/@18.4322493,-68.9674235,19z',

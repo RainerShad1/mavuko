@@ -197,6 +197,8 @@ create table if not exists galeria (
 -- Facturas de control del colegio. NO son comprobantes fiscales (e-CF):
 -- ncf y fiscal quedan reservados para conectar un proveedor autorizado por la DGII.
 alter table familias add column if not exists doc text;   -- cédula o RNC del tutor
+-- Mes desde el que paga un estudiante inscrito con el año empezado (null = desde el inicio)
+alter table estudiantes add column if not exists desde text;
 create sequence if not exists sec_factura start 1;
 create table if not exists facturas (
   id text primary key,                  -- FAC-000123

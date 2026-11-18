@@ -326,6 +326,8 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 .facl{cursor:pointer}.facl:hover td{background:#f7f9fc}
 @media(max-width:560px){.dos2{grid-template-columns:1fr}.nfl{grid-template-columns:1fr 54px 92px 30px}}
 .facl td:first-child b{white-space:nowrap}
+.estl{display:grid;grid-template-columns:1fr 170px 30px;gap:6px}.estl button{border:0;background:var(--badbg);color:var(--bad);border-radius:8px;font-weight:800;cursor:pointer}
+@media(max-width:560px){.estl{grid-template-columns:1fr 130px 30px}}
 </style></head><body>
 <div class="cargando" id="cargando" aria-hidden="true"><div><img src="/assets/monograma.png" alt="" width="78" height="108"><b>Colegio Paulo Freire</b><small>Sistema administrativo</small><span class="barra"><i></i><i></i><i></i></span></div></div>
 <noscript><style>.cargando{display:none}</style></noscript>
@@ -439,7 +441,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 
 <!-- FAMILIAS -->
   <section id="v-familias" class="hide">
-   <div class="top"><div><h1>Familias</h1><p>Toca una familia para ver su estado de cuenta</p></div><button class="btn btn-p" data-pay>＋ Registrar pago</button></div>
+   <div class="top"><div><h1>Familias</h1><p>Toca una familia para ver su estado de cuenta</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-o" data-ins>🎒 Inscribir estudiante</button><button class="btn btn-p" data-pay>＋ Registrar pago</button></div></div>
    <div class="tools"><input id="q" placeholder="Buscar tutor, estudiante o teléfono…"><select id="fEst"><option value="">Todos los estados</option><option value="ok">Al día</option><option value="warn">Por vencer</option><option value="bad">En mora</option></select><select id="fNiv"><option value="">Todos los niveles</option><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div>
    <div class="card" style="padding:6px 8px">
     <div class="tbl desk"><table><thead><tr><th>Tutor</th><th>Estudiantes</th><th>Teléfono</th><th>Estado</th><th style="text-align:right">Debe</th></tr></thead><tbody id="famBody"></tbody></table></div>
@@ -572,7 +574,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 </div>
 
 <div class="ov" id="ov"></div>
-<div class="drawer" id="drawer"><div class="dh"><div class="av" id="dAv"></div><div><h2 id="dName"></h2><p id="dSub"></p></div><button class="x" data-close>×</button></div><div class="db" id="dBody"></div>
+<div class="drawer" id="drawer"><div class="dh"><div class="av" id="dAv"></div><div><h2 id="dName"></h2><p id="dSub"></p><p style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-o btn-sm" id="dEdit" type="button">✏️ Editar datos</button><button class="btn btn-o btn-sm" id="dIns" type="button">🎒 Inscribir hermano</button></p></div><button class="x" data-close>×</button></div><div class="db" id="dBody"></div>
  <div class="df"><button class="btn btn-w" id="dWa">Enviar estado de cuenta</button><button class="btn btn-o" id="dFac">📑 Facturar</button><button class="btn btn-p" id="dPay">＋ Registrar pago</button></div></div>
 
 <div class="modal" id="mPay">
@@ -588,7 +590,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 </div>
 
 <div class="modal" id="mRec">
- <h2>Pago registrado ✅</h2><p class="sub">Factura generada automáticamente · <a id="recFac" target="_blank" rel="noopener">Ver factura</a></p>
+ <h2>Pago registrado ✅</h2><p class="sub">Factura generada automáticamente · <a id="recFac" target="_blank" rel="noopener">Ver factura</a> · <a id="recTicket" target="_blank" rel="noopener">Imprimir ticket 80 mm</a></p>
  <div class="rec" id="recBody"></div>
  <label>Mensaje que recibe el tutor</label><div class="wa"><div class="bub" id="recWa"></div></div>
  <div class="mfoot"><button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-w" id="recSend">Enviar factura por WhatsApp</button></div>
@@ -622,7 +624,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 <div class="modal" id="mFacVer">
  <h2 id="fvTit">Factura</h2><p class="sub" id="fvSub"></p>
  <div class="rec" id="fvBody"></div>
- <div class="mfoot" style="flex-wrap:wrap"><a class="btn btn-o" id="fvAbrir" target="_blank" rel="noopener">Ver e imprimir</a><button class="btn btn-o" id="fvCopiar" type="button">Copiar enlace</button><button class="btn btn-w" id="fvWa" type="button">Enviar por WhatsApp</button></div>
+ <div class="mfoot" style="flex-wrap:wrap"><a class="btn btn-o" id="fvAbrir" target="_blank" rel="noopener">Ver / PDF</a><a class="btn btn-o" id="fvTicket" target="_blank" rel="noopener">🖨️ Ticket 80 mm</a><button class="btn btn-o" id="fvCopiar" type="button">Copiar enlace</button><button class="btn btn-w" id="fvWa" type="button">Enviar por WhatsApp</button></div>
  <div class="mfoot" id="fvAcc"></div>
 </div>
 
@@ -637,6 +639,31 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
  <div class="dos2"><div><label>Forma de pago</label><select id="fcMet"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Cheque</option></select></div><div><label>Referencia</label><input id="fcRef" placeholder="Opcional"></div></div>
  <label class="chkline"><input type="checkbox" id="fcEnv" checked> Enviar la factura pagada por WhatsApp</label>
  <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" id="fcOk">Registrar cobro</button></div>
+</div>
+<div class="modal fac-m" id="mIns">
+ <h2>Inscribir estudiante</h2><p class="sub" id="insSub">Registra a la familia y a sus hijos. Desde ese momento el asistente de WhatsApp los reconoce.</p>
+ <div class="chips" id="insModo"><button type="button" class="chk on" data-insmodo="nueva">Familia nueva</button><button type="button" class="chk" data-insmodo="existe">Familia existente</button></div>
+ <div id="insNueva">
+  <div class="dos2"><div><label>Padre, madre o tutor</label><input id="iTutor" placeholder="Nombre completo"></div><div><label>Parentesco</label><select id="iPar"><option>Madre</option><option>Padre</option><option>Tutor</option><option>Tutora</option><option>Abuelo</option><option>Abuela</option><option>Otro</option></select></div></div>
+  <div class="dos2"><div><label>WhatsApp</label><input id="iTel" placeholder="809-000-0000" inputmode="tel"></div><div><label>Cédula <span class="muted">(opcional)</span></label><input id="iDoc" placeholder="000-0000000-0" inputmode="numeric"></div></div>
+ </div>
+ <div id="insExiste" class="hide"><label>Familia</label><select id="iFam"></select></div>
+ <label>Estudiantes</label>
+ <div id="iEsts" class="nf-lineas" style="margin-top:0"></div>
+ <button type="button" class="btn btn-o btn-sm" id="iAddEst" style="margin-top:8px">＋ Agregar otro hermano</button>
+ <label>Paga mensualidad desde</label><select id="iDesde"></select>
+ <label class="chkline"><input type="checkbox" id="iCobrar" checked> Cobrar inscripción <span class="muted" id="iPrecio"></span></label>
+ <div id="iCobro"><label>Forma de pago</label><select id="iMet"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Cheque</option><option value="">Pendiente de pago</option></select></div>
+ <label class="chkline"><input type="checkbox" id="iBienv" checked> Enviar mensaje de bienvenida por WhatsApp</label>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" id="iOk">Inscribir</button></div>
+</div>
+
+<div class="modal fac-m" id="mEdit">
+ <h2>Editar datos de la familia</h2><p class="sub">Los cambios de grado ajustan la mensualidad de los meses que faltan por pagar.</p>
+ <div class="dos2"><div><label>Padre, madre o tutor</label><input id="eTutor"></div><div><label>Parentesco</label><select id="ePar"><option>Madre</option><option>Padre</option><option>Tutor</option><option>Tutora</option><option>Abuelo</option><option>Abuela</option><option>Otro</option></select></div></div>
+ <div class="dos2"><div><label>WhatsApp</label><input id="eTel" inputmode="tel"></div><div><label>Cédula o RNC</label><input id="eDoc" inputmode="numeric"></div></div>
+ <label>Estudiantes</label><div id="eEsts" class="nf-lineas" style="margin-top:0"></div>
+ <div class="mfoot"><button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" id="eOk">Guardar cambios</button></div>
 </div>
 <div class="toast" id="toast"></div>
 

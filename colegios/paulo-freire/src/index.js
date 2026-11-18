@@ -12,7 +12,7 @@ import { firmaValida } from './wa.js';
 import { enviarRecordatorios } from './avisos.js';
 import { leerConfig } from './db.js';
 import { contenidoPublico, servirMedio } from './contenido.js';
-import { paginaFactura } from './facturas.js';
+import { paginaFactura, ticketFactura } from './facturas.js';
 
 const json = (d, s = 200, h = {}) => new Response(JSON.stringify(d), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...h } });
 
@@ -72,7 +72,8 @@ export default {
       if (!env.DATABASE_URL && !env.__db) return new Response('No disponible', { status: 503 });
       const f = await crearDB(env).one('select * from facturas where token = $1', [fc[1]]);
       if (!f) return new Response('Factura no encontrada', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
-      return new Response(paginaFactura(f), { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex', 'Referrer-Policy': 'no-referrer' } });
+      const html = url.searchParams.get('t') === '80' ? ticketFactura(f, { imprimir: url.searchParams.has('imprimir') }) : paginaFactura(f);
+      return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex', 'Referrer-Policy': 'no-referrer' } });
     }
     if (p === '/api/publico/inscripcion' && req.method === 'POST') {
       const b = await req.json().catch(() => ({}));

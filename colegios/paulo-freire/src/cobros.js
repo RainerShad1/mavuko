@@ -27,7 +27,7 @@ const dias = (a, b) => (Date.parse(b) - Date.parse(a)) / 864e5;
 export function estadoEst(est, pagados, hoy = hoyRD()) {
   const vencidos = [], porVencer = [];
   for (const { k } of meses()) {
-    if (pagados.has(est.id + '|' + k)) continue;
+    if (pagados.has(est.id + '|' + k) || !aplica(est, k)) continue;
     const v = venceDe(k);
     if (v < hoy) vencidos.push(k);
     else if (dias(hoy, v) <= 31) porVencer.push(k);
@@ -47,6 +47,9 @@ export function estadoFam(hijos, pagados, hoy = hoyRD()) {
   }
   return { mora, pend, st: mora > 0 ? 'bad' : pend > 0 ? 'warn' : 'ok', mesesMora, mesesPend };
 }
+
+// Un estudiante inscrito con el año empezado no debe los meses anteriores a su inscripción
+export const aplica = (est, k) => !est.desde || k >= est.desde;
 
 export const rd = (n) => 'RD$' + Number(n).toLocaleString('en-US');
 export const cap = (s) => s[0].toUpperCase() + s.slice(1);
