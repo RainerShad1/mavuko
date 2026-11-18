@@ -184,13 +184,13 @@ footer a:hover{color:#fff}
 .flota{transition:opacity .3s ease,transform .3s ease}
 .flota.oculta{opacity:0;transform:translateY(24px) scale(.85);pointer-events:none}
 @media (max-width:760px){.flota{right:14px;bottom:14px}.flota.abierta .flota-txt{max-width:0;padding:0}.flota-logo{width:50px;height:50px}}
-.listo{text-align:center;padding:10px 4px}
-.listo .ok{width:64px;height:64px;border-radius:50%;background:#e3f3ea;color:#12603F;display:grid;place-items:center;margin:0 auto 14px;font-size:32px;font-weight:800}
-.listo h3{margin-bottom:8px}
-.listo p{color:var(--suave);margin:0 auto 6px;max-width:34ch}
-.listo .acc{display:grid;gap:10px;margin-top:18px}
-.listo .btn-wa{background:#1fa855;color:#fff}
-.listo .otro{background:none;border:0;color:var(--tinta);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;padding:6px}
+.confirmado{text-align:center;padding:10px 4px}
+.confirmado .ok{width:64px;height:64px;border-radius:50%;background:#e3f3ea;color:#12603F;display:grid;place-items:center;margin:0 auto 14px;font-size:32px;font-weight:800}
+.confirmado h3{margin-bottom:8px}
+.confirmado p{color:var(--suave);margin:0 auto 6px;max-width:34ch}
+.confirmado .acc{display:grid;gap:10px;margin-top:18px}
+.confirmado .btn-wa{background:#1fa855;color:#fff}
+.confirmado .otro{background:none;border:0;color:var(--tinta);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;padding:6px}
 @media (prefers-reduced-motion:no-preference){
   .flota{animation:flota-entra .7s .9s cubic-bezier(.2,.9,.25,1.3) both}
   .flota-logo:before{animation:onda 2.6s 2s ease-out infinite}
@@ -400,7 +400,7 @@ $('#f').addEventListener('submit', async (e) => {
     // Confirmación clara en lugar del formulario, con la opción de escribir ya por WhatsApp
     const f = e.target, nom = String(d.tutor).trim().split(' ')[0];
     f.dataset.html = f.innerHTML;
-    f.innerHTML = `<div class="listo" role="status"><div class="ok">✓</div><h3>¡Recibimos tu solicitud, ${esc(nom)}!</h3>
+    f.innerHTML = `<div class="confirmado" role="status"><div class="ok">✓</div><h3>¡Recibimos tu solicitud, ${esc(nom)}!</h3>
       <p>La secretaría te llamará al <b>${esc(String(d.tel).replace(/\D/g, '').replace(/^1?(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</b> en horario de oficina (lunes a viernes, 7:30 a. m. a 3:00 p. m.) para coordinar tu visita.</p>
       <div class="acc"><a class="btn btn-wa" href="https://wa.me/18298531204?text=${encodeURIComponent(`Hola, soy ${d.tutor}. Acabo de pedir un cupo para ${d.est || 'mi hijo/a'} (${d.grado}).`)}" target="_blank" rel="noopener">¿Prefieres hablar ya? Escríbenos por WhatsApp</a>
       <button type="button" class="otro" id="otra">Enviar otra solicitud</button></div></div>`;

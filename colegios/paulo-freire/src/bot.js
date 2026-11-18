@@ -169,7 +169,7 @@ class Bot {
   }
 
   async conHijo(para, estId) {
-    const h = await this.db.one('select * from estudiantes where id = $1 and familia_id = $2', [estId, this.fam.id]);
+    const h = await this.db.one("select * from estudiantes where id = $1 and familia_id = $2 and estado = 'activo'", [estId, this.fam.id]);
     if (!h) return this.menu();
     if (para === 'comp') {
       this.paso('esperando_comp', { est: h.id });
@@ -184,7 +184,9 @@ class Bot {
   }
 
   async recibirComprobante(media) {
-    const hs = await this.db.q('select * from estudiantes where familia_id = $1 order by id', [this.fam.id]);
+    // Solo estudiantes activos: los retirados y egresados no aparecen para elegir
+    const hs = await this.db.q("select * from estudiantes where familia_id = $1 and estado = 'activo' order by id", [this.fam.id]);
+    if (!hs.length) { this.paso('menu'); await this.say('📎 Recibimos su archivo, pero su familia no tiene estudiantes activos. Le pasamos el mensaje a la secretaría.'); return this.humano('Envió un comprobante sin estudiantes activos', true); }
     let h = this.ses.paso === 'esperando_comp' ? hs.find((x) => x.id === this.ses.ctx.est) : null;
     if (!h && hs.length === 1) h = hs[0];
     if (!h) {

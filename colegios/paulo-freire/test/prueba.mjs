@@ -247,6 +247,20 @@ check(ret.status === 200, 'retirar ' + JSON.stringify(ret.data));
 const sr = await estadoDeFamilia(db, er.fam);
 check(![...sr.mesesMora, ...sr.mesesPend].some((z) => z[1] > st.meta.meses[2].k), 'retirado no debe meses después del retiro');
 check((await call('/api/facturas', 'POST', { fam: er.fam, lineas: [{ est: er.id, mes: st.meta.meses[5].k }] }, cookie)).status === 400, 'no se factura después del retiro');
+// ---- El asistente no muestra estudiantes retirados al enviar un comprobante ----
+{
+  const famK = (await db.one("select familia_id from estudiantes e where (select count(*) from estudiantes x where x.familia_id = e.familia_id) = 2 and familia_id <> 'F4' limit 1")).familia_id;
+  const [a1, a2] = await db.q('select * from estudiantes where familia_id = $1 order by id', [famK]);
+  const telK = '18295550177';
+  await call('/api/demo/vincular', 'POST', { fam: famK, tel: '829-555-0177' }, cookie);
+  await call(`/api/estudiantes/${a2.id}/retirar`, 'POST', { hasta: st.meta.meses[1].k, motivo: 'Prueba' }, cookie);
+  const waK = async (m) => { await manejarEventos(env, db, { entry: [{ changes: [{ value: { messages: [{ from: telK, id: 'wamid.k' + (++n), ...m }] } }] }] }); return (await db.q("select texto from mensajes where dir='out' and tel=$1 order by id desc limit 1", [telK]))[0]?.texto || ''; };
+  await waK({ type: 'text', text: { body: 'Hola' } });
+  const tk = await waK({ type: 'image', image: { id: 'MEDIA1', mime_type: 'image/jpeg' } });
+  check(tk.includes('Recibimos su comprobante') && tk.includes(a1.nombre) && !tk.includes(a2.nombre), 'comprobante sin preguntar por el retirado: ' + tk.slice(0, 90));
+  await call(`/api/estudiantes/${a2.id}/reactivar`, 'POST', {}, cookie);
+}
+
 // ---- Cierre del año ----
 const pre = (await call('/api/ano/cierre', 'GET', null, cookie)).data;
 check(pre.ano === '2026–2027' && pre.siguiente.inicio === '2027-08' && pre.totalDeuda > 0, 'resumen de cierre ' + pre.ano + ' ' + pre.totalDeuda);
@@ -285,7 +299,7 @@ check(reset.status === 200, 'reiniciar');
 check((await call('/api/state', 'GET', null, cookie)).data.meta.ano === '2026–2027', 'reiniciar vuelve al año de la demo');
 const tipos = llamadas.filter((l) => l.body?.type).map((l) => l.body.type + (l.body.interactive ? ':' + l.body.interactive.type : ''));
 console.log('llamadas a Meta:', [...new Set(tipos)].join(', '), '· total', llamadas.length);
-const REALES = new Set([TEL, N2, '18496538063', '18097527776', '18098422800']);
+const REALES = new Set([TEL, N2, '18295550177', '18496538063', '18097527776', '18098422800']);
 check(llamadas.every((l) => !l.body?.to || REALES.has(l.body.to)), 'solo se escribe a números reales');
 console.log(`\n${ok} pruebas bien, ${mal} mal`);
 process.exit(mal ? 1 : 0);
