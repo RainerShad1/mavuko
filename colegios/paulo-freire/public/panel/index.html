@@ -2,6 +2,7 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/assets/carga.css">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>Sistema administrativo · Colegio Paulo Freire</title>
 <link rel="icon" href="/assets/monograma.png">
@@ -296,21 +297,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 }
 
 /* ---------- Pantalla de carga ---------- */
-.cargando{position:fixed;inset:0;z-index:200;background:#fff;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s;animation:failsafe 0s 8s forwards}
-.cargando.fuera{opacity:0;visibility:hidden}
-.cargando div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
-.cargando img{width:78px;height:auto;margin-bottom:10px}
-.cargando b{font:800 clamp(28px,4vw,40px)/1.05 "Bricolage Grotesque",system-ui,sans-serif;color:#0B2B5B;letter-spacing:-.02em}
-.cargando small{font:500 15px Figtree,system-ui,sans-serif;color:#56637A}
-.barra{display:flex;gap:6px;margin-top:22px}
-.barra i{width:42px;height:6px;border-radius:3px;background:#E3E9F2;position:relative;overflow:hidden}
-.barra i:after{content:"";position:absolute;inset:0;transform:scaleX(0);transform-origin:left;animation:llena .5s ease forwards}
-.barra i:nth-child(1):after{background:#0B2B5B}
-.barra i:nth-child(2):after{background:#12603F;animation-delay:.35s}
-.barra i:nth-child(3):after{background:#C99A3E;animation-delay:.7s}
-@keyframes llena{to{transform:scaleX(1)}}
-@keyframes failsafe{to{opacity:0;visibility:hidden}}
-@media (prefers-reduced-motion:reduce){.barra i:after{animation:none;transform:none}.cargando{transition:none}}
+
 
 /* Facturación */
 .fac-m{width:min(640px,96vw)}
@@ -335,8 +322,59 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 @media(max-width:560px){.becal{grid-template-columns:1fr 1fr}}
 .estl{display:grid;grid-template-columns:1fr 170px 30px;gap:6px}.estl button{border:0;background:var(--badbg);color:var(--bad);border-radius:8px;font-weight:800;cursor:pointer}
 @media(max-width:560px){.estl{grid-template-columns:1fr 130px 30px}}
+
+/* ---------- Buscador global ---------- */
+.gbusca{position:sticky;top:0;z-index:25;margin:-6px 0 18px;display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:4px 12px;box-shadow:0 6px 20px -14px rgba(11,43,91,.4)}
+.gbusca:focus-within{border-color:var(--navy)}
+.gbusca input{flex:1;border:0;outline:0;font:500 15px Figtree,system-ui,sans-serif;padding:10px 0;background:transparent;color:var(--ink)}
+.gbusca kbd{font:600 12px Figtree;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.gres{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border-radius:14px;box-shadow:0 24px 50px -20px rgba(11,43,91,.45),0 0 0 1px var(--line);max-height:60vh;overflow:auto;padding:6px}
+.gres.on{display:block}
+.gres .grp{font:700 11px Figtree;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.gr{display:flex;gap:12px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer}
+.gr.sel,.gr:hover{background:var(--bg)}
+.gr .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--bg);flex:none;font-size:16px}
+.gr .tx{flex:1;min-width:0}.gr .tx b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gr .tx span{font-size:12.5px;color:var(--muted)}
+.gr mark{background:#fdf0cf;color:inherit;border-radius:3px}
+/* ---------- Selector con buscador ---------- */
+.cb{position:relative}
+.cb>select{display:none}
+.cb-btn{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font:500 14px Figtree,system-ui,sans-serif;color:var(--ink);cursor:pointer;min-height:46px}
+.cb-btn:after{content:'';margin-left:auto;border:5px solid transparent;border-top-color:var(--muted);transform:translateY(3px)}
+.cb-btn .t{min-width:0;flex:1}.cb-btn .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cb-btn .t small{color:var(--muted);font-size:12px}
+.cb.abierto .cb-btn{border-color:var(--navy)}
+.cb-pop{display:none;position:absolute;z-index:80;left:0;right:0;top:calc(100% + 4px);background:#fff;border-radius:14px;box-shadow:0 24px 50px -18px rgba(11,43,91,.45),0 0 0 1px var(--line);padding:8px}
+.cb.abierto .cb-pop{display:block}
+.cb-pop input{width:100%;padding:10px 12px!important;border:1.5px solid var(--line);border-radius:10px;font:500 14px Figtree!important;margin-bottom:6px;background:#fcfbf8}
+.cb-list{max-height:280px;overflow:auto}
+.cb-op{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:14px}
+.cb-op small{display:block;color:var(--muted);font-size:12px}
+.cb-op.sel,.cb-op:hover{background:var(--bg)}.cb-op.act{font-weight:700;color:var(--navy)}
+.cb-op .av{width:30px;height:30px;font-size:11px}
+.cb-vacio{padding:14px;color:var(--muted);text-align:center;font-size:13px}
+/* ---------- Historial en la ficha ---------- */
+.hist .li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.hist .li:first-of-type{border-top:0}
+.hist .li span small{display:block;color:var(--muted);font-size:12px}
+.hist a{color:var(--navy);font-weight:600}
+.subnav{margin-top:-6px}
+.mas-btn{display:none!important}
+@media(max-width:760px){
+ .gbusca{margin:0 0 14px;padding:2px 10px}.gbusca kbd{display:none}
+ .nav button:not(.prin):not(.mas-btn){display:none}
+ .mas-btn{display:flex!important}
+ aside:not(.mas) .nav{width:100%;display:flex}
+ aside:not(.mas) .nav button{flex:1;min-width:0;white-space:normal;line-height:1.15;padding:7px 4px}
+ aside.mas{max-height:70vh;overflow-y:auto}
+ aside.mas .nav{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+ aside.mas .nav button{white-space:normal;font-size:11px;min-height:58px}
+ aside.mas .nav button{display:flex!important}
+ .alert{padding:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 8px}.alert>span:last-child{grid-column:1/-1;font-size:11.5px;line-height:1.3}.alert .n{font-size:20px}
+ .cb-list{max-height:45vh}
+}
 </style></head><body>
-<div class="cargando" id="cargando" aria-hidden="true"><div><img src="/assets/monograma.png" alt="" width="78" height="108"><b>Colegio Paulo Freire</b><small>Sistema administrativo</small><span class="barra"><i></i><i></i><i></i></span></div></div>
+<div class="cargando" id="cargando" aria-hidden="true"><div class="cg"><div class="cg-mono"><img class="cg-body" src="/assets/carga/body.png" alt=""><img class="cg-F" src="/assets/carga/F.png" alt=""><img class="cg-leaves" src="/assets/carga/leaves.png" alt=""><img class="cg-gold" src="/assets/carga/gold.png" alt=""><img class="cg-globe" src="/assets/carga/globe.png" alt=""></div><div class="cg-nombre">Instituto Dominicano Paulo Freire</div><div class="cg-sub">SISTEMA ADMINISTRATIVO</div></div></div>
+<script src="/assets/carga.js"></script>
 <noscript><style>.cargando{display:none}</style></noscript>
 
 <div class="login hide" id="login"><form id="loginForm"><img src="/assets/monograma.png" alt=""><h2>Colegio Paulo Freire</h2><p>Sistema administrativo</p><input id="lUser" placeholder="Usuario" autocomplete="username" required><input id="lPass" type="password" placeholder="Contraseña" autocomplete="current-password" required><button class="btn btn-p" type="submit">Entrar</button><div class="er" id="lErr"></div></form></div>
@@ -346,26 +384,26 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
   <div class="brand"><img src="/assets/monograma.png" alt=""><span><b>Paulo Freire</b><small>Sistema administrativo</small></span></div>
   <nav class="nav" id="nav">
    <div class="navlbl">General</div>
-   <button data-v="panel" class="on"><span class="ico">📊</span>Panel</button>
-   <button data-v="asistente"><span class="ico">💬</span>WhatsApp<span class="badge" id="bChat"></span></button>
+   <button data-v="panel" class="on prin"><span class="ico">📊</span>Panel</button>
+   <button data-v="asistente" class="prin"><span class="ico">💬</span>WhatsApp<span class="badge" id="bChat"></span></button>
    <div class="navlbl">Cobros</div>
-   <button data-v="familias"><span class="ico">👨‍👩‍👧</span>Familias</button>
-   <button data-v="pagos"><span class="ico">💳</span>Pagos</button>
-   <button data-v="facturas"><span class="ico">📑</span>Facturación<span class="badge" id="bFac"></span></button>
-   <button data-v="comprobantes"><span class="ico">🧾</span>Comprobantes<span class="badge" id="bComp"></span></button>
+   <button data-v="familias" class="prin"><span class="ico">👨‍👩‍👧</span>Familias</button>
+   <button data-v="facturas"><span class="ico">📑</span>Pagos y facturas<span class="badge" id="bFac"></span></button>
+   <button data-v="comprobantes" class="prin"><span class="ico">🧾</span>Comprobantes<span class="badge" id="bComp"></span></button>
    <div class="navlbl">Atención</div>
    <button data-v="solicitudes"><span class="ico">📥</span>Solicitudes<span class="badge" id="bSol"></span></button>
    <button data-v="interesados"><span class="ico">🌱</span>Interesados<span class="badge" id="bInt"></span></button>
-   <button data-v="circulares"><span class="ico">📢</span>Circulares</button>
-   <button data-v="avisos"><span class="ico">🔔</span>Recordatorios<span class="badge" id="qBadge"></span></button>
+   <button data-v="avisos"><span class="ico">📢</span>Avisos a padres<span class="badge" id="qBadge"></span></button>
    <div class="navlbl" id="navCierreLbl">Administración</div>
    <button data-v="cierre" id="navCierre"><span class="ico">🎓</span>Cierre del año</button>
    <div class="navlbl">Página web</div>
    <button data-v="web"><span class="ico">🌐</span>Web y redes</button>
+   <button class="mas-btn" id="masBtn" type="button"><span class="ico">☰</span>Más</button>
   </nav>
   <div class="side-foot"><b id="uNombre"></b><span id="demoNote"></span><br><button id="reset" class="hide">↺ Reiniciar datos de prueba</button><br><button id="logout">Cerrar sesión</button></div>
  </aside>
  <main>
+  <div class="gbusca" id="gbusca"><span class="lupa" aria-hidden="true">🔍</span><input id="gq" type="search" placeholder="Buscar familia, estudiante, teléfono o factura…" autocomplete="off" aria-label="Buscar"><kbd>/</kbd><div class="gres" id="gres" role="listbox"></div></div>
   <div class="mtop"><span id="mUser"></span><button id="mLogout">Cerrar sesión</button></div>
   <!-- PANEL -->
   <section id="v-panel">
@@ -460,7 +498,8 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 
   <!-- PAGOS -->
   <section id="v-pagos" class="hide">
-   <div class="top"><div><h1>Pagos</h1><p>Historial de pagos registrados</p></div><button class="btn btn-p" data-pay>＋ Registrar pago</button></div>
+   <div class="top"><div><h1>Pagos de mensualidad</h1><p>Cada pago de mensualidad registrado, con su recibo y su factura</p></div><button class="btn btn-p" data-pay>＋ Registrar pago</button></div>
+   <div class="tabs subnav"><button class="tab" data-go="facturas" type="button">Facturas</button><button class="tab on" data-go="pagos" type="button">Pagos de mensualidad</button></div>
    <div class="tools"><input id="qp" placeholder="Buscar por tutor, estudiante o recibo…"><select id="fMet"><option value="">Todos los métodos</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select></div>
    <div class="card" style="padding:6px 8px">
     <div class="tbl desk"><table><thead><tr><th>Recibo</th><th>Fecha</th><th>Estudiante</th><th>Concepto</th><th>Método</th><th style="text-align:right">Monto</th></tr></thead><tbody id="payBody"></tbody></table></div>
@@ -470,7 +509,8 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 
   <!-- FACTURACIÓN -->
   <section id="v-facturas" class="hide">
-   <div class="top"><div><h1>Facturación</h1><p>Facturas de mensualidades, inscripción, libros, uniformes y otros cobros. Cada pago de mensualidad genera su factura automáticamente.</p></div><button class="btn btn-p" id="facNueva">＋ Nueva factura</button></div>
+   <div class="top"><div><h1>Pagos y facturas</h1><p>Facturas de mensualidades, inscripción, libros, uniformes y otros cobros. Cada pago de mensualidad genera su factura automáticamente.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-o" data-pay>＋ Registrar pago</button><button class="btn btn-p" id="facNueva">＋ Nueva factura</button></div></div>
+   <div class="tabs subnav"><button class="tab on" data-go="facturas" type="button">Facturas</button><button class="tab" data-go="pagos" type="button">Pagos de mensualidad</button></div>
    <div class="kpis">
     <div class="kpi g"><small>Facturado este mes</small><b id="fkMes">RD$0</b><span id="fkMesSub"></span></div>
     <div class="kpi"><small>Otros conceptos este mes</small><b id="fkOtros">RD$0</b><span>Inscripción, libros, uniformes…</span></div>
@@ -521,7 +561,7 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
 
   <!-- COMPROBANTES -->
   <section id="v-comprobantes" class="hide">
-   <div class="top"><div><h1>Comprobantes de transferencia</h1><p>Los padres envían la foto por WhatsApp. Al aprobarla, el pago queda registrado y el padre recibe su recibo. Meta da <b>24 horas</b> desde el mensaje del padre para responder como mensaje de servicio; después, el recibo sale como plantilla con costo.</p></div></div>
+   <div class="top"><div><h1>Comprobantes de transferencia</h1><p>Los padres envían la foto de su transferencia por WhatsApp. Revisa que el monto coincida y apruébala: el pago queda registrado y al padre le llega su factura. Si apruebas dentro de las 24 horas siguientes a su mensaje, el envío es gratis.</p></div></div>
    <div class="tabs"><button class="tab on" data-ctab="pend">Por revisar<span class="c" id="cPend"></span></button><button class="tab" data-ctab="hist">Revisados</button></div>
    <div id="compList"></div>
   </section>
@@ -545,8 +585,9 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
   <!-- CIRCULARES -->
   <section id="v-circulares" class="hide">
    <div class="top"><div><h1>Circulares por WhatsApp</h1><p>Envía avisos a los padres de los cursos que elijas. El costo se calcula antes de enviar.</p></div><span class="demo" id="cState">MÓDULO DESACTIVADO</span></div>
+   <div class="tabs subnav"><button class="tab" data-go="avisos" type="button">🔔 Recordatorios de pago</button><button class="tab on" data-go="circulares" type="button">📢 Circulares</button></div>
    <div class="locked" id="cLocked">
-    <div><span class="tagm">MÓDULO ADICIONAL</span><h2>Circulares por WhatsApp</h2><p>Funciona solo si el colegio lo solicita. Cada circular cuesta aprox. US$0.0113 por padre (tarifa de Meta), que se paga aparte. El costo se muestra antes de cada envío.</p>
+    <div><span class="tagm">MÓDULO ADICIONAL</span><h2>Circulares por WhatsApp</h2><p>Funciona solo si el colegio lo solicita. WhatsApp cobra unos centavos de dólar por cada padre que la recibe. Antes de enviar ves cuánto costará.</p>
      <button class="btn btn-w" id="cActivate" style="margin-top:16px">Activar módulo</button></div>
     <ul><li>Envío a todo el colegio, por nivel o por grado</li><li>Plantillas listas (reuniones, suspensiones, actividades)</li><li>Envío inmediato o programado</li><li>Costo calculado antes de enviar</li></ul>
    </div>
@@ -582,8 +623,9 @@ h1,h2,.kpi b,.brand b{font-family:"Bricolage Grotesque",system-ui,sans-serif;let
   <!-- RECORDATORIOS -->
   <section id="v-avisos" class="hide">
    <div class="top"><div><h1>Recordatorios de pago</h1><p>Avisos automáticos por WhatsApp cuando una mensualidad está por vencer o está vencida.</p></div><span class="demo" id="modState">MÓDULO DESACTIVADO</span></div>
+   <div class="tabs subnav"><button class="tab on" data-go="avisos" type="button">🔔 Recordatorios de pago</button><button class="tab" data-go="circulares" type="button">📢 Circulares</button></div>
    <div class="locked" id="locked">
-    <div><span class="tagm">MÓDULO ADICIONAL</span><h2>Recordatorios automáticos</h2><p>Funciona solo si el colegio lo activa. Cada mensaje tiene un costo de Meta de aprox. US$0.0113, que se paga aparte.</p>
+    <div><span class="tagm">MÓDULO ADICIONAL</span><h2>Recordatorios automáticos</h2><p>Funciona solo si el colegio lo activa. WhatsApp cobra unos centavos de dólar por cada recordatorio; el costo del mes se muestra aquí mismo.</p>
      <button class="btn btn-w" id="activate" style="margin-top:16px">Activar módulo</button></div>
     <ul><li>Aviso 3 días antes del vencimiento</li><li>Aviso el día de pago</li><li>Aviso de mora a los 3 y 10 días del vencimiento</li><li>Confirmación de entrega y lectura</li></ul>
    </div>

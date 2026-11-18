@@ -87,9 +87,9 @@ function ultimoMsg(c) { const l = (DB.lastIn || {})[c.fam]; return l && l > c.fe
 function ventana(c) {
   const base = ultimoMsg(c), renov = base !== c.fecha;
   const rest = new Date(base).getTime() + VENT - Date.now();
-  if (rest <= 0) return { open: false, html: `<div class="vent v-off"><div class="vt"><b>⛔ Ventana de 24 h cerrada</b><span>hace ${dur(-rest)}</span></div><div class="vbar"><i style="width:0"></i></div><small>${META.plantilla ? `El recibo se enviará como plantilla de utilidad (≈US$${C_UTIL}).` : 'Para enviar el recibo fuera de la ventana hace falta una plantilla aprobada por Meta. El pago sí se registra.'}</small></div>` };
+  if (rest <= 0) return { open: false, html: `<div class="vent v-off"><div class="vt"><b>Pasaron más de 24 horas</b><span>desde el mensaje del padre (hace ${dur(-rest)})</span></div><div class="vbar"><i style="width:0"></i></div><small>${META.plantilla ? 'Puedes aprobarlo igual: la factura se envía con un costo de unos centavos de dólar.' : 'Puedes aprobarlo igual y el pago queda registrado, pero WhatsApp no deja enviarle la factura ahora. Avísale por teléfono o espera a que vuelva a escribir.'}</small></div>` };
   const pct = rest / VENT * 100; const cls = rest < 3600e3 ? 'v-bad' : rest < 6 * 3600e3 ? 'v-warn' : 'v-ok';
-  return { open: true, rest, html: `<div class="vent ${cls}"><div class="vt"><b>⏱️ Quedan ${dur(rest)}</b><span>para responder dentro de la ventana de WhatsApp</span>${renov ? '<span class="pill p-info" style="margin-left:auto">↻ Renovada</span>' : ''}</div><div class="vbar"><i style="width:${pct}%"></i></div><small>Cierra a las ${horaDe(new Date(base).getTime() + VENT)} del ${fmtF(new Date(base).getTime() + VENT)}. Dentro de la ventana el recibo se envía como mensaje de servicio.</small></div>` };
+  return { open: true, rest, html: `<div class="vent ${cls}"><div class="vt"><b>⏱️ Apruébalo antes de las ${horaDe(new Date(base).getTime() + VENT)}</b><span>(quedan ${dur(rest)}) para que la factura le llegue gratis por WhatsApp</span>${renov ? '<span class="pill p-info" style="margin-left:auto">↻ Volvió a escribir</span>' : ''}</div><div class="vbar"><i style="width:${pct}%"></i></div></div>` };
 }
 function dur(ms) { const m = Math.floor(ms / 60000), h = Math.floor(m / 60); return h ? `${h} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`; }
 function voucherHTML(c) {
@@ -115,7 +115,7 @@ function renderPanel() {
   $('#kMora').textContent = rd(mora); $('#kMoraSub').textContent = fs.filter((x) => x.st === 'bad').length + ' familias';
   $('#aComp').textContent = DB.comps.filter((c) => c.estado === 'pend').length;
   const urg = DB.comps.filter((c) => c.estado === 'pend' && ventana(c).open && ventana(c).rest < 6 * 3600e3).length;
-  $('#aCompSub').textContent = urg ? `Comprobantes por revisar · ${urg} con ventana por cerrar` : 'Comprobantes por revisar';
+  $('#aCompSub').textContent = urg ? `Comprobantes por revisar · ${urg} urgente${urg > 1 ? "s" : ""}` : 'Comprobantes por revisar';
   $('#aAus').textContent = DB.aus.filter((a) => !a.visto).length;
   $('#aCit').textContent = DB.citas.filter((c) => c.estado === 'pend').length;
   $('#aInt').textContent = DB.ints.filter((c) => c.estado === 'Nuevo').length;
@@ -148,8 +148,10 @@ function openFam(id) {
   $('#dName').textContent = f.tutor; $('#dSub').innerHTML = `${esc(f.parent)} · ${esc(f.tel)} · ${pill(s.st)}`;
   $('#dBody').innerHTML = `<div class="kpis" style="grid-template-columns:1fr 1fr;margin-bottom:14px"><div class="kpi r"><small>En mora</small><b>${rd(s.mora)}</b></div><div class="kpi"><small>Por vencer</small><b>${rd(s.pend)}</b></div></div>` +
     s.hijos.map((h) => { const es = estadoEst(h); return `<div class="stu"><h3>${esc(h.nombre)}</h3><div class="g">${esc(h.grado)} · Mensualidad ${rd(tarifaEst(h))}${becaTxt(h) ? ` <span class="pill p-info">${esc(becaTxt(h))}</span>` : ''}${!activo(h) ? ` <span class="pill p-mute">${h.estado === 'egresado' ? 'Egresado' : 'Retirado'}${h.baja ? ' · ' + esc(h.baja) : ''}</span>` : ''}</div><div class="months">${MESES.map(([k, n]) => { let c, t; if (paid(h.id, k)) { c = 'ok'; t = 'Pagado'; } else if (!aplica(h, k)) { c = 'fut'; t = 'No aplica'; } else if (venceDe(k) < HOY) { c = 'late'; t = 'Vencido'; } else if (es.porVencer.includes(k)) { c = 'due'; t = 'Vence ' + venceDe(k).slice(8); } else { c = 'fut'; t = '—'; } return `<div class="mo ${c}">${n}<small>${t}</small></div>`; }).join('')}</div></div>`; }).join('') +
+    `<div class="stu hist"><h3>Historial de pagos y facturas</h3><div id="dHist"><p class="sub">Cargando…</p></div></div>` +
     (s.saldos.length ? `<div class="stu" style="border-color:var(--bad)"><h3>Saldo de años anteriores</h3>${s.saldos.map((x) => `<div class="li" style="display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0"><span>${esc(stu(x.est)?.nombre || '')} · año ${esc(x.ano)} (${x.meses.length} ${x.meses.length === 1 ? 'mes' : 'meses'})</span><b style="color:var(--bad)">${rd(x.monto)}</b></div>`).join('')}<button class="btn btn-p btn-sm" id="dSaldo" type="button" style="margin-top:8px">Cobrar saldo</button></div>` : '') +
     (f.ultimoAviso ? `<p class="sub">Último mensaje enviado: ${esc(f.ultimoAviso)}</p>` : '');
+  pintarHistorial(id);
   if ($('#dSaldo')) $('#dSaldo').onclick = () => { closeAll(); act(null, async () => { if (!FAC) await cargarFacturas(); abrirNuevaFactura(id); s.saldos.forEach((x) => NF.lineas.push({ saldo: x.id })); renderNF(); }); };
   $('#ov').classList.add('show'); $('#drawer').classList.add('show');
 }
@@ -376,14 +378,17 @@ let vista = 'panel';
 function go(v) {
   vista = v;
   document.querySelectorAll('main>section').forEach((s) => s.classList.toggle('hide', s.id !== 'v-' + v));
-  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  const enMenu = { pagos: 'facturas', circulares: 'avisos' }[v] || v;
+  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.v === enMenu));
+  document.querySelector('aside')?.classList.remove('mas'); if ($('#masBtn')) $('#masBtn').innerHTML = '<span class="ico">☰</span>Más';
   window.scrollTo(0, 0);
   if (v === 'asistente') loadChats().catch(() => {});
   if (v === 'web') cargarWeb().catch(() => {});
   if (v === 'facturas') cargarFacturas().catch((e) => toast('⚠️ ' + e.message));
   if (v === 'cierre') cargarCierre().catch((e) => toast('⚠️ ' + e.message));
 }
-document.querySelectorAll('#nav button').forEach((b) => (b.onclick = () => go(b.dataset.v)));
+document.querySelectorAll('#nav button[data-v]').forEach((b) => (b.onclick = () => go(b.dataset.v)));
+$('#masBtn').onclick = () => { const a = document.querySelector('aside'); a.classList.toggle('mas'); $('#masBtn').innerHTML = a.classList.contains('mas') ? '<span class="ico">✕</span>Cerrar' : '<span class="ico">☰</span>Más'; };
 document.addEventListener('click', (e) => {
   const t = e.target;
   const g = t.closest('[data-go]'); if (g) { if (g.dataset.tab) { stab = g.dataset.tab; renderSol(); } else if (g.dataset.go === 'solicitudes' && g.classList.contains('alert')) { stab = 'ausencias'; renderSol(); } go(g.dataset.go); return; }
@@ -540,7 +545,14 @@ $('#avisosBtn').onclick = async () => { try { await Notification.requestPermissi
 estadoAvisos();
 
 // ================= Login =================
-function quitarCarga() { const c = $('#cargando'); if (c && !c.classList.contains('fuera')) { c.classList.add('fuera'); setTimeout(() => c.remove(), 600); } }
+// La pantalla de carga termina y el logo vuela al de la pantalla de entrada o al del menú lateral
+let cargaHecha = false;
+function quitarCarga() {
+  if (cargaHecha || !window.Carga) return; cargaHecha = true;
+  let visto = false; try { visto = sessionStorage.getItem('pf_panel') === '1'; sessionStorage.setItem('pf_panel', '1'); } catch {}
+  if (visto) return Carga.saltar();
+  Carga.terminar(() => (!$('#login').classList.contains('hide') ? $('#login img') : document.querySelector('.brand img')));
+}
 function showLogin() { quitarCarga(); $('#login').classList.remove('hide'); setTimeout(() => $('#lUser').focus(), 50); }
 $('#loginForm').onsubmit = async (e) => {
   e.preventDefault(); $('#lErr').textContent = '';
@@ -906,3 +918,84 @@ $('#ciOk').onclick = (ev) => {
     toast(`Año ${r.cerrado} cerrado ✅ Empieza ${r.nuevo}: ${r.promovido} pasaron de grado, ${r.egresado} egresaron, ${r.saldos} saldos pendientes.`);
   });
 };
+
+// ================= Historial de la familia =================
+function pintarHistorial(id) {
+  const caja = $('#dHist'); if (!caja) return;
+  if (!FAC) { caja.innerHTML = '<p class="sub">Cargando…</p>'; cargarFacturas().then(() => { if (curFam === id) pintarHistorial(id); }).catch(() => { caja.innerHTML = '<p class="sub">No se pudo cargar el historial</p>'; }); return; }
+  const fs = FAC.facturas.filter((f) => f.fam === id).sort((a, b) => b.fecha.localeCompare(a.fecha));
+  caja.innerHTML = fs.length ? fs.slice(0, 12).map((f) => `<div class="li"><span><a href="#" data-fac="${f.id}">${f.id}</a> · ${fmtF(f.fecha)}<small>${esc(resumenItems(f))}${f.metodo ? ' · ' + esc(f.metodo) : ''}</small></span><span style="text-align:right"><b>${rd(f.total)}</b><br><span class="pill ${ESTF[f.estado][0]}" style="font-size:10.5px;padding:2px 8px">${ESTF[f.estado][1]}</span></span></div>`).join('') + (fs.length > 12 ? `<p class="sub" style="margin:8px 0 0">y ${fs.length - 12} más en Pagos y facturas</p>` : '')
+    : '<p class="sub" style="margin:0">Todavía no tiene pagos ni facturas</p>';
+}
+
+// ================= Selector con buscador (reemplaza las listas desplegables largas) =================
+const sinAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const VALOR = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+function buscable(sel, ph = 'Escribe para buscar…') {
+  if (!sel || sel.dataset.cb) return; sel.dataset.cb = '1';
+  const cb = document.createElement('div'); cb.className = 'cb'; sel.parentNode.insertBefore(cb, sel); cb.appendChild(sel);
+  cb.insertAdjacentHTML('beforeend', `<button type="button" class="cb-btn"><span class="t"></span></button><div class="cb-pop"><input type="search" placeholder="${ph}" autocomplete="off"><div class="cb-list" role="listbox"></div></div>`);
+  const btn = cb.querySelector('.cb-btn'), inp = cb.querySelector('input'), list = cb.querySelector('.cb-list');
+  const partes = (o) => { const t = o.textContent; const i = t.search(/ — | · /); return i < 0 ? [t, ''] : [t.slice(0, i), t.slice(i + 3)]; };
+  let vis = [], k = 0;
+  const pintar = () => { const o = sel.options[sel.selectedIndex]; const [a, b] = o ? partes(o) : ['Elige…', '']; btn.querySelector('.t').innerHTML = `<b>${esc(a)}</b>${b ? `<small>${esc(b)}</small>` : ''}`; };
+  const filtrar = () => {
+    const q = sinAcento(inp.value.trim());
+    vis = [...sel.options].filter((o) => !o.disabled && (!q || sinAcento(o.textContent).includes(q)));
+    k = Math.max(0, vis.findIndex((o) => o.value === sel.value));
+    list.innerHTML = vis.slice(0, 150).map((o, i) => { const [a, b] = partes(o); return `<div class="cb-op ${i === k ? 'sel' : ''} ${o.value === sel.value ? 'act' : ''}" data-i="${i}"><div><span>${esc(a)}</span>${b ? `<small>${esc(b)}</small>` : ''}</div></div>`; }).join('') || '<div class="cb-vacio">No hay resultados</div>';
+  };
+  const marcar = () => { list.querySelectorAll('.cb-op').forEach((d, i) => d.classList.toggle('sel', i === k)); list.querySelector('.sel')?.scrollIntoView({ block: 'nearest' }); };
+  const cerrar = () => cb.classList.remove('abierto');
+  const elegir = (o) => { if (!o) return; VALOR.set.call(sel, o.value); sel.dispatchEvent(new Event('change', { bubbles: true })); pintar(); cerrar(); };
+  const abrir = () => { document.querySelectorAll('.cb.abierto').forEach((x) => x !== cb && x.classList.remove('abierto')); cb.classList.add('abierto'); inp.value = ''; filtrar(); setTimeout(() => inp.focus(), 0); };
+  btn.onclick = () => (cb.classList.contains('abierto') ? cerrar() : abrir());
+  inp.oninput = filtrar;
+  inp.onkeydown = (e) => {
+    if (e.key === 'ArrowDown') { k = Math.min(vis.length - 1, k + 1); marcar(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { k = Math.max(0, k - 1); marcar(); e.preventDefault(); }
+    else if (e.key === 'Enter') { elegir(vis[k]); e.preventDefault(); }
+    else if (e.key === 'Escape') { cerrar(); btn.focus(); e.stopPropagation(); }
+  };
+  list.onclick = (e) => { const d = e.target.closest('.cb-op'); if (d) elegir(vis[+d.dataset.i]); };
+  document.addEventListener('click', (e) => { if (!cb.contains(e.target)) cerrar(); });
+  // Cuando el código cambia el valor o las opciones, el botón se actualiza solo
+  Object.defineProperty(sel, 'value', { get() { return VALOR.get.call(this); }, set(v) { VALOR.set.call(this, v); pintar(); }, configurable: true });
+  new MutationObserver(pintar).observe(sel, { childList: true });
+  pintar();
+}
+[['#pStu', 'Busca por estudiante o tutor…'], ['#nfFam', 'Busca la familia…'], ['#iFam', 'Busca la familia…'], ['#vFam', 'Busca la familia…']].forEach(([s, ph]) => buscable($(s), ph));
+
+// ================= Buscador global =================
+let gk = 0, GRES = [];
+function buscarTodo(q) {
+  const t = sinAcento(q.trim()); if (!t || !DB) return [];
+  const dig = t.replace(/\D/g, '');
+  const out = [];
+  const fams = DB.fams.map((f) => ({ f, hs: hijosDe(f.id) })).filter(({ f, hs }) => sinAcento(f.tutor).includes(t) || (dig.length >= 3 && f.tel.replace(/\D/g, '').includes(dig)) || (f.doc && dig.length >= 3 && f.doc.replace(/\D/g, '').includes(dig)) || hs.some((h) => sinAcento(h.nombre).includes(t)));
+  fams.slice(0, 7).forEach(({ f, hs }) => { const s = estadoFam(f); out.push({ g: 'Familias', ic: '👨‍👩‍👧', a: f.tutor, b: `${hs.map((h) => h.nombre.split(' ')[0] + ' (' + h.grado + ')').join(', ')} · ${f.tel}`, d: s.mora ? `<span class="pill p-bad">${rd(s.mora)}</span>` : '<span class="pill p-ok">Al día</span>', fn: () => { go('familias'); openFam(f.id); } }); });
+  if (FAC) FAC.facturas.filter((f) => sinAcento(f.id).includes(t) || (f.recibo && sinAcento(f.recibo).includes(t))).slice(0, 4).forEach((f) => out.push({ g: 'Facturas', ic: '📑', a: f.id + ' · ' + f.cliente, b: resumenItems(f), d: `<b>${rd(f.total)}</b>`, fn: () => { go('facturas'); verFactura(f.id); } }));
+  const ACC = [['registrar pago cobrar mensualidad', '💳', 'Registrar un pago', () => openPay()], ['nueva factura facturar', '📑', 'Nueva factura', () => act(null, async () => { if (!FAC) await cargarFacturas(); abrirNuevaFactura(); })], ['inscribir estudiante inscripcion', '🎒', 'Inscribir un estudiante', () => abrirInscripcion()], ['comprobantes transferencia', '🧾', 'Comprobantes por revisar', () => go('comprobantes')], ['circular aviso', '📢', 'Enviar una circular', () => go('circulares')]];
+  ACC.filter(([k]) => k.split(' ').some((w) => w.startsWith(t))).forEach(([, ic, a, fn]) => out.push({ g: 'Acciones', ic, a, b: '', d: '', fn }));
+  return out;
+}
+function pintarG() {
+  const r = $('#gres'), q = $('#gq').value;
+  GRES = buscarTodo(q); gk = 0;
+  if (!q.trim()) { r.classList.remove('on'); return; }
+  let g = ''; const re = new RegExp('(' + q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+  r.innerHTML = GRES.length ? GRES.map((x, i) => (x.g !== g ? `<div class="grp">${(g = x.g)}</div>` : '') + `<div class="gr ${i === 0 ? 'sel' : ''}" data-g="${i}"><span class="ic">${x.ic}</span><span class="tx"><b>${esc(x.a).replace(re, '<mark>$1</mark>')}</b>${x.b ? `<span>${esc(x.b)}</span>` : ''}</span>${x.d}</div>`).join('') : '<div class="cb-vacio">No encontré nada con eso</div>';
+  r.classList.add('on');
+}
+function elegirG(i) { const x = GRES[i]; if (!x) return; $('#gq').value = ''; $('#gres').classList.remove('on'); $('#gq').blur(); x.fn(); }
+$('#gq').addEventListener('input', pintarG);
+$('#gq').addEventListener('focus', () => { if (!FAC) cargarFacturas().catch(() => {}); if ($('#gq').value) pintarG(); });
+$('#gq').addEventListener('keydown', (e) => {
+  const n = GRES.length;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { gk = (gk + (e.key === 'ArrowDown' ? 1 : -1) + n) % Math.max(n, 1); document.querySelectorAll('.gr').forEach((d, i) => d.classList.toggle('sel', i === gk)); document.querySelector('.gr.sel')?.scrollIntoView({ block: 'nearest' }); e.preventDefault(); }
+  else if (e.key === 'Enter') { elegirG(gk); e.preventDefault(); }
+  else if (e.key === 'Escape') { $('#gq').value = ''; $('#gres').classList.remove('on'); $('#gq').blur(); }
+});
+$('#gres').addEventListener('click', (e) => { const d = e.target.closest('[data-g]'); if (d) elegirG(+d.dataset.g); });
+document.addEventListener('click', (e) => { if (!e.target.closest('#gbusca')) $('#gres').classList.remove('on'); });
+document.addEventListener('keydown', (e) => { if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $('#gq').focus(); } });

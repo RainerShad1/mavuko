@@ -9,6 +9,7 @@
 <meta property="og:image" content="/assets/fotos/admisiones.jpg">
 <link rel="preload" as="image" href="/assets/fotos/admisiones.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/assets/carga.css">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -180,6 +181,16 @@ footer a:hover{color:#fff}
 .flota-txt{max-width:0;overflow:hidden;white-space:nowrap;font-weight:700;font-size:15px;color:var(--tinta);transition:max-width .45s ease,padding .45s ease;padding:0}
 .flota-txt small{display:block;font-weight:500;font-size:12.5px;color:var(--suave)}
 .flota.abierta .flota-txt,.flota:hover .flota-txt,.flota:focus-visible .flota-txt{max-width:240px;padding:0 10px 0 16px}
+.flota{transition:opacity .3s ease,transform .3s ease}
+.flota.oculta{opacity:0;transform:translateY(24px) scale(.85);pointer-events:none}
+@media (max-width:760px){.flota{right:14px;bottom:14px}.flota.abierta .flota-txt{max-width:0;padding:0}.flota-logo{width:50px;height:50px}}
+.listo{text-align:center;padding:10px 4px}
+.listo .ok{width:64px;height:64px;border-radius:50%;background:#e3f3ea;color:#12603F;display:grid;place-items:center;margin:0 auto 14px;font-size:32px;font-weight:800}
+.listo h3{margin-bottom:8px}
+.listo p{color:var(--suave);margin:0 auto 6px;max-width:34ch}
+.listo .acc{display:grid;gap:10px;margin-top:18px}
+.listo .btn-wa{background:#1fa855;color:#fff}
+.listo .otro{background:none;border:0;color:var(--tinta);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;padding:6px}
 @media (prefers-reduced-motion:no-preference){
   .flota{animation:flota-entra .7s .9s cubic-bezier(.2,.9,.25,1.3) both}
   .flota-logo:before{animation:onda 2.6s 2s ease-out infinite}
@@ -204,23 +215,10 @@ footer a:hover{color:#fff}
 }
 
 /* ---------- Pantalla de carga ---------- */
-.cargando{position:fixed;inset:0;z-index:200;background:#fff;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s;animation:failsafe 0s 4s forwards}
-.cargando.fuera{opacity:0;visibility:hidden}
-.cargando div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
-.cargando img{width:78px;height:auto;margin-bottom:10px}
-.cargando b{font:800 clamp(28px,4vw,40px)/1.05 "Bricolage Grotesque",system-ui,sans-serif;color:#0B2B5B;letter-spacing:-.02em}
-.cargando small{font:500 15px Figtree,system-ui,sans-serif;color:#56637A}
-.barra{display:flex;gap:6px;margin-top:22px}
-.barra i{width:42px;height:6px;border-radius:3px;background:#E3E9F2;position:relative;overflow:hidden}
-.barra i:after{content:"";position:absolute;inset:0;transform:scaleX(0);transform-origin:left;animation:llena .5s ease forwards}
-.barra i:nth-child(1):after{background:#0B2B5B}
-.barra i:nth-child(2):after{background:#12603F;animation-delay:.35s}
-.barra i:nth-child(3):after{background:#C99A3E;animation-delay:.7s}
-@keyframes llena{to{transform:scaleX(1)}}
-@keyframes failsafe{to{opacity:0;visibility:hidden}}
-@media (prefers-reduced-motion:reduce){.barra i:after{animation:none;transform:none}.cargando{transition:none}}
+
 </style></head><body>
-<div class="cargando" id="cargando" aria-hidden="true"><div><img src="/assets/monograma.png" alt="" width="78" height="108"><b>Colegio Paulo Freire</b><small>Instituto Dominicano · La Romana</small><span class="barra"><i></i><i></i><i></i></span></div></div>
+<div class="cargando" id="cargando" aria-hidden="true"><div class="cg"><div class="cg-mono"><img class="cg-body" src="/assets/carga/body.png" alt=""><img class="cg-F" src="/assets/carga/F.png" alt=""><img class="cg-leaves" src="/assets/carga/leaves.png" alt=""><img class="cg-gold" src="/assets/carga/gold.png" alt=""><img class="cg-globe" src="/assets/carga/globe.png" alt=""></div><div class="cg-nombre">Instituto Dominicano Paulo Freire</div><div class="cg-sub">LA ROMANA</div></div></div>
+<script src="/assets/carga.js"></script>
 <noscript><style>.cargando{display:none}</style></noscript>
 
 
@@ -339,22 +337,26 @@ footer a:hover{color:#fff}
 
 <script>
 const $ = (s) => document.querySelector(s);
-// Pantalla de carga: se va cuando la portada está lista (mínimo 0.9 s, máximo 2.5 s; en visitas siguientes, al instante)
+// Pantalla de carga: el logo se arma, se escribe el nombre y luego el logo vuela a su lugar en el menú.
+// En las visitas siguientes de la misma sesión la página aparece al instante.
 (() => {
-  const c = $('#cargando'), t0 = performance.now();
   let visto = false; try { visto = sessionStorage.getItem('pf_visto') === '1'; sessionStorage.setItem('pf_visto', '1'); } catch {}
-  let hecho = false;
-  const fin = () => { if (hecho) return; hecho = true; c.classList.add('fuera'); document.body.classList.add('listo'); setTimeout(() => c.remove(), 600); };
-  if (visto) { c.style.transition = 'none'; return fin(); }
+  const listo = () => document.body.classList.add('listo');
+  if (visto) return Carga.saltar(listo);
   const img = $('#banner');
-  const listo = Promise.all([document.fonts ? document.fonts.ready : 0, img.complete ? 0 : new Promise((r) => { img.onload = img.onerror = r; })]);
-  listo.then(() => setTimeout(fin, Math.max(0, 900 - (performance.now() - t0))));
-  setTimeout(fin, 2500);
+  const cargada = Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0, img.complete ? 0 : new Promise((r) => { img.onload = img.onerror = r; })]), new Promise((r) => setTimeout(r, 4500))]);
+  cargada.then(() => { scrollTo(0, 0); Carga.terminar(document.querySelector('.marca img'), listo); });
 })();
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fecha = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'long' });
 
 setTimeout(() => $('#flota').classList.remove('abierta'), 6000);
+// El botón flotante se esconde mientras se ve el formulario o el pie, para no tapar nada
+if ('IntersectionObserver' in window) {
+  const vistos = new Set();
+  const io = new IntersectionObserver((es) => { es.forEach((x) => (x.isIntersecting ? vistos.add(x.target) : vistos.delete(x.target))); $('#flota').classList.toggle('oculta', vistos.size > 0); }, { threshold: 0.15 });
+  ['#f', 'footer'].forEach((s) => { const el = document.querySelector(s); if (el) io.observe(el); });
+}
 $('#menu').onclick = () => { const n = $('#nav'); n.classList.toggle('on'); $('#menu').setAttribute('aria-expanded', n.classList.contains('on')); };
 document.querySelectorAll('#nav a').forEach((a) => a.addEventListener('click', () => $('#nav').classList.remove('on')));
 
@@ -395,7 +397,15 @@ $('#f').addEventListener('submit', async (e) => {
     const r = await fetch('/api/publico/inscripcion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error);
-    e.target.reset(); m.className = 'msg ok'; m.textContent = '¡Listo! La secretaría te llamará para coordinar la visita.';
+    // Confirmación clara en lugar del formulario, con la opción de escribir ya por WhatsApp
+    const f = e.target, nom = String(d.tutor).trim().split(' ')[0];
+    f.dataset.html = f.innerHTML;
+    f.innerHTML = `<div class="listo" role="status"><div class="ok">✓</div><h3>¡Recibimos tu solicitud, ${esc(nom)}!</h3>
+      <p>La secretaría te llamará al <b>${esc(String(d.tel).replace(/\D/g, '').replace(/^1?(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</b> en horario de oficina (lunes a viernes, 7:30 a. m. a 3:00 p. m.) para coordinar tu visita.</p>
+      <div class="acc"><a class="btn btn-wa" href="https://wa.me/18298531204?text=${encodeURIComponent(`Hola, soy ${d.tutor}. Acabo de pedir un cupo para ${d.est || 'mi hijo/a'} (${d.grado}).`)}" target="_blank" rel="noopener">¿Prefieres hablar ya? Escríbenos por WhatsApp</a>
+      <button type="button" class="otro" id="otra">Enviar otra solicitud</button></div></div>`;
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('#otra').onclick = () => { f.innerHTML = f.dataset.html; };
   } catch (x) { m.className = 'msg er'; m.textContent = x.message || 'No se pudo enviar. Escríbenos por WhatsApp.'; }
 });
 </script>
